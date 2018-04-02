@@ -1,22 +1,47 @@
 import collections
 import re
+import abc
 
-class AutoState:
+class State:
     def __init__(self, name, value, **rules):
+        '''
+        Initialises an automata state.
+
+        :param name: name of the state
+        :param value: value the state holds (can be used externally to define if a state is accepted or not)
+        :param parent: parent automata (any class derived from FA)
+        :param rules: transition functions
+        '''
 
         self.name = name
         self.value = value
 
-        self.transitions = dict()
+        self.__transitions = dict()
 
         if len(rules) > 0:
             self.add_functions(rules)
 
     def add_function(self, end_state, event):
-
-        self.transitions[event] = end_state
+        '''
+        Adds a single transition function.
+        :param end_state: a single state or a list of states
+        :param event: input value that calls this function
+        :return:
+        '''
+        self.__transitions[event] = end_state
 
     def add_functions(self, **rules):
+        '''
+        Adds multiple transition functions.
+
+        Example:
+            d = State(...)
+            d.add_functions(q1=4, q2=5, q3={2,3})
+            ...
+
+        :param rules: transition functions pairs state=value or values
+        :return:
+        '''
         try:
             for state, value in rules.items():
                 if not isinstance(value, collections.Iterable):
@@ -29,7 +54,7 @@ class AutoState:
     def __repr__(self):
         result = 'State {} (value {}):\n'.format(self.name, self.value)
         side = ''
-        for state, trans_value in self.transitions.items():
+        for state, trans_value in self.__transitions.items():
             side += 'on {} -> {}\n'.format(state, trans_value)
         side = side[:-1]
         return result + self.__wrap(side)
@@ -40,17 +65,29 @@ class AutoState:
 
     def forward(self, value):
         try:
-            return self.transitions[value]
+            return self.__transitions[value]
         except KeyError:
             raise KeyError('Illegal transition function value {}.'.format(value))
 
-class DFA: #todo: see if you can utilize class inheritance so that NFA doesn't have to be rewritten.
-    def __init__(self, states, inputs, functions, start_state, final_states, in_type = int):
+class FA(abc.ABC):
+    '''
+    Finite automata base abstract class. It isn't aware of transition functions.
+    '''
+    def __init__(self, states, inputs, start_state, final_states, in_type = int):
+        '''
+        Initialises a DFA.
 
+        :param states: set of all possible states
+        :param inputs: set of all possible inputs
+        :param start_state: single starting state
+        :param final_states: set of all possible final (accepting) states
+        :param in_type: input type (string or int)
+        '''
         self.states = dict()
         self.inputs = set()
         self.functions = ''
-        #self.final_states = dict()
+        #I deliberately include functions although they are not defined in FA class so that __repr__ can be written
+        #only in the base class.
 
         self.type = in_type
 
@@ -58,20 +95,94 @@ class DFA: #todo: see if you can utilize class inheritance so that NFA doesn't h
             self.inputs |= {one_input}
 
         for state in states:
-            self.states[state] = AutoState(state, 1 if state in final_states else 0)
+            self.states[state] = State(state, 1 if state in final_states else 0)
 
         if self.states.get(start_state, 0):
             self.start_state = start_state
             self.current = self.states[start_state]
         else:
-            raise ValueError('State {} not defined in this DFA.'.format(start_state))
+            raise ValueError('State {} not defined in this automata.'.format(start_state))
 
-        self.parse_functions_string(functions)
+    @abc.abstractmethod
+    def parse_functions_string(self, functions):
+        pass
+
+    @staticmethod
+    def __wrap_in_braces(string, last_brace_newline=False):
+        return '{' + string + ('\n}' if last_brace_newline else '}')
+
+    @staticmethod
+    def __tab(string):
+        return '\t' + string.replace('\n', '\n\t')
+
+    @staticmethod
+    def __newline(*lines):
+        '''
+        Returns concatenated string composed of all line arguments with newline added between them.
+        :param str lines: lines of text that need to be newlined.
+        :return: full string composed of individual lines concatenated with newline in-between
+        '''
+        res = '\n'
+        for line in lines:
+            res += line + '\n'
+        return res[:-1]
+
+    def __repr__(self):
+        states = ''
+        final = ''
+
+        for state, state_object in self.states.items():
+            states += state + ','
+            if state_object.value:
+                final += state
+
+        final = 'F=' + self.__wrap_in_braces(final)
+
+        states = 'Q=' + self.__wrap_in_braces(states[:-1])
+
+        inputs = ''
+
+        for inp in self.inputs:
+            inputs += str(inp) + ','
+
+        inputs = u'\u03A3=' + self.__wrap_in_braces(inputs[:-1])
+
+        funcs = u'\u03B4=' + self.__wrap_in_braces(self.functions)
+
+        start = 'q0=' + self.start_state
+
+        return 'DFA ' + self.__wrap_in_braces(self.__tab(
+            self.__newline(states, inputs, funcs, start, final)
+        ), True)
 
     def __contains__(self, item):
         if self.states.get(item, None) is None:
             return False
         return True
+
+    @abc.abstractmethod
+    def enter(self, *entry): #I don't want to define the way inputs are passed through the automata
+        pass
+
+class DFA(FA): #todo: see if you can utilize class inheritance so that NFA doesn't have to be rewritten.
+    '''
+    Deterministic finite automata.
+    '''
+    def __init__(self, states, inputs, functions, start_state, final_states, in_type = int):
+        '''
+        Initialises a DFA.
+
+        :param states: set of all possible states
+        :param inputs: set of all possible inputs
+        :param str functions: FIS. see parse_functions_string documentation
+        :param start_state: single starting state
+        :param final_states: set of all possible final (accepting) states
+        :param in_type: input type (string or int)
+        '''
+
+        super().__init__(states,inputs,start_state,final_states,in_type)
+
+        self.parse_functions_string(functions)
 
     def parse_functions_string(self, functions): #todo: improve string handling, maybe completely remove FIS.
         '''
@@ -132,60 +243,13 @@ class DFA: #todo: see if you can utilize class inheritance so that NFA doesn't h
         elif function_check > 0:
             raise AttributeError('You have defined too many transition functions! DFA has to have a function mapped from each state through each input!')
 
-    @staticmethod
-    def __wrap_in_braces(string, last_brace_newline = False):
-        return '{' + string +  ('\n}' if last_brace_newline else '}')
-    @staticmethod
-    def __tab(string):
-        return '\t' + string.replace('\n', '\n\t')
-
-    @staticmethod
-    def __newline(*lines):
-        '''
-        Returns concatenated string composed of all line arguments with newline added between them.
-        :param str lines: lines of text that need to be newlined.
-        :return: full string composed of individual lines concatenated with newline in-between
-        '''
-        res = '\n'
-        for line in lines:
-            res += line + '\n'
-        return res[:-1]
-
-    def __repr__(self):
-        states = ''
-        final = ''
-
-        for state, state_object in self.states.items():
-            states += state + ','
-            if state_object.value:
-                final += state
-
-        final = 'F=' + self.__wrap_in_braces(final)
-
-        states = 'Q=' + self.__wrap_in_braces(states[:-1])
-
-        inputs = ''
-
-        for inp in self.inputs:
-            inputs += str(inp) + ','
-
-        inputs = u'\u03A3=' + self.__wrap_in_braces(inputs[:-1])
-
-        funcs = u'\u03B4=' + self.__wrap_in_braces(self.functions)
-
-        start = 'q0=' + self.start_state
-
-        return 'DFA ' + self.__wrap_in_braces(self.__tab(
-                self.__newline(states, inputs, funcs, start, final)
-        ), True)
-
     def enter(self, *entry): #I hate this function. Redo it.
         for inp in entry:
             if isinstance(inp, collections.Iterable):
                 for i in inp:
                     self.current = self.states[self.current.forward(self.type(i))]
             else:
-                self.current = self.states[self.current.forward(self.type(i))]
+                self.current = self.states[self.current.forward(self.type(inp))]
         return self.current
 
 def create_function_string(newline = False, **rules):
@@ -194,7 +258,7 @@ def create_function_string(newline = False, **rules):
 
     Example:
         create_function_string(q0={0:'q0', 1:'q1'}, q1={0:'q0', 1:'q1'})
-
+    :param bool newline: defines if FIS is going to have each function defined in its' own row
     :param dict rules: dictionary with keys (str) being inputs and values (str) being state names
     :return: Function instruction string
     '''
@@ -212,7 +276,7 @@ has_0_then_1 = DFA({'q0', 'q1', 'q2'}, {0,1},
           q2:1->q1;
           q2:0->q2;
           q1:0->q1;
-          q1:1->q1;
+          q1:1->q1
           ''',
           'q0', {'q1'})
 
