@@ -216,7 +216,7 @@ class FA(abc.ABC):
 
         start = 'q0=' + self.start_state
 
-        return 'DFA ' + self.__wrap_in_braces(self.__tab(
+        return '{} '.format(self.__class__.__name__) + self.__wrap_in_braces(self.__tab(
             self.__newline(states, inputs, funcs, start, final)
         ), True)
 

@@ -1,4 +1,5 @@
 from labos1.FA import FA
+from labos1 import collections
 
 class NFA(FA):
     '''
@@ -30,4 +31,32 @@ class NFA(FA):
         return states
 
     def enter(self, *entry):
-        raise NotImplementedError
+
+        def access(value):
+            old_currents = self.current.copy()
+            for state in old_currents:
+                res = state.forward(self.type(value))
+                self.current -= {state}
+                if res is None:
+                    break
+                for end in res:
+                    self.current |= {self.states[end]}
+
+
+        for inp in entry:
+            if isinstance(inp, collections.Iterable):
+                for i in inp:
+                    access(i)
+            else:
+                access(inp)
+        return self.current
+
+class E_NFA(NFA):
+
+    def __init__(self, states, inputs, functions, start_state, final_states, in_type=int):
+
+        super().__init__(states, inputs, functions, start_state, final_states, in_type)
+
+        self.inputs |= {'$'}
+
+        #todo: finish epsilon NFA & introduce empty set # in FIS notation.

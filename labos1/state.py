@@ -1,8 +1,7 @@
 from labos1 import collections
-from labos1 import DFA, NFA, FA
 
 class State:
-    def __init__(self, name, value, state_type = DFA, **rules):
+    def __init__(self, name, value, **rules):
         '''
         Initialises an automata state.
 
@@ -15,25 +14,17 @@ class State:
         self.name = name
         self.value = value
 
-        def get_parent(cls):
-            '''
-            Determines if state type class is FA (finite automata).
-
-            :param cls: metaclass provided as state_type on State initialisation.
-            :return: base class type
-            '''
-            if not cls.__base__ is object:
-                return get_parent(cls.__base__)
-            return cls
-
-        if not get_parent(state_type) is FA:
-            raise TypeError('Automata type {} provided in state_type is not derived from FA class.'.format(state_type.__name__))
-        self.state_type = state_type
-
         self.__transitions = dict()
 
         if len(rules) > 0:
             self.add_functions(rules)
+
+    @staticmethod
+    def __clean(value):
+
+        if not isinstance(value, collections.Iterable) or isinstance(value, str):
+            value = {value}
+        return value
 
     def add_function(self, end_state, event):
         '''
@@ -43,13 +34,15 @@ class State:
         :return:
         '''
 
-        if self.state_type is DFA:
-            self.__transitions[end_state] = event
-        elif self.state_type is NFA:
-            if self.__transitions.get(end_state, -1) == -1:
-                self.__transitions[end_state] = {event}
-            else:
-                self.__transitions[end_state] |= {event}
+        end_state = self.__clean(end_state)
+        event = self.__clean(event)
+
+        for state in end_state:
+            for ev in event:
+                if self.__transitions.get(ev, -1) == -1:
+                    self.__transitions[ev] = {state}
+                else:
+                    self.__transitions[ev] |= {state}
 
 
     def add_functions(self, **rules):
@@ -64,29 +57,34 @@ class State:
         :param rules: transition functions pairs state=value or values
         :return:
         '''
+
         try:
             for state, value in rules.items():
-                if not isinstance(value, collections.Iterable):
-                    value = list((value,))
+                value = self.__clean(value)
+                state = self.__clean(state)
                 for single_value in value:
                     self.add_function(state, single_value)
         except IndexError:
             raise IndexError('Transition functions have to be defined with a tuple (end state, transition value)!')
 
     def __repr__(self):
-        result = 'State {} (value {}):\n'.format(self.name, self.value)
-        side = ''
-        for state, trans_value in self.__transitions.items():
-            side += 'on {} -> {}\n'.format(state, trans_value)
-        side = side[:-1]
-        return result + self.__wrap(side)
+        # result = 'State {} (value {}):\n'.format(self.name, self.value)
+        # side = ''
+        # for state, trans_value in self.__transitions.items():
+        #     side += 'on {} -> {}\n'.format(state, trans_value)
+        # side = side[:-1]
+        # return result + self.__wrap(side)
+        return self.name
 
     @staticmethod
     def __wrap(state_string):
         return ('{\n' + state_string).replace('\n', '\n\t') + '\n}'
 
-    def forward(self, value): #todo: fix forwarding when using NFA.
-        try:
-            return self.__transitions[value]
-        except KeyError:
-            raise KeyError('Illegal transition function value {}.'.format(value))
+    def forward(self, value):
+
+        res = self.__transitions.get(value, -1)
+
+        return None if res == -1 else res
+
+
+

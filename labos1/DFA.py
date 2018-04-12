@@ -20,10 +20,14 @@ class DFA(FA): #todo: see if you can utilize class inheritance so that NFA doesn
         return end_state_string
 
     def enter(self, *entry): #I hate this function. Redo it.
+
+        def access(value):
+            self.current = self.states[list(self.current.forward(self.type(value)))[0]]
+
         for inp in entry:
             if isinstance(inp, collections.Iterable):
                 for i in inp:
-                    self.current = self.states[self.current.forward(self.type(i))]
+                    access(i)
             else:
-                self.current = self.states[self.current.forward(self.type(inp))]
+                access(inp)
         return self.current

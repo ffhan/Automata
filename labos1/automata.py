@@ -1,4 +1,5 @@
 from labos1.DFA import DFA
+from labos1.NFA import NFA
 
 def create_function_string(newline = False, **rules):
     '''
@@ -46,12 +47,26 @@ equal01 = DFA({'botheven',
               bothodd,1->1even0odd
               ''', 'botheven', {'botheven'}, str)
 
-print(equal01.enter('10110010'))
+#print(equal01.enter('10110010'))
 
 # example of generating the upper function instruction string (FIS):
 
-print(create_function_string(newline=True,
-                             q0={0:'q1',1:'q2'},
-                             q1={0:'q0',1:'q3'},
-                             q2={0:'q3',1:'q0'},
-                             q3={0:'q2',1:'q1'}))
+# print(create_function_string(newline=True,
+#                              q0={0:'q1',1:'q2'},
+#                              q1={0:'q0',1:'q3'},
+#                              q2={0:'q3',1:'q0'},
+#                              q3={0:'q2',1:'q1'}))
+
+nfa = NFA(
+    {'q0','q1', 'q2'}, {0, 1},
+    '''
+    q0,0->q0;
+    q0,1->q1;
+    q1,0->q0;
+    q1,1->q1;
+    q1,1->q2
+    ''', 'q0', {'q2'})
+
+print(nfa)
+
+print(nfa.enter('11'))
