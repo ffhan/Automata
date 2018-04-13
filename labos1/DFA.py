@@ -16,7 +16,7 @@ class DFA(FA): #todo: see if you can utilize class inheritance so that NFA doesn
 
     def end_state_parser(self, end_state_string):
         if end_state_string not in self:
-            raise ValueError(self.__state_error(end_state_string, '(ending)'))
+            raise ValueError(self._state_error(end_state_string, '(ending)'))
         return end_state_string
 
     def enter(self, *entry): #I hate this function. Redo it.

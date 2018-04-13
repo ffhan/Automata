@@ -8,7 +8,7 @@ class FA(abc.ABC):
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     '''
 
-    def __init__(self, states, inputs, functions, start_state, final_states, in_type=int):
+    def __init__(self, states, inputs, functions, start_state, final_states, in_type=str):
         '''
         Initialises a finite state automata.
 
@@ -28,7 +28,7 @@ class FA(abc.ABC):
         self.type = in_type
 
         for one_input in inputs:
-            self.inputs |= {one_input}
+            self.inputs |= {self.type(one_input)}
 
         for state in states:
             self.states[state] = State(state, 1 if state in final_states else 0)
@@ -79,7 +79,7 @@ class FA(abc.ABC):
 
         return ' is not defined in this {}.'.format(type(self).__name__)
 
-    def __state_error(self, state, prefix=''):
+    def _state_error(self, state, prefix=''):
         '''
         Returns a default error string with a possible prefix.
 
@@ -96,7 +96,7 @@ class FA(abc.ABC):
         return '{}{}tate "{}"'.format(prefix, 'S' if prefix == '' else ' s', state,
                                       type(self).__name__) + self.__not_defined_substring()
 
-    def __input_error(self, inp):
+    def _input_error(self, inp):
         '''
         Defines an input error string
         :param str inp: value of the input
@@ -119,14 +119,19 @@ class FA(abc.ABC):
             func3;
 
         Each expression is composed of 3 parts:
-            start_state:transition_value->end_state
+            start_state:transition_value->end_state(s)
 
         Example:
             q0,1->q1
 
+        Multiple end states are separated by a comma. (forbidden in a DFA.)
+
+        Example:
+            q0,1->q1,q2
+
         Example of the whole notation system:
             q0,0->q0;
-            q0,1->q1;
+            q0,1->q1,q0;
             q1,0->q1;
             q1,1->q1
 
@@ -139,18 +144,17 @@ class FA(abc.ABC):
         functions_added = 0
         for transition_func in funcs:  # todo: extract FIS parser to a base class (FA) method and pass parsed data to this method.
             try:
-                start, valueend = transition_func.split(',')
-                value, end = valueend.split('->')
-
+                startvalue, end = transition_func.split('->')
+                start, value = startvalue.split(',')
                 end = self.end_state_parser(end)  # parsing the end state(s).
 
             except (AttributeError, ValueError) as error:
-                raise type(error)('Invalid function instruction string. Check your function string.')
+                raise type(error)('Invalid function instruction string at line {}. Check your function string.'.format(functions_added + 1))
             value = self.type(value.strip('"').strip("'"))  # sanitizing input, removing braces
             if start not in self:
-                raise ValueError(self.__state_error(end, '(starting)'))
+                raise ValueError(self._state_error(end, '(starting)'))
             if value not in self.inputs:
-                raise ValueError(self.__input_error(value))
+                raise ValueError(self._input_error(value))
             '''
             excluded because this part is handled in the end_state_parser
 
@@ -179,6 +183,13 @@ class FA(abc.ABC):
     @staticmethod
     def __tab(string):
         return '\t' + string.replace('\n', '\n\t')
+
+    @staticmethod
+    def __space(*strings):
+        result = ''
+        for s in strings:
+            result += s + ' '
+        return result[:-1]
 
     @staticmethod
     def __newline(*lines):
@@ -226,5 +237,32 @@ class FA(abc.ABC):
         return True
 
     @abc.abstractmethod
-    def enter(self, *entry):  # I don't want to define the way inputs are passed through the automata
+    def enter(self, *entry):  # I don't want to define the way inputs are passed through automata
+        '''
+        Reads all inputs from entry and puts them through the FA.
+        It's extremely important to specify the correct in_type when initialising.
+        For example, creating a finite automata with in type integer (in_type=int) means that any string input '101' will be
+        turned into 101 and therefore will not be segmented.
+
+        Entry itself doesn't have to be a singular value. If you opted for string as input type you can easily put everything into one string.
+
+        Example:
+            a = NFA(......,in_type = int)
+            a.enter(101, 123, 34)
+            a.enter('101') #'101' will be turned into a number 101.
+
+            b = NFA(.......,in_type=str)
+            b.enter(101, 124) # all numbers will be turned into strings and processed symbol by symbol (1,0,1,...)
+            b.enter("example", 123)
+
+        :param entry: All entries.
+        :return: result states
+        '''
         pass
+
+    def output(self, *entry):
+        results = self.enter(*entry)
+        for result in results:
+            if result.value > 0:
+                return True
+        return False

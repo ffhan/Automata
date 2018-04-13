@@ -29,7 +29,7 @@ has_0_then_1 = DFA({'q0', 'q1', 'q2'}, {0,1},
           ''',
           'q0', {'q1'})
 
-# has_0_then_1.enter('101')
+# print(has_0_then_1.enter('101'))
 
 equal01 = DFA({'botheven',
                '1even0odd',
@@ -47,7 +47,7 @@ equal01 = DFA({'botheven',
               bothodd,1->1even0odd
               ''', 'botheven', {'botheven'}, str)
 
-#print(equal01.enter('10110010'))
+# print(equal01.enter('10110010'))
 
 # example of generating the upper function instruction string (FIS):
 
@@ -58,15 +58,18 @@ equal01 = DFA({'botheven',
 #                              q3={0:'q2',1:'q1'}))
 
 nfa = NFA(
-    {'q0','q1', 'q2'}, {0, 1},
+    {'q0', 'q1', 'q2'},
+    {0,1},
     '''
-    q0,0->q0;
-    q0,1->q1;
-    q1,0->q0;
-    q1,1->q1;
+    q0,0->q0,q1;
+    q0,1->q0;
     q1,1->q2
-    ''', 'q0', {'q2'})
+    ''',
+    'q0',
+    {'q2'}, str
+)
 
 print(nfa)
 
-print(nfa.enter('11'))
+# print(nfa.output('110101'))
+print(nfa.output('0101'))

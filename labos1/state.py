@@ -84,7 +84,7 @@ class State:
 
         res = self.__transitions.get(value, -1)
 
-        return None if res == -1 else res
+        return {} if res == -1 else res
 
 
 

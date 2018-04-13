@@ -7,7 +7,7 @@ class NFA(FA):
     '''
 
     def __init__(self, states, inputs, functions, start_state, final_states, in_type=int):
-        super().__init__(states,inputs,functions,start_state,final_states,in_type)
+        super().__init__(states, inputs, functions, start_state, final_states, in_type)
 
         self.current = {self.current} #NFA holds current states in a set
 
@@ -26,22 +26,25 @@ class NFA(FA):
         for state in end_state_string.split(','):
             clean_state = state.strip()
             if clean_state not in self:
-                raise ValueError(self.__state_error(clean_state, '(ending)'))
+                raise ValueError(self._state_error(clean_state, '(ending)'))
             states.append(clean_state)
         return states
 
     def enter(self, *entry):
 
         def access(value):
+
+            if value not in self.inputs:
+                raise ValueError(self._input_error(value))
+
             old_currents = self.current.copy()
             for state in old_currents:
                 res = state.forward(self.type(value))
+
                 self.current -= {state}
-                if res is None:
-                    break
+
                 for end in res:
                     self.current |= {self.states[end]}
-
 
         for inp in entry:
             if isinstance(inp, collections.Iterable):
