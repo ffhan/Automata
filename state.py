@@ -91,4 +91,4 @@ class State:
 
     def forward(self, value):
 
-        return self._transitions.get(value, set()) | self._transitions.get(self.epsilon, set())
+        return self._transitions.get(value, set()) # | self._transitions.get(self.epsilon, set())

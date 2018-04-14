@@ -246,12 +246,21 @@ class FA(abc.ABC):
             self.__newline(states, inputs, funcs, start, final)
         ), True)
 
-    def __contains__(self, item):
+    def __contains_helper(self, item):
         if self.states.get(item, None) is None:
             return False
         return True
 
-    def __process(self, *entry):
+    def __contains__(self, item):
+        # print(type(item), item)
+        if type(item) is str:
+            return self.__contains_helper(item)
+        elif type(item) is State:
+            return self.__contains_helper(item.name)
+        else:
+            return False
+
+    def _process(self, *entry):
         '''
         Processes the entry arguments.
 
@@ -303,7 +312,7 @@ class FA(abc.ABC):
         :param entry: All entries.
         :return: result states
         '''
-        self.__process(*entry)
+        self._process(*entry)
         return self.current
 
     def record(self, *entry):
@@ -312,7 +321,7 @@ class FA(abc.ABC):
         :param entry: All entries.
         :return:
         '''
-        self.__process(*entry)
+        self._process(*entry)
         return self._records
 
     def output(self, *entry):
