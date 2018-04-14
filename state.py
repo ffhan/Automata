@@ -1,7 +1,7 @@
-from labos1 import collections
+import collections
 
 class State:
-    def __init__(self, name, value, **rules):
+    def __init__(self, name, value, epsilon = '$', **rules):
         '''
         Initialises an automata state.
 
@@ -14,10 +14,12 @@ class State:
         self.name = name
         self.value = value
 
-        self.__transitions = dict()
+        self._transitions = dict()
+
+        self.epsilon = epsilon
 
         if len(rules) > 0:
-            self.add_functions(rules)
+            self.add_functions(**rules)
 
     @staticmethod
     def __clean(value):
@@ -39,10 +41,10 @@ class State:
 
         for state in end_state:
             for ev in event:
-                if self.__transitions.get(ev, -1) == -1:
-                    self.__transitions[ev] = {state}
+                if self._transitions.get(ev, -1) == -1:
+                    self._transitions[ev] = {state}
                 else:
-                    self.__transitions[ev] |= {state}
+                    self._transitions[ev] |= {state}
 
 
     def add_functions(self, **rules):
@@ -80,11 +82,13 @@ class State:
     def __wrap(state_string):
         return ('{\n' + state_string).replace('\n', '\n\t') + '\n}'
 
+    def __lt__(self, other):
+
+        if type(other) is not type(self):
+            return 1
+
+        return self.name < other.name
+
     def forward(self, value):
 
-        res = self.__transitions.get(value, -1)
-
-        return {} if res == -1 else res
-
-
-
+        return self._transitions.get(value, set()) | self._transitions.get(self.epsilon, set())

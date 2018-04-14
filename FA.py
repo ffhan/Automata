@@ -1,5 +1,6 @@
-from labos1 import abc, re
-from labos1.state import State
+from state import State
+import abc, re
+
 
 class FA(abc.ABC):
     '''
@@ -19,6 +20,7 @@ class FA(abc.ABC):
         :param final_states: set of all possible final (accepting) states
         :param in_type: input type (string or int)
         '''
+
         self.states = dict()
         self.inputs = set()
         self.functions = ''
@@ -26,6 +28,8 @@ class FA(abc.ABC):
         # only in the base class.
 
         self.type = in_type
+
+        self._records = []
 
         for one_input in inputs:
             self.inputs |= {self.type(one_input)}
@@ -40,6 +44,10 @@ class FA(abc.ABC):
             raise ValueError('State {} not defined in this automata.'.format(start_state))
 
         self.parse_functions_string(functions)
+
+    def reset(self):
+        self._records.clear()
+        self.current = self.states[self.start_state]
 
     def __fis_extract(self, entry):
 
@@ -144,9 +152,14 @@ class FA(abc.ABC):
         functions_added = 0
         for transition_func in funcs:  # todo: extract FIS parser to a base class (FA) method and pass parsed data to this method.
             try:
+                # print(transition_func)
                 startvalue, end = transition_func.split('->')
                 start, value = startvalue.split(',')
+                if end == '#':
+                    continue
                 end = self.end_state_parser(end)  # parsing the end state(s).
+
+                # print("created", start, value, end)
 
             except (AttributeError, ValueError) as error:
                 raise type(error)('Invalid function instruction string at line {}. Check your function string.'.format(functions_added + 1))
@@ -163,6 +176,8 @@ class FA(abc.ABC):
             '''
             self.states[start].add_function(end, value)
             functions_added += 1
+
+            # print("done")
 
         self.check_fis_output(functions_added)
 
@@ -236,7 +251,35 @@ class FA(abc.ABC):
             return False
         return True
 
+    def __process(self, *entry):
+        '''
+        Processes the entry arguments.
+
+        :param entry: entries that have to be handled.
+        :param processor: A function that can output steps in computation.
+        :return:
+        '''
+        # for inp in entry:
+        #     if isinstance(inp, collections.Iterable):
+        #         for i in inp:
+        #             self._access(i)
+        #     else:
+        #         self._access(inp)
+        self._records.clear()
+        self._records.append(self.current.copy())
+        for inp in entry:
+            self._access(inp)
+            self._records.append(self.current.copy())
+
     @abc.abstractmethod
+    def _access(self, value):
+        '''
+        A method that handles the individual input passing through FA.
+        :param value: input
+        :return:
+        '''
+        pass
+
     def enter(self, *entry):  # I don't want to define the way inputs are passed through automata
         '''
         Reads all inputs from entry and puts them through the FA.
@@ -255,10 +298,22 @@ class FA(abc.ABC):
             b.enter(101, 124) # all numbers will be turned into strings and processed symbol by symbol (1,0,1,...)
             b.enter("example", 123)
 
+            b.enter("example", lambda t : print(t))
+
         :param entry: All entries.
         :return: result states
         '''
-        pass
+        self.__process(*entry)
+        return self.current
+
+    def record(self, *entry):
+        '''
+        See entry method.
+        :param entry: All entries.
+        :return:
+        '''
+        self.__process(*entry)
+        return self._records
 
     def output(self, *entry):
         results = self.enter(*entry)

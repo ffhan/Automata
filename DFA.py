@@ -1,5 +1,5 @@
-from labos1 import collections
-from labos1.FA import FA
+import FA
+
 
 class DFA(FA): #todo: see if you can utilize class inheritance so that NFA doesn't have to be rewritten.
     '''
@@ -19,15 +19,6 @@ class DFA(FA): #todo: see if you can utilize class inheritance so that NFA doesn
             raise ValueError(self._state_error(end_state_string, '(ending)'))
         return end_state_string
 
-    def enter(self, *entry): #I hate this function. Redo it.
+    def _access(self, value):
 
-        def access(value):
-            self.current = self.states[list(self.current.forward(self.type(value)))[0]]
-
-        for inp in entry:
-            if isinstance(inp, collections.Iterable):
-                for i in inp:
-                    access(i)
-            else:
-                access(inp)
-        return self.current
+        self.current = self.states[list(self.current.forward(self.type(value)))[0]]
