@@ -31,7 +31,7 @@ class State:
     def add_function(self, end_state, event):
         '''
         Adds a single transition function.
-        :param end_state: a single state or a list of states
+        :param State end_state: a single state or a list of states
         :param event: input value that calls this function
         :return:
         '''
@@ -88,6 +88,43 @@ class State:
             return 1
 
         return self.name < other.name
+
+    def __eq__(self, other):
+        '''
+        Checks if State has the same name.
+
+        :param State other: second State
+        :return: True if States have the same name
+        '''
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        if other.name == self.name:
+            return True
+        return False
+
+    def __hash__(self):
+        result = '{}{}'.format(self.name, self.value)
+        side = ''
+        for state, trans_value in self._transitions.items():
+            side += '{}{}\n'.format(state, trans_value)
+        side = result + side[:-1]
+
+        return hash(self.name) + hash(self.value) + hash(side)
+
+    def distinguish(self, other):
+        '''
+        Returns True if states are distinguishable, False if they are not.
+
+        It's not the same as equality (==).
+
+        :param State other: second State
+        :return: distinguishability
+        '''
+
+        return NotImplementedError()
+
 
     def forward(self, value):
 

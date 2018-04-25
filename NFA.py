@@ -44,8 +44,6 @@ class NFA(FA):
 
         old_currents = set()
 
-        # delete = set()
-
         # print(value)
         for state in sorted(list(self.current)):
             res = state.forward(self.type(value))
@@ -54,15 +52,9 @@ class NFA(FA):
 
             # print(state, state._transitions)
 
-            # if len(res) == 0:
-            #     delete |= {state}
-
             for end in res:
                 old_currents |= {self.states[end]}
                 # print(end, old_currents)
-        # print(old_currents)
-
-        # old_currents -= delete
         # print(old_currents)
         # print("-" * 20)
         self.current = old_currents
