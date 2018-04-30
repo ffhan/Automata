@@ -1,5 +1,5 @@
-from state import State
-import abc, re
+from state import State, StateName
+import abc, re, collections
 
 
 class FA(abc.ABC):
@@ -35,13 +35,18 @@ class FA(abc.ABC):
             self.inputs |= {self.type(one_input)}
 
         for state in states:
-            self.states[state] = State(state, 1 if state in final_states else 0)
+            new_state = State(state, 1 if state in final_states else 0)
+            if state == start_state: #making sure start state is of StateName type
+                start_state = new_state.name
+            self.states[new_state.name] = new_state
 
         if self.states.get(start_state, 0):
             self.start_state = start_state
             self.current = self.states[start_state]
         else:
             raise ValueError('State {} not defined in this automata.'.format(start_state))
+
+        assert isinstance(self.start_state, StateName)
 
         self.parse_functions_string(functions)
 
@@ -153,17 +158,20 @@ class FA(abc.ABC):
         for transition_func in funcs:  # todo: extract FIS parser to a base class (FA) method and pass parsed data to this method.
             try:
                 # print(transition_func)
-                startvalue, end = transition_func.split('->')
-                start, value = startvalue.split(',')
+                start_value, end = transition_func.split('->')
+                start, value = start_value.split(',')
                 if end == '#':
                     continue
+
                 end = self.end_state_parser(end)  # parsing the end state(s).
 
                 # print("created", start, value, end)
 
             except (AttributeError, ValueError) as error:
                 raise type(error)('Invalid function instruction string at line {}. Check your function string.'.format(functions_added + 1))
+
             value = self.type(value.strip('"').strip("'"))  # sanitizing input, removing braces
+
             if start not in self:
                 raise ValueError(self._state_error(end, '(starting)'))
             if value not in self.inputs:
@@ -180,6 +188,26 @@ class FA(abc.ABC):
             # print("done")
 
         self.check_fis_output(functions_added)
+
+    def _prepare_end_states(self, end):
+        """
+        Turns the name of a state (from string) to a State object.
+
+        :param end: end States
+        :return: set of State objects
+        """
+
+        if isinstance(end, collections.Iterable) and not isinstance(end, str):
+            for i in range(len(end)):
+                end[i] = self.states[end[i]]
+        elif isinstance(end, str):
+            end = self.states[end]
+        elif isinstance(end, State):
+            pass
+        else:
+            raise TypeError('Type {} is not accepted as end type!'.format(end.__class__.__name__))
+
+        return end
 
     @abc.abstractmethod
     def check_fis_output(self, funcs_added):

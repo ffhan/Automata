@@ -1,5 +1,45 @@
 import collections
 
+class StateName(str):
+    '''
+    Wrapper for State name, enables direct object renaming.
+    '''
+
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, other):
+        if isinstance(other, str):
+            self._name = other
+        else:
+            raise TypeError('State name has to be a string.')
+
+
+    def __eq__(self, other):
+
+        if isinstance(other, str):
+            return other == self.name
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        if other.name == self.name:
+            return True
+
+    def __hash__(self):
+
+        return hash(self.name)
+
+    def __repr__(self):
+        assert isinstance(self.name, str)
+        return 'n->{}'.format(self.name)
+
 class State:
     def __init__(self, name, value, epsilon = '$', **rules):
         '''
@@ -11,7 +51,7 @@ class State:
         :param rules: transition functions
         '''
 
-        self.name = name
+        self.name = StateName(name)
         self.value = value
 
         self._transitions = dict()
@@ -76,7 +116,7 @@ class State:
         #     side += 'on {} -> {}\n'.format(state, trans_value)
         # side = side[:-1]
         # return result + self.__wrap(side)
-        return self.name
+        return str(self.name)
 
     @staticmethod
     def __wrap(state_string):
@@ -105,7 +145,7 @@ class State:
         return False
 
     def __hash__(self):
-        result = '{}{}'.format(self.name, self.value)
+        result = '{}{}'.format(self.name.name, self.value)
         side = ''
         for state, trans_value in self._transitions.items():
             side += '{}{}\n'.format(state, trans_value)
