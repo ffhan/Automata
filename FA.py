@@ -48,7 +48,29 @@ class FA(abc.ABC):
 
         assert isinstance(self.start_state, StateName)
 
+        self.alias = dict()
+
         self.parse_functions_string(functions)
+
+    def set_alias(self, state, alias):
+        '''
+        Stores an alias for a removed State.
+        :param StateName state: State that has replaced a state
+        :param StateName alias: The replaced State
+        :return:
+        '''
+        self.alias[alias] = state
+
+    def get_alias(self, alias):
+        '''
+        Find current State associated with a removed State
+
+        Returns the same State if it doesn't exist (case when State hasn't been removed from FA.
+        :param StateName alias: Removed State
+        :return State: Current State identical to the old State
+        '''
+
+        return self.alias.get(alias, self.states[alias])
 
     def reset(self):
         self._records.clear()
@@ -163,7 +185,7 @@ class FA(abc.ABC):
                 if end == '#':
                     continue
 
-                end = self.end_state_parser(end)  # parsing the end state(s).
+                end = self._prepare_end_states(self.end_state_parser(end))  # parsing the end state(s).
 
                 # print("created", start, value, end)
 
@@ -182,7 +204,7 @@ class FA(abc.ABC):
             if end not in self:
                 raise ValueError(self.__state_error(end, '(ending)'))
             '''
-            self.states[start].add_function(end, value)
+            self.states[start].add_function({e.name for e in end}, value)
             functions_added += 1
 
             # print("done")
@@ -201,7 +223,7 @@ class FA(abc.ABC):
             for i in range(len(end)):
                 end[i] = self.states[end[i]]
         elif isinstance(end, str):
-            end = self.states[end]
+            end = [self.states[end]]
         elif isinstance(end, State):
             pass
         else:
@@ -283,6 +305,8 @@ class FA(abc.ABC):
         # print(type(item), item)
         if type(item) is str:
             return self.__contains_helper(item)
+        elif type(item) is StateName:
+            return self.__contains_helper(item)
         elif type(item) is State:
             return self.__contains_helper(item.name)
         else:
@@ -358,3 +382,6 @@ class FA(abc.ABC):
             if result.value > 0:
                 return True
         return False
+
+    def distinguish(self):
+        raise NotImplementedError()

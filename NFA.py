@@ -1,6 +1,6 @@
-from FA import FA
+import FA
 
-class NFA(FA):
+class NFA(FA.FA):
     '''
     Non-deterministic finite automata.
     '''
@@ -79,7 +79,7 @@ class E_NFA(NFA):
 
         for eps in state.forward(self._epsilon):
             if self.states[eps] not in closure:
-                self.e_closure(eps, closure)
+                self.e_closure(self.states[eps], closure)
 
         return closure
 

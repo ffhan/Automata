@@ -41,16 +41,9 @@ def printer(*args):
     for arg in args:
         print(arg)
 
-def parse(string):
-    lines = splitter(string, '\n')
+def parse_e_nfa(string):
 
-    entries = splitter(lines[0], '|')
-    states = set_splitter(lines[1], ',')
-    inputs = set_splitter(lines[2], ',')
-    final = set_splitter(lines[3], ',')
-    start = lines[4]
-    functions = comma(*lines[5:])
-
+    entries, states, inputs, final, start, functions = general_parse(string)
     #printer(entries, states, inputs, final, start, functions)
 
     nfa = E_NFA(states, inputs, functions, start, final)
@@ -64,7 +57,40 @@ def parse(string):
     # print(len(functions.replace(';', ';\n')))
     return records
 
-def output(records):
+
+def general_parse(string):
+    lines = splitter(string, '\n')
+
+    entries = splitter(lines[0], '|')
+    states = set_splitter(lines[1], ',')
+    inputs = set_splitter(lines[2], ',')
+    final = set_splitter(lines[3], ',')
+    start = lines[4]
+    functions = comma(*lines[5:])
+
+    return entries, states, inputs, final, start, functions
+
+def encode(automat):
+
+    '''
+    Format za zapis definicije ulaznog i izlaznog automata jest sljedeći:
+    1. redak: Skup stanja odvojenih zarezom, leksikografski poredana.
+    2. redak: Skup simbola abecede odvojenih zarezom, leksikografski poredana.
+    3. redak: Skup prihvatljivih stanja odvojenih zarezom, leksikografski poredana.
+    4. redak: Početno stanje.
+    5. redak i svi ostali retci: Funkcija prijelaza u formatu
+    :param FA automatum: FA that has to be encoded
+    :return str: String output
+    '''
+
+    states = list(sorted(automat.states.keys()))
+    inputs = list(automat.inputs).sort()
+    final = list(automat.final_states)
+
+    #todo: finish
+
+
+def fa_output(records):
     result = ''
 
     for record in records:
@@ -83,10 +109,10 @@ def output(records):
 
     return result
 
-def print_out(records):
+def print_output(records):
 
-    print(output(records))
+    print(fa_output(records))
 
-def compare(records, test_output):
+def compare_output(records, test_output):
 
-    return output(records) == test_output
+    return fa_output(records) == test_output

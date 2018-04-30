@@ -43,25 +43,31 @@ example:
     python tester --type e_nfa 
 '''
 
-def test_e_nfa(in_file, out_file):
+def tester(func):
 
-    def file_to_string(file):
+    def wrapper(in_file, out_file):
+        def file_to_string(file):
+            text = ''
 
-        text = ''
+            with open(file, 'r') as inp:
+                for s in inp.readlines():
+                    text += s
+            return text
 
-        with open(file, 'r') as inp:
-            for s in inp.readlines():
-                text += s
-        return text
+        in_text = ''
+        out_text = ''
 
-    in_text = ''
-    out_text = ''
+        in_text = file_to_string(in_file)
 
-    in_text = file_to_string(in_file)
+        out_text = file_to_string(out_file)
 
-    out_text = file_to_string(out_file)
+        return preformat.compare_output(func(in_text), out_text)
 
-    return preformat.compare(preformat.parse(in_text), out_text)
+    return wrapper
+
+test_e_nfa = tester(preformat.parse_e_nfa) #define E_NFA tester function
+
+
 
 for root, dirs, files in os.walk(DESTINATION):
     path = root.split(os.sep)
@@ -82,8 +88,17 @@ for root, dirs, files in os.walk(DESTINATION):
             break
     if inp and outp:
         try:
-            print('Test {}: {}'.format(folder, 'PASSED' if test_e_nfa(root + '\\' + in_file, root + '\\' + test_file) else 'FAILED'))
+            result = test_e_nfa(root + '\\' + in_file, root + '\\' + test_file)
+
+            message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
+
+            print(message)
+
+            if not result:
+                logging.warning(message)
+            else:
+                logging.info(message)
         except Exception as e:
-            print('Test {}: FAILED'.format(folder))
+            print('Test {}: !FAILED!'.format(folder))
             logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
             raise e

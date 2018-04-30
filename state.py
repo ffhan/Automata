@@ -37,7 +37,7 @@ class StateName(str):
         return hash(self.name)
 
     def __repr__(self):
-        assert isinstance(self.name, str)
+
         return 'n->{}'.format(self.name)
 
 class State:
@@ -71,7 +71,7 @@ class State:
     def add_function(self, end_state, event):
         '''
         Adds a single transition function.
-        :param State end_state: a single state or a list of states
+        :param end_state: a single state or a list of states
         :param event: input value that calls this function
         :return:
         '''
@@ -108,6 +108,14 @@ class State:
                     self.add_function(state, single_value)
         except IndexError:
             raise IndexError('Transition functions have to be defined with a tuple (end state, transition value)!')
+
+    def alias(self, old_state, new_state):
+
+        for event, state in self._transitions.items():
+            if state == old_state:
+                self._transitions[event] += {new_state}
+                self._transitions[event] -= {old_state}
+                print(self, old_state, new_state)
 
     def __repr__(self):
         # result = 'State {} (value {}):\n'.format(self.name, self.value)
@@ -151,21 +159,16 @@ class State:
             side += '{}{}\n'.format(state, trans_value)
         side = result + side[:-1]
 
-        return hash(self.name) + hash(self.value) + hash(side)
-
-    def distinguish(self, other):
-        '''
-        Returns True if states are distinguishable, False if they are not.
-
-        It's not the same as equality (==).
-
-        :param State other: second State
-        :return: distinguishability
-        '''
-
-        return NotImplementedError()
-
+        return hash(self.name) + hash(self.value) + hash(side) + hash(len(self._transitions))
 
     def forward(self, value):
 
         return self._transitions.get(value, set()) # | self._transitions.get(self.epsilon, set())
+
+    def clean_forward(self, value):
+
+        res = self.forward(value)
+
+        if len(res) == 1:
+            return list(res)[0]
+        return res
