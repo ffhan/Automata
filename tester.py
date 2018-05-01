@@ -43,7 +43,7 @@ example:
     python tester --type e_nfa 
 '''
 
-def tester(func):
+def tester(func, comparator = preformat.compare_output):
 
     def wrapper(in_file, out_file):
         def file_to_string(file):
@@ -61,14 +61,18 @@ def tester(func):
 
         out_text = file_to_string(out_file)
 
-        return preformat.compare_output(func(in_text), out_text)
+        return comparator(func(in_text), out_text)
 
     return wrapper
 
 test_e_nfa = tester(preformat.parse_e_nfa) #define E_NFA tester function
+test_dfa_min = tester(preformat.parse_dfa, preformat.compare_encoding)
 
+exec_function = test_e_nfa
 
-
+if test_type == 'DFA_MIN':
+    exec_function = test_dfa_min
+print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
 for root, dirs, files in os.walk(DESTINATION):
     path = root.split(os.sep)
     inp, outp = False, False
@@ -88,7 +92,7 @@ for root, dirs, files in os.walk(DESTINATION):
             break
     if inp and outp:
         try:
-            result = test_e_nfa(root + '\\' + in_file, root + '\\' + test_file)
+            result = exec_function(root + '\\' + in_file, root + '\\' + test_file)
 
             message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
 

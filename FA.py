@@ -55,6 +55,7 @@ class FA(abc.ABC):
     def set_alias(self, state, alias):
         '''
         Stores an alias for a removed State.
+
         :param StateName state: State that has replaced a state
         :param StateName alias: The replaced State
         :return:
@@ -66,11 +67,12 @@ class FA(abc.ABC):
         Find current State associated with a removed State
 
         Returns the same State if it doesn't exist (case when State hasn't been removed from FA.
-        :param StateName alias: Removed State
-        :return State: Current State identical to the old State
-        '''
 
-        return self.alias.get(alias, self.states[alias])
+        :param StateName alias: Removed State
+        :return StateName: Current State identical to the old State
+        '''
+        # print(alias, type(alias))
+        return self.alias.get(alias, alias)
 
     def reset(self):
         self._records.clear()
@@ -80,6 +82,7 @@ class FA(abc.ABC):
 
         '''
         Sanitizes and splits the FIS instructions.
+
         :param str entry: Function instruction string
         :return list: List that contains individual instructions.
         '''
@@ -133,14 +136,15 @@ class FA(abc.ABC):
 
     def _input_error(self, inp):
         '''
-        Defines an input error string
+        Defines an input error string.
+
         :param str inp: value of the input
         :return str: input error string
         '''
 
         return 'Input "{}"'.format(inp) + self.__not_defined_substring()
 
-    def parse_functions_string(self, functions):  # todo: improve string handling, maybe completely remove FIS.
+    def parse_functions_string(self, functions):
         '''
         Parses the functions instruction string and defines transition functions.
 
@@ -177,7 +181,7 @@ class FA(abc.ABC):
         funcs = self.__fis_extract(functions)
 
         functions_added = 0
-        for transition_func in funcs:  # todo: extract FIS parser to a base class (FA) method and pass parsed data to this method.
+        for transition_func in funcs:
             try:
                 # print(transition_func)
                 start_value, end = transition_func.split('->')
@@ -260,6 +264,7 @@ class FA(abc.ABC):
     def __newline(*lines):
         '''
         Returns concatenated string composed of all line arguments with newline added between them.
+
         :param str lines: lines of text that need to be newlined.
         :return: full string composed of individual lines concatenated with newline in-between
         '''
@@ -297,11 +302,23 @@ class FA(abc.ABC):
         ), True)
 
     def __contains_helper(self, item):
+        '''
+        Internal wrapper for states dict getter.
+
+        :param StateName item: State name
+        :return bool: True if State exists
+        '''
         if self.states.get(item, None) is None:
             return False
         return True
 
     def __contains__(self, item):
+        '''
+        Wrapper allowing 'in self' notation.
+
+        :param item: State name
+        :return:
+        '''
         # print(type(item), item)
         if type(item) is str:
             return self.__contains_helper(item)
@@ -336,6 +353,7 @@ class FA(abc.ABC):
     def _access(self, value):
         '''
         A method that handles the individual input passing through FA.
+
         :param value: input
         :return:
         '''
@@ -370,6 +388,7 @@ class FA(abc.ABC):
     def record(self, *entry):
         '''
         See entry method.
+
         :param entry: All entries.
         :return:
         '''
@@ -377,6 +396,12 @@ class FA(abc.ABC):
         return self._records
 
     def output(self, *entry):
+        '''
+        Outputs end state acceptance.
+
+        :param entry: Inputs
+        :return bool: Outputs True if end state is acceptable, False if not
+        '''
         results = self.enter(*entry)
         for result in results:
             if result.value > 0:
@@ -384,4 +409,34 @@ class FA(abc.ABC):
         return False
 
     def distinguish(self):
+        '''
+        Distinguishes identical states from non-identical and updates the automatum.
+        
+        :return: 
+        '''
         raise NotImplementedError()
+
+    def minimize(self):
+        raise NotImplementedError()
+
+    def update_functions(self):
+        '''
+        Updates functions and start state according to changes made in the automatum.
+
+        :return:
+        '''
+
+        result = ''
+
+        for state in sorted(self.states.values()):
+            for event, end_states in state._transitions.items(): #extremely bad code
+                result += '{},{}->'.format(self.get_alias(state.name), event)
+                for end in end_states:
+                    result += '{},'.format(self.get_alias(end))
+                result = result[:-1] + ';'
+
+        # print(result)
+
+        self.start_state = self.get_alias(self.start_state)
+
+        self.functions = result

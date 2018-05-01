@@ -1,7 +1,7 @@
 import FA
 import copy
 
-class DFA(FA.FA): #todo: see if you can utilize class inheritance so that NFA doesn't have to be rewritten.
+class DFA(FA.FA):
     '''
     Deterministic finite automata.
     '''
@@ -22,6 +22,31 @@ class DFA(FA.FA): #todo: see if you can utilize class inheritance so that NFA do
     def _access(self, value):
 
         self.current = self.states[list(self.current.forward(self.type(value)))[0]]
+
+    def _reachable(self, state, visited = set()): #todo: migrate to FA.
+        visited |= {state}
+        for i in self.states[state]._transitions.values():
+            for j in i:
+                if not j in visited:
+                    self._reachable(j, visited)
+
+    def reachable(self):
+
+        visited = set()
+
+        self._reachable(self.start_state, visited)
+
+        states = dict()
+
+        start = set(self.states.copy().values())
+        for state_name in visited:
+
+            states[state_name] = self.states[state_name]
+
+        # print(visited, states)
+        # print(start - set(states.values()), states)
+        self.states = states
+        self.update_functions()
 
     def distinguish(self):
 
@@ -73,12 +98,13 @@ class DFA(FA.FA): #todo: see if you can utilize class inheritance so that NFA do
                 c = s1
                 s1 = s2
                 s2 = c
+            self.set_alias(s1.name, s2.name)
             if not aliases.get(s1, False):
                 aliases[s1] = {s2}
             else:
                 aliases[s1] |= {s2}
 
-        print(aliases)
+        # print(aliases, self.alias)
 
         new_states = self.states.copy()
 
@@ -87,12 +113,25 @@ class DFA(FA.FA): #todo: see if you can utilize class inheritance so that NFA do
                 for al in alias:
                     if my_state == al:
                         # print(al)
-                        new_states.pop(key)
-                        self.set_alias(state, key)
+                        # print("deleted {} that is aliased with {}".format(key, self.get_alias(key)))
+                        if new_states.get(key, False):
+                            new_states.pop(key)
                     else:
-                        new_states[self.get_alias(key).name].alias(al, state)  # todo: neka mijenja sve tranzicije koje spominju alias sa stateom i neka na kraju izbrise state i regenerira functions
+                        my_alias = self.get_alias(key)
+                        # print(new_states, self.alias, self.states, my_alias, type(my_alias), key, type(key), al, type(al), state, type(state))
+                        try:
+                            if new_states.get(my_alias, False):
+                                new_states[my_alias].alias(al.name, state.name)
+                        except Exception as e:
+                            raise e
 
                     # print(state,al,key,my_state,new_states)
         self.states = new_states.copy()
-        print(self.alias)
+        # print(self.alias)
+        self.update_functions()
         return table
+
+    def minimize(self):
+
+        self.reachable()
+        self.distinguish()

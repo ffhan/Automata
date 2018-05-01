@@ -15,6 +15,10 @@ class NFA(FA.FA):
         pass
 
     def reset(self):
+        '''
+        Resets the current State.
+        :return:
+        '''
         super().reset()
         self.current = {self.current}
 

@@ -2,7 +2,8 @@ import collections
 
 class StateName(str):
     '''
-    Wrapper for State name, enables direct object renaming.
+    Wrapper for the State name, enables direct object renaming.
+    Inherits string class, allowing us to treat it as a string.
     '''
 
     def __init__(self, name):
@@ -71,6 +72,7 @@ class State:
     def add_function(self, end_state, event):
         '''
         Adds a single transition function.
+
         :param end_state: a single state or a list of states
         :param event: input value that calls this function
         :return:
@@ -110,7 +112,14 @@ class State:
             raise IndexError('Transition functions have to be defined with a tuple (end state, transition value)!')
 
     def alias(self, old_state, new_state):
+        '''
+        Store alias of obsolete states.
 
+        :param StateName old_state: Obsolete State name
+        :param StateName new_state: name of the State that replaced the old state
+        :return:
+        '''
+        assert isinstance(old_state, StateName) and isinstance(new_state, StateName)
         for event, state in self._transitions.items():
             if state == old_state:
                 self._transitions[event] += {new_state}
@@ -163,9 +172,22 @@ class State:
 
     def forward(self, value):
 
+        '''
+        Pass a value through the automatum and return the end state.
+
+        :param value: input
+        :return set: End State(s)
+        '''
+
         return self._transitions.get(value, set()) # | self._transitions.get(self.epsilon, set())
 
     def clean_forward(self, value):
+        '''
+        Return a single value instead of a set if set length is 1.
+
+        :param value: input
+        :return: End State(s)
+        '''
 
         res = self.forward(value)
 
