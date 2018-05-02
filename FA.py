@@ -60,8 +60,6 @@ class FA(abc.ABC):
         :param StateName alias: The replaced State
         :return:
         '''
-        if state in self.alias.keys():
-            state = self._get_alias(state)
         self.alias[alias] = state
 
     def _get_alias(self, alias):
@@ -75,7 +73,10 @@ class FA(abc.ABC):
         '''
         # print(alias, type(alias))
         assert isinstance(alias, StateName)
-        return self.alias.get(alias, alias)
+        found = self.alias.get(alias, alias)
+        if found in self.alias.keys() and found != alias:
+            found = self._get_alias(found)
+        return found
 
     def reset(self):
         self._records.clear()

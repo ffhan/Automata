@@ -113,6 +113,8 @@ class DFA(FA.FA):
             self.states.pop(old_state)
             old_state = new_state
 
+        # print(self.alias, self.states)
+
         # print(self.alias)
         #
         # for state, alias in aliases.items():
