@@ -6,7 +6,7 @@ class DFA(FA.FA):
     Deterministic finite automata.
     '''
 
-    def check_fis_output(self, funcs_added):
+    def _check_fis_output(self, funcs_added):
         function_check = funcs_added - len(self.states) * len(self.inputs)
         if function_check < 0:
             raise AttributeError('Some transition functions were undefined! Check your function instruction string!')
@@ -14,7 +14,7 @@ class DFA(FA.FA):
             raise AttributeError(
                 'You have defined too many transition functions! DFA has to have a function mapped from each state through each input!')
 
-    def end_state_parser(self, end_state_string):
+    def _end_state_parser(self, end_state_string):
         if end_state_string not in self:
             raise ValueError(self._state_error(end_state_string, '(ending)'))
         return end_state_string
@@ -46,7 +46,7 @@ class DFA(FA.FA):
         # print(visited, states)
         # print(start - set(states.values()), states)
         self.states = states
-        self.update_functions()
+        self._update_functions()
 
     def distinguish(self):
 
@@ -64,6 +64,7 @@ class DFA(FA.FA):
             for j in range(i + 1, len(states)):
                 if states[i].value == states[j].value:
                     table |= {(states[i], states[j])}
+
         added = 1
 
         aliases = dict()
@@ -98,7 +99,7 @@ class DFA(FA.FA):
                 c = s1
                 s1 = s2
                 s2 = c
-            self.set_alias(s1.name, s2.name)
+            self._set_alias(s1.name, s2.name)
             if not aliases.get(s1, False):
                 aliases[s1] = {s2}
             else:
@@ -106,32 +107,40 @@ class DFA(FA.FA):
 
         # print(aliases, self.alias)
 
-        new_states = self.states.copy()
+        # new_states = self.states.copy()
 
-        for state, alias in aliases.items():
-            for key, my_state in self.states.items():
-                for al in alias:
-                    if my_state == al:
-                        # print(al)
-                        # print("deleted {} that is aliased with {}".format(key, self.get_alias(key)))
-                        if new_states.get(key, False):
-                            new_states.pop(key)
-                    else:
-                        my_alias = self.get_alias(key)
-                        # print(new_states, self.alias, self.states, my_alias, type(my_alias), key, type(key), al, type(al), state, type(state))
-                        try:
-                            if new_states.get(my_alias, False):
-                                new_states[my_alias].alias(al.name, state.name)
-                        except Exception as e:
-                            raise e
+        for old_state, new_state in self.alias.items():
+            self.states.pop(old_state)
+            old_state = new_state
 
-                    # print(state,al,key,my_state,new_states)
-        self.states = new_states.copy()
         # print(self.alias)
-        self.update_functions()
+        #
+        # for state, alias in aliases.items():
+        #     for key, my_state in self.states.items():
+        #         for al in alias:
+        #             if my_state == al:
+        #                 # print(al)
+        #                 # print("deleted {} that is aliased with {}".format(key, self.get_alias(key)))
+        #                 if new_states.get(key, False):
+        #                     new_states.pop(key)
+        #             else:
+        #                 my_alias = self._get_alias(key)
+        #                 # print(new_states, self.alias, self.states, my_alias, type(my_alias), key, type(key), al, type(al), state, type(state))
+        #                 try:
+        #                     if new_states.get(my_alias, False):
+        #                         new_states[my_alias].alias(al.name, state.name)
+        #                 except Exception as e:
+        #                     raise e
+        #
+        #             # print(state,al,key,my_state,new_states)
+        # self.states = new_states.copy()
+        # print(self.alias)
+        self._update_functions()
         return table
 
     def minimize(self):
 
         self.reachable()
+        # print(self)
         self.distinguish()
+        # print(self)

@@ -10,7 +10,7 @@ class NFA(FA.FA):
 
         self.current = {self.current} #NFA holds current states in a set
 
-    def check_fis_output(self, funcs_added):
+    def _check_fis_output(self, funcs_added):
         #does nothing for NFA.
         pass
 
@@ -22,7 +22,7 @@ class NFA(FA.FA):
         super().reset()
         self.current = {self.current}
 
-    def end_state_parser(self, end_state_string):
+    def _end_state_parser(self, end_state_string):
         '''
         Parses end states.
 

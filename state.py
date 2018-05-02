@@ -1,14 +1,28 @@
 import collections
 
-class StateName(str):
+class StateName:
     '''
     Wrapper for the State name, enables direct object renaming.
     Inherits string class, allowing us to treat it as a string.
     '''
 
     def __init__(self, name):
-        super().__init__()
+        #super().__init__()
         self.name = name
+		
+    def __add__(self, other):
+        if isinstance(other, str):
+            return self.name + other
+        return self.name + other.name
+
+    def __iadd__(self, other):
+
+        return self.__add__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, str):
+            return self.name < other
+        return self.name < other.name
 
     @property
     def name(self):
@@ -39,7 +53,7 @@ class StateName(str):
 
     def __repr__(self):
 
-        return 'n->{}'.format(self.name)
+        return self.name
 
 class State:
     def __init__(self, name, value, epsilon = '$', **rules):

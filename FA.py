@@ -50,9 +50,9 @@ class FA(abc.ABC):
 
         self.alias = dict()
 
-        self.parse_functions_string(functions)
+        self._parse_functions_string(functions)
 
-    def set_alias(self, state, alias):
+    def _set_alias(self, state, alias):
         '''
         Stores an alias for a removed State.
 
@@ -60,9 +60,11 @@ class FA(abc.ABC):
         :param StateName alias: The replaced State
         :return:
         '''
+        if state in self.alias.keys():
+            state = self._get_alias(state)
         self.alias[alias] = state
 
-    def get_alias(self, alias):
+    def _get_alias(self, alias):
         '''
         Find current State associated with a removed State
 
@@ -72,6 +74,7 @@ class FA(abc.ABC):
         :return StateName: Current State identical to the old State
         '''
         # print(alias, type(alias))
+        assert isinstance(alias, StateName)
         return self.alias.get(alias, alias)
 
     def reset(self):
@@ -97,7 +100,7 @@ class FA(abc.ABC):
         return funcs
 
     @abc.abstractmethod
-    def end_state_parser(self, end_state_string):
+    def _end_state_parser(self, end_state_string):
         '''
         Defines how an end state string is going to be fed to the FA.
 
@@ -144,7 +147,7 @@ class FA(abc.ABC):
 
         return 'Input "{}"'.format(inp) + self.__not_defined_substring()
 
-    def parse_functions_string(self, functions):
+    def _parse_functions_string(self, functions):
         '''
         Parses the functions instruction string and defines transition functions.
 
@@ -189,7 +192,7 @@ class FA(abc.ABC):
                 if end == '#':
                     continue
 
-                end = self._prepare_end_states(self.end_state_parser(end))  # parsing the end state(s).
+                end = self._prepare_end_states(self._end_state_parser(end))  # parsing the end state(s).
 
                 # print("created", start, value, end)
 
@@ -213,7 +216,7 @@ class FA(abc.ABC):
 
             # print("done")
 
-        self.check_fis_output(functions_added)
+        self._check_fis_output(functions_added)
 
     def _prepare_end_states(self, end):
         """
@@ -236,7 +239,7 @@ class FA(abc.ABC):
         return end
 
     @abc.abstractmethod
-    def check_fis_output(self, funcs_added):
+    def _check_fis_output(self, funcs_added):
         '''
         Checks if successfully parsed FA is indeed correct. Raises a suitable error if something is not right.
 
@@ -280,7 +283,8 @@ class FA(abc.ABC):
         for state, state_object in self.states.items():
             states += state + ','
             if state_object.value:
-                final += state
+                print(final, state)
+                final += state.name
 
         final = 'F=' + self.__wrap_in_braces(final)
 
@@ -295,7 +299,7 @@ class FA(abc.ABC):
 
         funcs = u'\u03B4=' + self.__wrap_in_braces(self.functions)
 
-        start = 'q0=' + self.start_state
+        start = 'q0=' + self.start_state.name
 
         return '{} '.format(self.__class__.__name__) + self.__wrap_in_braces(self.__tab(
             self.__newline(states, inputs, funcs, start, final)
@@ -419,7 +423,7 @@ class FA(abc.ABC):
     def minimize(self):
         raise NotImplementedError()
 
-    def update_functions(self):
+    def _update_functions(self):
         '''
         Updates functions and start state according to changes made in the automatum.
 
@@ -430,13 +434,13 @@ class FA(abc.ABC):
 
         for state in sorted(self.states.values()):
             for event, end_states in state._transitions.items(): #extremely bad code
-                result += '{},{}->'.format(self.get_alias(state.name), event)
+                result += '{},{}->'.format(self._get_alias(state.name), event)
                 for end in end_states:
-                    result += '{},'.format(self.get_alias(end))
+                    result += '{},'.format(self._get_alias(end))
                 result = result[:-1] + ';'
 
         # print(result)
 
-        self.start_state = self.get_alias(self.start_state)
+        self.start_state = self._get_alias(self.start_state)
 
         self.functions = result

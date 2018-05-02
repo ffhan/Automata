@@ -121,7 +121,7 @@ def encode(automat):
     result += str(start_state)
     result += general_it(sorted(functions.split(';')), '\n')[:-1]
 
-    return result.strip().strip('\n')
+    return result.strip().strip('\n').strip()
 
 def encode_minimized_dfa(text):
 
@@ -156,7 +156,7 @@ def compare_output(records, test_output):
 
 def compare_encoding(fa, test_output):
     # print(encode(fa))
-    return encode(fa) == test_output
+    return encode(fa).strip() == test_output.strip().strip('\n').strip()
 
 def print_encoding(fa):
     print(encode(fa))
