@@ -125,21 +125,6 @@ class State:
         except IndexError:
             raise IndexError('Transition functions have to be defined with a tuple (end state, transition value)!')
 
-    def alias(self, old_state, new_state):
-        '''
-        Store alias of obsolete states.
-
-        :param StateName old_state: Obsolete State name
-        :param StateName new_state: name of the State that replaced the old state
-        :return:
-        '''
-        assert isinstance(old_state, StateName) and isinstance(new_state, StateName)
-        for event, state in self._transitions.items():
-            if state == old_state:
-                self._transitions[event] += {new_state}
-                self._transitions[event] -= {old_state}
-                print(self, old_state, new_state)
-
     def __repr__(self):
         # result = 'State {} (value {}):\n'.format(self.name, self.value)
         # side = ''

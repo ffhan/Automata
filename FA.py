@@ -9,7 +9,7 @@ class FA(abc.ABC):
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     '''
 
-    def __init__(self, states, inputs, functions, start_state, final_states, in_type=str):
+    def __init__(self, states, inputs, functions, start_state, final_states, in_type=str): #todo: bridge for parsing functional strings.
         '''
         Initialises a finite state automata.
 
