@@ -76,6 +76,16 @@ class State:
         if len(rules) > 0:
             self.add_functions(**rules)
 
+    @property
+    def reach(self):
+
+        return list(self._transitions.values())
+
+    @property
+    def transitions(self):
+
+        return list(self._transitions.items())
+
     @staticmethod
     def __clean(value):
 
@@ -156,7 +166,7 @@ class State:
         if not isinstance(other, self.__class__):
             return False
 
-        if other.name == self.name:
+        if other.name == self.name and other.value == self.value and other._transitions == self._transitions:
             return True
         return False
 

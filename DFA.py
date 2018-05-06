@@ -86,7 +86,7 @@ class DFA(FA.FA):
                 s2 = c
             self._set_alias(s1.name, s2.name)
 
-        for old_state, new_state in self.alias.items():
+        for old_state, new_state in self._alias.items():
             self.states.pop(old_state)
             old_state = new_state
 

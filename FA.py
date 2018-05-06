@@ -21,21 +21,22 @@ class FA(abc.ABC):
         :param in_type: input type (string or int)
         '''
 
-        self.states = dict()
-        self.inputs = set()
-        self.functions = ''
+        self.states = dict() #todo: use property instead. Ensures that keys are of StateName type and values States. Also forbids breaking encapsulation.
+        self.inputs = set() #todo: use property
+        self.functions = '' #todo: get rid of direct string representation. Use property instead.
         # I deliberately include functions although they are not defined in FA class so that __repr__ can be written
         # only in the base class.
 
-        self.type = in_type
+        #only strings should probably be used.
+        self.type = in_type # todo: build tests for types. I assume type casting isn't stable enough to be used efficiently.
 
         self._records = []
 
         for one_input in inputs:
             self.inputs |= {self.type(one_input)}
 
-        for state in states:
-            new_state = State(state, 1 if state in final_states else 0)
+        for state in states: # todo: create Parser that parses a specific format and then calls up an abstract factory of FAs'.
+            new_state = State(state, 1 if state in final_states else 0) # todo: avoid direct State creation. It should be done beforehand.
             if state == start_state: #making sure start state is of StateName type
                 start_state = new_state.name
             self.states[new_state.name] = new_state
@@ -44,41 +45,62 @@ class FA(abc.ABC):
             self.start_state = start_state
             self.current = self.states[start_state]
         else:
-            raise ValueError('State {} not defined in this automata.'.format(start_state))
+            raise ValueError('State {} not defined in this automaton.'.format(start_state))
 
         assert isinstance(self.start_state, StateName)
 
-        self.alias = dict()
+        self._alias = dict() # used to ensure backwards compatibility after FA minimization.
 
-        self._parse_functions_string(functions)
+        self._parse_functions_string(functions) #todo: migrate to Parser class.
+
+    @property
+    def accepted_states(self):
+        """
+        Returns states that contain value different than 0.
+
+        :return: Accepted States
+        """
+        final = set()
+
+        for name, state in self.states.items():
+
+            if state.value:
+                final.add(state)
+
+        return final
 
     def _set_alias(self, state, alias):
-        '''
+        """
         Stores an alias for a removed State.
 
         :param StateName state: State that has replaced a state
         :param StateName alias: The replaced State
         :return:
-        '''
-        self.alias[alias] = state
+        """
+        self._alias[alias] = state
 
     def _get_alias(self, alias):
-        '''
-        Find current State associated with a removed State
+        """
+        Find current State associated with a removed State.
 
         Returns the same State if it doesn't exist (case when State hasn't been removed from FA.
 
         :param StateName alias: Removed State
         :return StateName: Current State identical to the old State
-        '''
+        """
         # print(alias, type(alias))
         assert isinstance(alias, StateName)
-        found = self.alias.get(alias, alias)
-        if found in self.alias.keys() and found != alias:
+        found = self._alias.get(alias, alias)
+        if found in self._alias.keys() and found != alias:
             found = self._get_alias(found)
         return found
 
     def reset(self):
+        """
+        Resets the current FA state and clears step records.
+
+        :return:
+        """
         self._records.clear()
         self.current = self.states[self.start_state]
 
