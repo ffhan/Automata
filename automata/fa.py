@@ -1,16 +1,16 @@
-from state import State, StateName
+from automata.state import State, StateName
 import abc, re, collections
 
 
-class FA(abc.ABC):
-    '''
+class FiniteAutomaton(abc.ABC):
+    """
     Finite automata base abstract class. It isn't aware of transition functions.
 
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
-    '''
+    """
 
     def __init__(self, states, inputs, functions, start_state, final_states, in_type=str): #todo: bridge for parsing functional strings.
-        '''
+        """
         Initialises a finite state automata.
 
         :param states: set of all possible states
@@ -19,7 +19,7 @@ class FA(abc.ABC):
         :param start_state: single starting state
         :param final_states: set of all possible final (accepting) states
         :param in_type: input type (string or int)
-        '''
+        """
 
         self.states = dict() #todo: use property instead. Ensures that keys are of StateName type and values States. Also forbids breaking encapsulation.
         self.inputs = set() #todo: use property
@@ -106,12 +106,12 @@ class FA(abc.ABC):
 
     def __fis_extract(self, entry):
 
-        '''
+        """
         Sanitizes and splits the FIS instructions.
 
         :param str entry: Function instruction string
         :return list: List that contains individual instructions.
-        '''
+        """
 
         funcs = re.sub(r"[\n\t *]", '', entry)
         self.functions = funcs
@@ -124,27 +124,27 @@ class FA(abc.ABC):
 
     @abc.abstractmethod
     def _end_state_parser(self, end_state_string):
-        '''
+        """
         Defines how an end state string is going to be fed to the FA.
 
         For example DFA returns exclusively one value, not of an iterable type, while NFA returns an iterable.
 
         :param str end_state_string: Function instruction string
         :return: End state(s) for a particular FIS
-        '''
+        """
         pass
 
     def __not_defined_substring(self):
-        '''
+        """
         Method used to follow DRY principle in error reporting. May be moved to custom Error classes.
 
         :return str: Returns 'is not defined in this "name of the class"' string for an error.
-        '''
+        """
 
         return ' is not defined in this {}.'.format(type(self).__name__)
 
     def _state_error(self, state, prefix=''):
-        '''
+        """
         Returns a default error string with a possible prefix.
 
         Example:
@@ -155,23 +155,23 @@ class FA(abc.ABC):
         :param str state: state name
         :param str prefix: Possible beginning of the error.
         :return str: state error string
-        '''
+        """
 
         return '{}{}tate "{}"'.format(prefix, 'S' if prefix == '' else ' s', state,
                                       type(self).__name__) + self.__not_defined_substring()
 
     def _input_error(self, inp):
-        '''
+        """
         Defines an input error string.
 
         :param str inp: value of the input
         :return str: input error string
-        '''
+        """
 
         return 'Input "{}"'.format(inp) + self.__not_defined_substring()
 
     def _parse_functions_string(self, functions):
-        '''
+        """
         Parses the functions instruction string and defines transition functions.
 
         Each expression of functions string has to be escaped with ; symbol.
@@ -202,7 +202,7 @@ class FA(abc.ABC):
 
         :param str functions: A string defining transition functions for DFA
         :return:
-        '''
+        """
 
         funcs = self.__fis_extract(functions)
 
@@ -228,12 +228,12 @@ class FA(abc.ABC):
                 raise ValueError(self._state_error(end, '(starting)'))
             if value not in self.inputs:
                 raise ValueError(self._input_error(value))
-            '''
+            """
             excluded because this part is handled in the end_state_parser
 
             if end not in self:
                 raise ValueError(self.__state_error(end, '(ending)'))
-            '''
+            """
             self.states[start].add_function({e.name for e in end}, value)
             functions_added += 1
 
@@ -263,12 +263,12 @@ class FA(abc.ABC):
 
     @abc.abstractmethod
     def _check_fis_output(self, funcs_added):
-        '''
+        """
         Checks if successfully parsed FA is indeed correct. Raises a suitable error if something is not right.
 
         :param int funcs_added: how many functions were added.
         :return:
-        '''
+        """
         pass
 
     @staticmethod
@@ -288,12 +288,12 @@ class FA(abc.ABC):
 
     @staticmethod
     def __newline(*lines):
-        '''
+        """
         Returns concatenated string composed of all line arguments with newline added between them.
 
         :param str lines: lines of text that need to be newlined.
         :return: full string composed of individual lines concatenated with newline in-between
-        '''
+        """
         res = '\n'
         for line in lines:
             res += line + '\n'
@@ -329,23 +329,23 @@ class FA(abc.ABC):
         ), True)
 
     def __contains_helper(self, item):
-        '''
+        """
         Internal wrapper for states dict getter.
 
         :param StateName item: State name
         :return bool: True if State exists
-        '''
+        """
         if self.states.get(item, None) is None:
             return False
         return True
 
     def __contains__(self, item):
-        '''
+        """
         Wrapper allowing 'in self' notation.
 
         :param item: State name
         :return:
-        '''
+        """
         # print(type(item), item)
         if type(item) is str:
             return self.__contains_helper(item)
@@ -357,13 +357,13 @@ class FA(abc.ABC):
             return False
 
     def _process(self, *entry):
-        '''
+        """
         Processes the entry arguments.
 
         :param entry: entries that have to be handled.
         :param processor: A function that can output steps in computation.
         :return:
-        '''
+        """
         # for inp in entry:
         #     if isinstance(inp, collections.Iterable):
         #         for i in inp:
@@ -378,16 +378,16 @@ class FA(abc.ABC):
 
     @abc.abstractmethod
     def _access(self, value):
-        '''
+        """
         A method that handles the individual input passing through FA.
 
         :param value: input
         :return:
-        '''
+        """
         pass
 
     def enter(self, *entry):  # I don't want to define the way inputs are passed through automata
-        '''
+        """
         Reads all inputs from entry and puts them through the FA.
         It's extremely important to specify the correct in_type when initialising.
         For example, creating a finite automata with in type integer (in_type=int) means that any string input '101' will be
@@ -408,27 +408,27 @@ class FA(abc.ABC):
 
         :param entry: All entries.
         :return: result states
-        '''
+        """
         self._process(*entry)
         return self.current
 
     def record(self, *entry):
-        '''
+        """
         See entry method.
 
         :param entry: All entries.
         :return:
-        '''
+        """
         self._process(*entry)
         return self._records
 
     def output(self, *entry):
-        '''
+        """
         Outputs end state acceptance.
 
         :param entry: Inputs
         :return bool: Outputs True if end state is acceptable, False if not
-        '''
+        """
         results = self.enter(*entry)
         for result in results:
             if result.value > 0:
@@ -436,22 +436,22 @@ class FA(abc.ABC):
         return False
 
     def distinguish(self):
-        '''
+        """
         Distinguishes identical states from non-identical and updates the automatum.
         
         :return: 
-        '''
+        """
         raise NotImplementedError()
 
     def minimize(self):
         raise NotImplementedError()
 
     def _update_functions(self):
-        '''
+        """
         Updates functions and start state according to changes made in the automatum.
 
         :return:
-        '''
+        """
 
         result = ''
 

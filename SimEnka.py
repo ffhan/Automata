@@ -1,5 +1,5 @@
 import sys
-import preformat
+from format import preformat
 
 inp = sys.stdin.readlines()
 

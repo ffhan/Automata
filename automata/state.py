@@ -8,16 +8,24 @@ class StateName:
 
     def __init__(self, name):
         #super().__init__()
+        self._name = ''
         self.name = name
 		
     def __add__(self, other):
+        """
+        Concatenates a string or other State name.
+
+        :param other: State name (StateName or string)
+        :return str: Concatenated name
+        """
         if isinstance(other, str):
             return self.name + other
-        return self.name + other.name
+        return self.__add__(other.name)
 
     def __iadd__(self, other):
 
-        return self.__add__(other)
+        self.name = self.__add__(other)
+        return self
 
     def __lt__(self, other):
         if isinstance(other, str):
@@ -56,7 +64,7 @@ class StateName:
         return self.name
 
 class State:
-    def __init__(self, name, value, epsilon = '$', **rules):
+    def __init__(self, name, value, epsilon = '$'):
         '''
         Initialises an automata state.
 
@@ -73,8 +81,14 @@ class State:
 
         self.epsilon = epsilon
 
-        if len(rules) > 0:
-            self.add_functions(**rules)
+    @property
+    def accepted(self):
+        """
+        Returns if a State is accepted.
+
+        :return: True if accepted, False if not.
+        """
+        return bool(self.value)
 
     @property
     def reach(self):
@@ -111,29 +125,6 @@ class State:
                     self._transitions[ev] = {state}
                 else:
                     self._transitions[ev] |= {state}
-
-
-    def add_functions(self, **rules):
-        '''
-        Adds multiple transition functions.
-
-        Example:
-            d = State(...)
-            d.add_functions(q1=4, q2=5, q3={2,3})
-            ...
-
-        :param rules: transition functions pairs state=value or values
-        :return:
-        '''
-
-        try:
-            for state, value in rules.items():
-                value = self.__clean(value)
-                state = self.__clean(state)
-                for single_value in value:
-                    self.add_function(state, single_value)
-        except IndexError:
-            raise IndexError('Transition functions have to be defined with a tuple (end state, transition value)!')
 
     def __repr__(self):
         # result = 'State {} (value {}):\n'.format(self.name, self.value)

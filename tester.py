@@ -1,6 +1,6 @@
 import os
 import argparse
-import preformat
+from format import preformat
 import logging
 import datetime
 

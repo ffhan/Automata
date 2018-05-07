@@ -1,9 +1,16 @@
-from NFA import E_NFA, NFA
-from DFA import DFA
+from automata.nfa import E_NFA
+from automata.dfa import Deterministic
 
 '''
 Preformatting scripts, an endpoint between FA system and outer format connections. 
 '''
+
+"""
+todo: create an abstract parser class that defines the interface that all its' children are going to follow.
+Parser is going have bunch of properties (states, inputs, start_state, etc.).
+
+Create a FA_Factory class that takes output from a specific Parser and creates a suitable FA.
+"""
 
 def create_function_string(newline = False, **rules):
     '''
@@ -66,7 +73,7 @@ def parse_dfa(string):
     waste, states, inputs, final, start, functions= general_parse('\n' + string)
     # print(waste, states, inputs, final, start, functions)
     # print(states,inputs,final,start,functions,waste)
-    dfa = DFA(states,inputs,functions,start,final)
+    dfa = Deterministic(states, inputs, functions, start, final)
 
     dfa.minimize()
 
