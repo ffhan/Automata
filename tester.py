@@ -72,37 +72,42 @@ exec_function = test_e_nfa
 
 if test_type == 'DFA_MIN':
     exec_function = test_dfa_min
-print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
-for root, dirs, files in os.walk(DESTINATION):
-    path = root.split(os.sep)
-    inp, outp = False, False
 
-    folder = os.path.basename(root)
+def execute_test(destination, input_format, test_format):
+    for root, dirs, files in os.walk(DESTINATION):
+        path = root.split(os.sep)
+        inp, outp = False, False
 
-    # print((len(path) - 1) * '---', os.path.basename(root))
-    for file in files:
-        if file.endswith(INPUT_FORMAT):
-            in_file = file
-            inp = True
-        elif file.endswith(TEST_FORMAT):
-            test_file = file
-            outp = True
+        folder = os.path.basename(root)
 
+        # print((len(path) - 1) * '---', os.path.basename(root))
+        for file in files:
+            if file.endswith(INPUT_FORMAT):
+                in_file = file
+                inp = True
+            elif file.endswith(TEST_FORMAT):
+                test_file = file
+                outp = True
+
+            if inp and outp:
+                break
         if inp and outp:
-            break
-    if inp and outp:
-        try:
-            result = exec_function(root + '\\' + in_file, root + '\\' + test_file)
+            try:
+                result = exec_function(root + '\\' + in_file, root + '\\' + test_file)
 
-            message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
+                message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
 
-            print(message)
+                print(message)
 
-            if not result:
-                logging.warning(message)
-            else:
-                logging.info(message)
-        except Exception as e:
-            print('Test {}: !FAILED!'.format(folder))
-            logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
-            raise e
+                if not result:
+                    logging.warning(message)
+                else:
+                    logging.info(message)
+            except Exception as e:
+                print('Test {}: !FAILED!'.format(folder))
+                logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
+                raise e
+
+if __name__ == '__main__':
+    print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
+    execute_test(DESTINATION, INPUT_FORMAT, TEST_FORMAT)

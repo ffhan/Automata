@@ -86,9 +86,9 @@ class TestState(unittest.TestCase):
 
     def test_reach(self):
 
-        self.assertEqual(self.s1.reach, {self.s1, self.s2})
-        self.assertEqual(self.s2.reach, {self.s2, self.s3})
-        self.assertEqual(self.s3.reach, {self.s1, self.s3})
+        self.assertEqual(self.s1.direct_reach, {self.s1, self.s2})
+        self.assertEqual(self.s2.direct_reach, {self.s2, self.s3})
+        self.assertEqual(self.s3.direct_reach, {self.s1, self.s3})
 
     def test_lt(self):
 

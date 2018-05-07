@@ -9,46 +9,47 @@ class FiniteAutomaton(abc.ABC):
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     """
 
-    def __init__(self, states, inputs, functions, start_state, final_states): #todo: bridge for parsing functional strings.
+    def __init__(self, states, inputs, start_state):
         """
         Initialises a finite state automata.
 
         :param states: set of all possible states
         :param inputs: set of all possible inputs
-        :param str functions: Function instruction string.
         :param start_state: single starting state
-        :param final_states: set of all possible final (accepting) states
-        :param in_type: input type (string or int)
         """
 
-        self.states = dict() #todo: use property instead. Ensures that keys are of StateName type and values States. Also forbids breaking encapsulation.
-        self.inputs = set() #todo: use property
-        self.functions = '' #todo: get rid of direct string representation. Use property instead.
+        self.states = states
+
+        self.inputs = set(inputs)
         # I deliberately include functions although they are not defined in FA class so that __repr__ can be written
         # only in the base class.
 
-        self._records = []
+        self.records = []
 
-        for one_input in inputs:
-            self.inputs |= {one_input}
-
-        for state in states: # todo: create Parser that parses a specific format and then calls up an abstract factory of FAs'.
-            new_state = State(state, 1 if state in final_states else 0) # todo: avoid direct State creation. It should be done beforehand.
-            if state == start_state: #making sure start state is of StateName type
-                start_state = new_state.name
-            self.states[new_state.name] = new_state
-
-        if self.states.get(start_state, 0):
+        if self.states.get(start_state.name, 0):
             self.start_state = start_state
-            self.current = {self.states[start_state]}
+            self.current = {start_state}
         else:
-            raise ValueError('State {} not defined in this automaton.'.format(start_state))
+            raise ValueError(self._state_error(start_state.name))
 
-        assert isinstance(self.start_state, StateName)
+        for name, state in self.states.items():
+            assert isinstance(name, StateName)
+            assert isinstance(state, State)
+
+        assert isinstance(start_state, State)
+
+        self._check_structure()
 
         self._alias = dict() # used to ensure backwards compatibility after FA minimization.
 
-        self._parse_functions_string(functions) #todo: migrate to Parser class.
+    @abc.abstractmethod
+    def _check_structure(self):
+        """
+        Checks if inner structure is correct. Raises a ValueError if not correct.
+
+        :return:
+        """
+        pass
 
     @property
     def accepted_states(self):
@@ -59,9 +60,9 @@ class FiniteAutomaton(abc.ABC):
         """
         final = set()
 
-        for name, state in self.states.items():
+        for state in self.states.values():
 
-            if state.value:
+            if state.accepted:
                 final.add(state)
 
         return final
@@ -92,46 +93,28 @@ class FiniteAutomaton(abc.ABC):
             found = self._get_alias(found)
         return found
 
+    def reachable(self):
+
+        visited = self.start_state.indirect_reach
+
+        states = dict()
+
+        for state in visited:
+
+            states[state.name] = state
+
+        self.states = states
+
     def reset(self):
         """
         Resets the current FA state and clears step records.
 
         :return:
         """
-        self._records.clear()
-        self.current = self.states[self.start_state]
+        self.records.clear()
+        self.current = {self.start_state}
 
-    def __fis_extract(self, entry):
-
-        """
-        Sanitizes and splits the FIS instructions.
-
-        :param str entry: Function instruction string
-        :return list: List that contains individual instructions.
-        """
-
-        funcs = re.sub(r"[\n\t *]", '', entry)
-        self.functions = funcs
-        try:
-            funcs = funcs.split(';')
-        except AttributeError:
-            raise AttributeError('Invalid function instruction string. Check your function string.')
-
-        return funcs
-
-    @abc.abstractmethod
-    def _end_state_parser(self, end_state_string):
-        """
-        Defines how an end state string is going to be fed to the FA.
-
-        For example DFA returns exclusively one value, not of an iterable type, while NFA returns an iterable.
-
-        :param str end_state_string: Function instruction string
-        :return: End state(s) for a particular FIS
-        """
-        pass
-
-    def __not_defined_substring(self):
+    def _not_defined_substring(self):
         """
         Method used to follow DRY principle in error reporting. May be moved to custom Error classes.
 
@@ -155,7 +138,7 @@ class FiniteAutomaton(abc.ABC):
         """
 
         return '{}{}tate "{}"'.format(prefix, 'S' if prefix == '' else ' s', state,
-                                      type(self).__name__) + self.__not_defined_substring()
+                                      type(self).__name__) + self._not_defined_substring()
 
     def _input_error(self, inp):
         """
@@ -165,164 +148,58 @@ class FiniteAutomaton(abc.ABC):
         :return str: input error string
         """
 
-        return 'Input "{}"'.format(inp) + self.__not_defined_substring()
-
-    def _parse_functions_string(self, functions):
-        """
-        Parses the functions instruction string and defines transition functions.
-
-        Each expression of functions string has to be escaped with ; symbol.
-        Example: func1;func2;...
-
-        It is advisable to use multiple line string to separate individual transition functions.
-        Example:
-            func1;
-            func2;
-            func3;
-
-        Each expression is composed of 3 parts:
-            start_state:transition_value->end_state(s)
-
-        Example:
-            q0,1->q1
-
-        Multiple end states are separated by a comma. (forbidden in a DFA.)
-
-        Example:
-            q0,1->q1,q2
-
-        Example of the whole notation system:
-            q0,0->q0;
-            q0,1->q1,q0;
-            q1,0->q1;
-            q1,1->q1
-
-        :param str functions: A string defining transition functions for DFA
-        :return:
-        """
-
-        funcs = self.__fis_extract(functions)
-
-        functions_added = 0
-        for transition_func in funcs:
-            try:
-                # print(transition_func)
-                start_value, end = transition_func.split('->')
-                start, value = start_value.split(',')
-                if end == '#':
-                    continue
-
-                end = self._prepare_end_states(self._end_state_parser(end))  # parsing the end state(s).
-
-                # print("created", start, value, end)
-
-            except (AttributeError, ValueError) as error:
-                raise type(error)('Invalid function instruction string at line {}. Check your function string.'.format(functions_added + 1))
-
-            value = value.strip('"').strip("'")  # sanitizing input, removing braces
-
-            if start not in self:
-                raise ValueError(self._state_error(end, '(starting)'))
-            if value not in self.inputs:
-                raise ValueError(self._input_error(value))
-            """
-            excluded because this part is handled in the end_state_parser
-
-            if end not in self:
-                raise ValueError(self.__state_error(end, '(ending)'))
-            """
-            self.states[start].add_function({e.name for e in end}, value)
-            functions_added += 1
-
-            # print("done")
-
-        self._check_fis_output(functions_added)
-
-    def _prepare_end_states(self, end):
-        """
-        Turns the name of a state (from string) to a State object.
-
-        :param end: end States
-        :return: set of State objects
-        """
-
-        if isinstance(end, collections.Iterable) and not isinstance(end, str):
-            for i in range(len(end)):
-                end[i] = self.states[end[i]]
-        elif isinstance(end, str):
-            end = [self.states[end]]
-        elif isinstance(end, State):
-            pass
-        else:
-            raise TypeError('Type {} is not accepted as end type!'.format(end.__class__.__name__))
-
-        return end
-
-    @abc.abstractmethod
-    def _check_fis_output(self, funcs_added):
-        """
-        Checks if successfully parsed FA is indeed correct. Raises a suitable error if something is not right.
-
-        :param int funcs_added: how many functions were added.
-        :return:
-        """
-        pass
-
-    @staticmethod
-    def __wrap_in_braces(string, last_brace_newline=False):
-        return '{' + string + ('\n}' if last_brace_newline else '}')
-
-    @staticmethod
-    def __tab(string):
-        return '\t' + string.replace('\n', '\n\t')
-
-    @staticmethod
-    def __space(*strings):
-        result = ''
-        for s in strings:
-            result += s + ' '
-        return result[:-1]
-
-    @staticmethod
-    def __newline(*lines):
-        """
-        Returns concatenated string composed of all line arguments with newline added between them.
-
-        :param str lines: lines of text that need to be newlined.
-        :return: full string composed of individual lines concatenated with newline in-between
-        """
-        res = '\n'
-        for line in lines:
-            res += line + '\n'
-        return res[:-1]
+        return 'Input "{}"'.format(inp) + self._not_defined_substring()
 
     def __repr__(self):
+        def wrap_in_braces(string, last_brace_newline=False):
+            return '{' + string + ('\n}' if last_brace_newline else '}')
+
+        def tab(string):
+            return '\t' + string.replace('\n', '\n\t')
+
+        def space(*strings):
+            result = ''
+            for s in strings:
+                result += s + ' '
+            return result[:-1]
+
+        def newline(*lines):
+            """
+            Returns concatenated string composed of all line arguments with newline added between them.
+
+            :param str lines: lines of text that need to be newlined.
+            :return: full string composed of individual lines concatenated with newline in-between
+            """
+            res = '\n'
+            for line in lines:
+                res += line + '\n'
+            return res[:-1]
         states = ''
         final = ''
 
         for state, state_object in self.states.items():
             states += state + ','
             if state_object.value:
-                print(final, state)
+                # print(final, state)
                 final += state.name
 
-        final = 'F=' + self.__wrap_in_braces(final)
+        final = 'F=' + wrap_in_braces(final)
 
-        states = 'Q=' + self.__wrap_in_braces(states[:-1])
+        states = 'Q=' + wrap_in_braces(states[:-1])
 
         inputs = ''
 
         for inp in self.inputs:
             inputs += str(inp) + ','
 
-        inputs = u'\u03A3=' + self.__wrap_in_braces(inputs[:-1])
+        inputs = u'\u03A3=' + wrap_in_braces(inputs[:-1])
 
-        funcs = u'\u03B4=' + self.__wrap_in_braces(self.functions)
+        funcs = u'\u03B4=' + wrap_in_braces(self.functions)
 
         start = 'q0=' + self.start_state.name
 
-        return '{} '.format(self.__class__.__name__) + self.__wrap_in_braces(self.__tab(
-            self.__newline(states, inputs, funcs, start, final)
+        return '{} '.format(self.__class__.__name__) + wrap_in_braces(tab(
+            newline(states, inputs, funcs, start, final)
         ), True)
 
     def __contains_helper(self, item):
@@ -332,7 +209,7 @@ class FiniteAutomaton(abc.ABC):
         :param StateName item: State name
         :return bool: True if State exists
         """
-        if self.states.get(item, None) is None:
+        if not self.states.get(item, False):
             return False
         return True
 
@@ -343,17 +220,15 @@ class FiniteAutomaton(abc.ABC):
         :param item: State name
         :return:
         """
-        # print(type(item), item)
-        if type(item) is str:
+        assert not isinstance(item, str)
+        if isinstance(item, StateName):
             return self.__contains_helper(item)
-        elif type(item) is StateName:
-            return self.__contains_helper(item)
-        elif type(item) is State:
+        elif isinstance(item, State):
             return self.__contains_helper(item.name)
         else:
             return False
 
-    def _process(self, *entry):
+    def _process(self, *entry): #exists to precisely define how entries are handled. Enter is just interface endpoint
         """
         Processes the entry arguments.
 
@@ -367,11 +242,11 @@ class FiniteAutomaton(abc.ABC):
         #             self._access(i)
         #     else:
         #         self._access(inp)
-        self._records.clear()
-        self._records.append(self.current.copy())
+        self.records.clear()
+        self.records.append(self.current)
         for inp in entry:
             self._access(inp)
-            self._records.append(self.current.copy())
+            self.records.append(self.current)
 
     @abc.abstractmethod
     def _access(self, value):
@@ -383,25 +258,9 @@ class FiniteAutomaton(abc.ABC):
         """
         pass
 
-    def enter(self, *entry):  # I don't want to define the way inputs are passed through automata
+    def enter(self, *entry):
         """
         Reads all inputs from entry and puts them through the FA.
-        It's extremely important to specify the correct in_type when initialising.
-        For example, creating a finite automata with in type integer (in_type=int) means that any string input '101' will be
-        turned into 101 and therefore will not be segmented.
-
-        Entry itself doesn't have to be a singular value. If you opted for string as input type you can easily put everything into one string.
-
-        Example:
-            a = NFA(......,in_type = int)
-            a.enter(101, 123, 34)
-            a.enter('101') #'101' will be turned into a number 101.
-
-            b = NFA(.......,in_type=str)
-            b.enter(101, 124) # all numbers will be turned into strings and processed symbol by symbol (1,0,1,...)
-            b.enter("example", 123)
-
-            b.enter("example", lambda t : print(t))
 
         :param entry: All entries.
         :return: result states
@@ -417,7 +276,7 @@ class FiniteAutomaton(abc.ABC):
         :return:
         """
         self._process(*entry)
-        return self._records
+        return self.records
 
     def output(self, *entry):
         """
@@ -443,7 +302,8 @@ class FiniteAutomaton(abc.ABC):
     def minimize(self):
         raise NotImplementedError()
 
-    def _update_functions(self):
+    @property
+    def functions(self):
         """
         Updates functions and start state according to changes made in the automatum.
 
@@ -453,14 +313,14 @@ class FiniteAutomaton(abc.ABC):
         result = ''
 
         for state in sorted(self.states.values()):
-            for event, end_states in state._transitions.items(): #extremely bad code
+            for event, end_states in state.transitions.items(): #extremely bad code, but it's a part of an interface
                 result += '{},{}->'.format(self._get_alias(state.name), event)
                 for end in end_states:
-                    result += '{},'.format(self._get_alias(end))
-                result = result[:-1] + ';'
+                    result += '{},'.format(self._get_alias(end.name))
+                result = result[:-1] + '\n'
 
         # print(result)
 
-        self.start_state = self._get_alias(self.start_state)
+        self.start_state = self._get_alias(self.start_state.name)
 
-        self.functions = result
+        return result

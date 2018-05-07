@@ -1,5 +1,6 @@
 from automata.nfa import EPSILON_NFA
-from automata.dfa import Deterministic
+from automata.dfa import DFA
+from format.parsers import StandardFormatWithInputParser, StandardFormatParser
 
 '''
 Preformatting scripts, an endpoint between FA system and outer format connections. 
@@ -55,25 +56,32 @@ def printer(*args):
 
 def parse_e_nfa(string):
 
-    entries, states, inputs, final, start, functions = general_parse(string)
+    # entries, states, inputs, final, start, functions = general_parse(string)
     #printer(entries, states, inputs, final, start, functions)
 
-    nfa = EPSILON_NFA(states, inputs, functions, start, final)
+    parser = StandardFormatWithInputParser()
+    # print(string)
+    parser.parse(string)
+    nfa = EPSILON_NFA(parser.states, parser.inputs, parser.start_state)
 
     records = []
 
-    for entry in entries:
-        records.append(nfa.record(*entry.split(',')).copy())
+    for entry in parser.entries:
+        records.append(nfa.record(*entry).copy())
         nfa.reset()
     # print(entries)
     # print(len(functions.replace(';', ';\n')))
     return records
 
 def parse_dfa(string):
-    waste, states, inputs, final, start, functions= general_parse('\n' + string)
+    # waste, states, inputs, final, start, functions= general_parse('\n' + string)
     # print(waste, states, inputs, final, start, functions)
     # print(states,inputs,final,start,functions,waste)
-    dfa = Deterministic(states, inputs, functions, start, final)
+
+    parser = StandardFormatParser()
+    parser.parse(string)
+
+    dfa = DFA(parser.states, parser.inputs, parser.start_state)
 
     dfa.minimize()
 
@@ -113,12 +121,10 @@ def encode(automat):
 
     states = list(sorted(automat.states.values()))
     inputs = list(sorted(automat.inputs))
-    final = []
-    for state in states:
-        if state.value:
-            final.append(state)
+    final = list(sorted(automat.accepted_states))
     start_state = automat.start_state
     functions = automat.functions
+    # print(states,inputs,final,start_state,functions)
 
     result = ''
 
@@ -126,7 +132,7 @@ def encode(automat):
     result += coma_it(inputs)
     result += coma_it(final)
     result += str(start_state)
-    result += general_it(sorted(functions.split(';')), '\n')[:-1]
+    result += '\n' + functions
 
     return result.strip().strip('\n').strip()
 

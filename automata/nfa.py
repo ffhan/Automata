@@ -6,34 +6,9 @@ class NFA(fa.FiniteAutomaton):
     Non-deterministic finite automata.
     '''
 
-    def _check_fis_output(self, funcs_added):
-        #does nothing for NFA.
+    def _check_structure(self):
+        #does nothing.
         pass
-
-    def reset(self):
-        '''
-        Resets the current State.
-        :return:
-        '''
-        super().reset()
-        self.current = {self.current}
-
-    def _end_state_parser(self, end_state_string):
-        '''
-        Parses end states.
-
-        :param str end_state_string: String containing state names divided by a comma.
-        :return list: list of all end state names
-        '''
-        states = []
-        for state in end_state_string.split(','):
-            clean_state = state.strip()
-            if clean_state not in self:
-                # print(clean_state, self.states)
-                raise ValueError(self._state_err or(clean_state, '(ending)'))
-            states.append(clean_state)
-        return states
-
 
     def _access(self, value):
 
@@ -53,7 +28,7 @@ class NFA(fa.FiniteAutomaton):
             # print(state, state._transitions)
 
             for end in res:
-                old_currents |= {self.states[end]}
+                old_currents.add(self.states[self._get_alias(end.name)])
                 # print(end, old_currents)
         # print(old_currents)
         # print("-" * 20)
@@ -61,14 +36,14 @@ class NFA(fa.FiniteAutomaton):
 
 class EPSILON_NFA(NFA):
 
-    def __init__(self, states, inputs, functions, start_state, final_states, epsilon = '$'):
+    def __init__(self, states, inputs, start_state, epsilon = '$'):
 
         inputs.add(epsilon)
         self._epsilon = epsilon
 
-        super().__init__(states, inputs, functions, start_state, final_states)
+        super().__init__(states, inputs, start_state)
 
-    def e_closure(self, state, closure = set()):
+    def _e_closure(self, state, closure = set()):
         if state not in self:
             raise ValueError(self._input_error(state))
 
@@ -78,32 +53,32 @@ class EPSILON_NFA(NFA):
         closure |= {state}
 
         for eps in state.forward(self._epsilon):
-            if self.states[eps] not in closure:
-                self.e_closure(self.states[eps], closure)
+            if eps not in closure:
+                self._e_closure(eps, closure)
 
         return closure
 
-    def e_closures(self, *states):
+    def _e_closures(self, *states):
         currents = set(states) if type(states) is not set else states
 
         for i in states:
-            currents |= self.e_closure(i, currents)
+            currents |= self._e_closure(i, currents)
 
         return currents
 
-    def all_closures(self):
+    def _all_closures(self):
 
-        return self.e_closures(*self.current)
+        return self._e_closures(*self.current)
 
     def _access(self, value):
 
         super()._access(value)
 
-        self.current = self.all_closures()
+        self.current = self._all_closures()
 
     def _process(self, *entry):
 
-        self.current = self.all_closures()
+        self.current = self._all_closures()
 
         return super()._process(*entry)
 

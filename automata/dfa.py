@@ -1,63 +1,41 @@
 from automata import fa
-import copy
 
-class Deterministic(fa.FiniteAutomaton):
+class DFA(fa.FiniteAutomaton):
     '''
     Deterministic finite automata.
     '''
 
-    def __init__(self, states, inputs, functions, start_state, final_states):
+    def __init__(self, states, inputs, start_state):
 
-        super().__init__(states, inputs, functions, start_state, final_states)
+        super().__init__(states, inputs, start_state)
 
         self.current = list(self.current)[0]
 
-    def _check_fis_output(self, funcs_added):
-        function_check = funcs_added - len(self.states) * len(self.inputs)
-        if function_check < 0:
-            raise AttributeError('Some transition functions were undefined! Check your function instruction string!')
-        elif function_check > 0:
-            raise AttributeError(
-                'You have defined too many transition functions! DFA has to have a function mapped from each state through each input!')
+    def _check_structure(self):
 
-    def _end_state_parser(self, end_state_string):
-        if end_state_string not in self:
-            raise ValueError(self._state_error(end_state_string, '(ending)'))
-        return end_state_string
+        function_num = 0
+
+        error_msg = 'Incorrect {} structure.'.format(self.__class__)
+
+        for state in self.states.values():
+            if len(state.transitions) != len(self.inputs):
+                raise ValueError(error_msg)
+            for end in state.transitions.values():
+                if len(end) != 1:
+                    raise ValueError(error_msg)
+
+    def reset(self):
+
+        super().reset()
+        self.current = {self.start_state}
 
     def _access(self, value):
 
-        self.current = self.states[list(self.current.forward(self.type(value)))[0]]
-
-    def _reachable(self, state, visited = set()): #todo: migrate to FA.
-        visited |= {state}
-        for i in self.states[state.name].reach:
-            if not i in visited:
-                self._reachable(i, visited)
-
-    def reachable(self):
-
-        visited = set()
-
-        self._reachable(self.start_state, visited)
-
-        states = dict()
-
-        start = set(self.states.copy().values())
-        for state_name in visited:
-
-            states[state_name] = self.states[state_name]
-
-        # print(visited, states)
-        # print(start - set(states.values()), states)
-        self.states = states
-        self._update_functions()
+        self.current = self.states[self._get_alias(self.current.clean_forward(value).name)]
 
     def distinguish(self):
 
         def is_in(v1, v2, tab):
-            v1 = self.states[v1]
-            v2 = self.states[v2]
             return (v1,v2) in tab or (v2,v1) in tab
 
 
@@ -68,13 +46,13 @@ class Deterministic(fa.FiniteAutomaton):
         for i in range(len(states)):
             for j in range(i + 1, len(states)):
                 if states[i].value == states[j].value:
-                    table |= {(states[i], states[j])}
+                    table.add((states[i], states[j]))
 
         added = 1
 
         while added != 0:
             added = 0
-            temp = copy.deepcopy(table)
+            temp = table.copy()
             for inp in self.inputs:
 
                 for s1, s2 in temp:
@@ -93,9 +71,7 @@ class Deterministic(fa.FiniteAutomaton):
 
         for old_state, new_state in self._alias.items():
             self.states.pop(old_state)
-            old_state = new_state
 
-        self._update_functions()
         return table
 
     def minimize(self):
@@ -104,3 +80,4 @@ class Deterministic(fa.FiniteAutomaton):
         # print(self)
         self.distinguish()
         # print(self)
+        self.start_state = self.states[self._get_alias(self.start_state.name)]

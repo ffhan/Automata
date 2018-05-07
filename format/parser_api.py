@@ -1,9 +1,10 @@
-def split_factory(split_by = ',', cast_to = list):
+def split_factory(split_by = ',', cast_to = list, remove_empty = True):
     """
     Creates a uniform function split by a selected expression.
 
     :param str split_by: Splitting expression
     :param type cast_to: Result type
+    :param bool remove_empty: Determines if empty strings should be added to the container
     :return function: Splitting function
     """
 
@@ -23,7 +24,10 @@ def split_factory(split_by = ',', cast_to = list):
         container = list()
 
         for part in text.split(split_by):
-            if part.strip() != '':
+            if remove_empty:
+                if part.strip() != '':
+                    container.append(part.strip())
+            else:
                 container.append(part.strip())
 
         return cast_to(container)
@@ -35,3 +39,5 @@ split_coma_list = split_factory(',', list)
 
 split_newline_set = split_factory('\n', set)
 split_newline_list = split_factory('\n', list)
+
+split_lines_without_removal = split_factory('\n', list, False)

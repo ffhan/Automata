@@ -77,7 +77,7 @@ class State:
         self.name = StateName(name)
         self.value = value
 
-        self._transitions = dict()
+        self.transitions = dict()
 
         self.epsilon = epsilon
 
@@ -91,11 +91,11 @@ class State:
         return bool(self.value)
 
     @property
-    def reach(self):
+    def direct_reach(self):
 
         reach = set()
 
-        for states in self._transitions.values():
+        for states in self.transitions.values():
             for state in states:
                 reach.add(state)
         return reach
@@ -120,11 +120,12 @@ class State:
         event = self.__clean(event)
 
         for state in end_state:
+            assert isinstance(state, self.__class__)
             for ev in event:
-                if self._transitions.get(ev, -1) == -1:
-                    self._transitions[ev] = {state}
+                if self.transitions.get(ev, -1) == -1:
+                    self.transitions[ev] = {state}
                 else:
-                    self._transitions[ev].add(state)
+                    self.transitions[ev].add(state)
 
     def __repr__(self):
         # result = 'State {} (value {}):\n'.format(self.name, self.value)
@@ -164,7 +165,9 @@ class State:
         if not isinstance(other, self.__class__):
             return False
 
-        return other.name == self.name and other.value == self.value
+        if other.name == self.name and other.value == self.value:
+            return True
+        return False
 
     def __hash__(self):
         return hash(self.name) + hash(self.value)
@@ -178,7 +181,7 @@ class State:
         :return set: End State(s)
         '''
 
-        return self._transitions.get(value, set()) # | self._transitions.get(self.epsilon, set())
+        return self.transitions.get(value, set()) # | self._transitions.get(self.epsilon, set())
 
     def clean_forward(self, value):
         '''
@@ -193,3 +196,16 @@ class State:
         if len(res) == 1:
             return list(res)[0]
         return res
+
+    @property
+    def indirect_reach(self):
+
+        visits = set()
+        self._reachable(self, visits)
+        return visits
+
+    def _reachable(self, state, visited = set()):
+        visited |= {state}
+        for i in state.direct_reach:
+            if not i in visited:
+                self._reachable(i, visited)
