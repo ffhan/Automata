@@ -73,8 +73,8 @@ exec_function = test_e_nfa
 if test_type == 'DFA_MIN':
     exec_function = test_dfa_min
 
-def execute_test(destination, input_format, test_format):
-    for root, dirs, files in os.walk(DESTINATION):
+def execute_test(destination, input_format, test_format, test_function):
+    for root, dirs, files in os.walk(destination):
         path = root.split(os.sep)
         inp, outp = False, False
 
@@ -82,10 +82,10 @@ def execute_test(destination, input_format, test_format):
 
         # print((len(path) - 1) * '---', os.path.basename(root))
         for file in files:
-            if file.endswith(INPUT_FORMAT):
+            if file.endswith(input_format):
                 in_file = file
                 inp = True
-            elif file.endswith(TEST_FORMAT):
+            elif file.endswith(test_format):
                 test_file = file
                 outp = True
 
@@ -93,7 +93,7 @@ def execute_test(destination, input_format, test_format):
                 break
         if inp and outp:
             try:
-                result = exec_function(root + '\\' + in_file, root + '\\' + test_file)
+                result = test_function(root + '\\' + in_file, root + '\\' + test_file)
 
                 message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
 
@@ -110,4 +110,4 @@ def execute_test(destination, input_format, test_format):
 
 if __name__ == '__main__':
     print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
-    execute_test(DESTINATION, INPUT_FORMAT, TEST_FORMAT)
+    execute_test(DESTINATION, INPUT_FORMAT, TEST_FORMAT, exec_function)

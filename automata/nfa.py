@@ -36,12 +36,13 @@ class NFA(fa.FiniteAutomaton):
 
 class EPSILON_NFA(NFA):
 
-    def __init__(self, states, inputs, start_state, epsilon = '$'):
+    def __init__(self, text, parser, epsilon = '$'):
 
-        inputs.add(epsilon)
         self._epsilon = epsilon
 
-        super().__init__(states, inputs, start_state)
+        super().__init__(text, parser)
+
+        self.inputs.add(epsilon)
 
     def _e_closure(self, state, closure = set()):
         if state not in self:

@@ -24,36 +24,6 @@ class Parser(abc.ABC):
 
         self.state_imp = state_class
 
-    def parse_file(self, file_path): #todo: migrate reading to Reader
-        """
-        Parses a file.
-
-        :param str file_path: File pathname.
-        :return:
-        """
-
-        text = ''
-        with open(file_path, 'r') as file:
-            for line in file.readlines():
-                text += line
-        self.parse(text)
-
-
-    def parse_input(self):
-        """
-        Parses a direct input. Input ends with CTRL+D.
-        Enables inputting from a file through command prompt.
-
-        :return:
-        """
-
-        read = sys.stdin.readlines()
-
-        text = ''
-        for line in read:
-            text += line
-        self.parse(text)
-
     @abc.abstractmethod
     def parse(self, text):
         """

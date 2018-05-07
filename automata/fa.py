@@ -9,34 +9,35 @@ class FiniteAutomaton(abc.ABC):
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     """
 
-    def __init__(self, states, inputs, start_state):
+    def __init__(self, text, parser):
         """
         Initialises a finite state automata.
 
-        :param states: set of all possible states
-        :param inputs: set of all possible inputs
-        :param start_state: single starting state
+        :param str text: Input text
+        :param format.parser.Parser parser: Concrete Parser implementation
         """
 
-        self.states = states
+        parser.parse(text)
 
-        self.inputs = set(inputs)
+        self.states = parser.states
+
+        self.inputs = set(parser.inputs)
         # I deliberately include functions although they are not defined in FA class so that __repr__ can be written
         # only in the base class.
 
         self.records = []
 
-        if self.states.get(start_state.name, 0):
-            self.start_state = start_state
-            self.current = {start_state}
+        if self.states.get(parser.start_state.name, 0):
+            self.start_state = parser.start_state
+            self.current = {parser.start_state}
         else:
-            raise ValueError(self._state_error(start_state.name))
+            raise ValueError(self._state_error(parser.start_state.name))
 
         for name, state in self.states.items():
             assert isinstance(name, StateName)
             assert isinstance(state, State)
 
-        assert isinstance(start_state, State)
+        assert isinstance(parser.start_state, State)
 
         self._check_structure()
 

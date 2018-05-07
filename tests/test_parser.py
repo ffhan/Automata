@@ -1,6 +1,6 @@
 import unittest
 import format.parsers as ps
-
+import format.readers as rs
 
 class TestParser(unittest.TestCase):
 
@@ -17,7 +17,8 @@ class TestStandardFormatParser(unittest.TestCase):
     def test_file_parsing(self):
 
         try:
-            self.test.parse_file('.\\file_test.a')
+            text = rs.Reader.read_file('.\\file_test.a')
+            self.test.parse(text)
         except FileNotFoundError:
             self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
 
@@ -46,7 +47,8 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
     def test_file_parsing(self):
 
         try:
-            self.test.parse_file('.\\file_test_w_input.a')
+            text = rs.Reader.read_file('.\\file_test_w_input.a')
+            self.test.parse(text)
         except FileNotFoundError:
             self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
 

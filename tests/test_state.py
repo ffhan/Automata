@@ -115,3 +115,13 @@ class TestState(unittest.TestCase):
         self.s1.add_function(self.s3, 0)
 
         self.assertEqual(self.s1.forward(0), {self.s1, self.s3})
+        self.assertEqual(self.s1.clean_forward(0), {self.s1, self.s3})
+
+    def test_indirect_reach(self):
+
+        self.assertEqual(self.s1.indirect_reach, {self.s1, self.s2, self.s3})
+
+    def test_accepted(self):
+
+        self.assertTrue(self.s3.accepted)
+        self.assertFalse(self.s1.accepted)

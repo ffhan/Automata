@@ -6,63 +6,9 @@ from format.parsers import StandardFormatWithInputParser, StandardFormatParser
 Preformatting scripts, an endpoint between FA system and outer format connections. 
 '''
 
-"""
-todo: create an abstract parser class that defines the interface that all its' children are going to follow.
-Parser is going have bunch of properties (states, inputs, start_state, etc.).
-
-Create a FA_Factory class that takes output from a specific Parser and creates a suitable FA.
-"""
-
-def create_function_string(newline = False, **rules):
-    '''
-    Creates function string from parameters. This enables the programmer to use both string-type functional input or direct programming.
-
-    Example:
-        create_function_string(q0={0:'q0', 1:'q1'}, q1={0:'q0', 1:'q1'})
-    :param bool newline: defines if FIS is going to have each function defined in its' own row
-    :param dict rules: dictionary with keys (str) being inputs and values (str) being state names
-    :return: Function instruction string
-    '''
-    result = ''
-
-    for start, value_and_end in rules.items():
-        for value, end in value_and_end.items():
-            result += start + ',' + str(value) + '->' + end + ';' + ('\n' if newline else '')
-    return result
-
-def sets(func):
-    def wrapper(*args):
-        return set(func(*args))
-    return wrapper
-
-
-def splitter(string, char):
-    return string.split(char)
-
-@sets
-def set_splitter(string,char):
-    return splitter(string, char)
-
-def comma(*args):
-    result = ''
-    for arg in args:
-        if arg != '':
-            result += arg + ';'
-    return result[:-1]
-
-def printer(*args):
-    for arg in args:
-        print(arg)
-
 def parse_e_nfa(string):
-
-    # entries, states, inputs, final, start, functions = general_parse(string)
-    #printer(entries, states, inputs, final, start, functions)
-
     parser = StandardFormatWithInputParser()
-    # print(string)
-    parser.parse(string)
-    nfa = EPSILON_NFA(parser.states, parser.inputs, parser.start_state)
+    nfa = EPSILON_NFA(string, parser)
 
     records = []
 
@@ -79,25 +25,12 @@ def parse_dfa(string):
     # print(states,inputs,final,start,functions,waste)
 
     parser = StandardFormatParser()
-    parser.parse(string)
 
-    dfa = DFA(parser.states, parser.inputs, parser.start_state)
+    dfa = DFA(string, parser)
 
     dfa.minimize()
 
     return dfa
-
-def general_parse(string):
-    lines = splitter(string, '\n')
-
-    entries = splitter(lines[0], '|')
-    states = set_splitter(lines[1], ',')
-    inputs = set_splitter(lines[2], ',')
-    final = set_splitter(lines[3], ',')
-    start = lines[4]
-    functions = comma(*lines[5:])
-
-    return entries, states, inputs, final, start, functions
 
 def encode(automat):
     def general_it(iterable, symbol = ','):
@@ -173,34 +106,3 @@ def compare_encoding(fa, test_output):
 
 def print_encoding(fa):
     print(encode(fa))
-
-
-
-# USE TO CHECK MINIMIZATION TABLE
-# def print_minimize_table(start_index, end_index, table):
-#
-#     def tuple_equal(v1, v2):
-#         v1 = 'p' + str(v1)
-#         v2 = 'p' + str(v2)
-#
-#         for t1, t2 in table:
-#             if (v1 == t1.name and v2 == t2.name) or (v1 == t2.name and v2 == t1.name):
-#                 return False
-#         return True
-#
-#     lines = ['p{}'.format(index + 1) + ' |' + ' . |' * index for index in range(start_index, end_index)]
-#
-#     lines = ''
-#
-#     for index in range(start_index + 1, end_index + 1):
-#         line = ' |'
-#         for i in range(0, index - 1):
-#             line += ' {} |'.format(' ' if not tuple_equal(index, i + 1) else 'x')
-#         lines+= 'p{}'.format(index) + line + '\n'
-#     lines += '   '
-#     for i in range(start_index, end_index):
-#         lines += '  p{}'.format(i)
-#
-#     return lines
-
-# print(print_minimize_table(1, 8, df.distinguish()))

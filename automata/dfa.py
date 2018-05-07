@@ -5,9 +5,9 @@ class DFA(fa.FiniteAutomaton):
     Deterministic finite automata.
     '''
 
-    def __init__(self, states, inputs, start_state):
+    def __init__(self, text, parser):
 
-        super().__init__(states, inputs, start_state)
+        super().__init__(text, parser)
 
         self.current = list(self.current)[0]
 
