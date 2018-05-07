@@ -1,4 +1,4 @@
-from automata.nfa import E_NFA
+from automata.nfa import EPSILON_NFA
 from automata.dfa import Deterministic
 
 '''
@@ -58,7 +58,7 @@ def parse_e_nfa(string):
     entries, states, inputs, final, start, functions = general_parse(string)
     #printer(entries, states, inputs, final, start, functions)
 
-    nfa = E_NFA(states, inputs, functions, start, final)
+    nfa = EPSILON_NFA(states, inputs, functions, start, final)
 
     records = []
 

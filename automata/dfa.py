@@ -6,6 +6,12 @@ class Deterministic(fa.FiniteAutomaton):
     Deterministic finite automata.
     '''
 
+    def __init__(self, states, inputs, functions, start_state, final_states):
+
+        super().__init__(states, inputs, functions, start_state, final_states)
+
+        self.current = list(self.current)[0]
+
     def _check_fis_output(self, funcs_added):
         function_check = funcs_added - len(self.states) * len(self.inputs)
         if function_check < 0:
@@ -25,10 +31,9 @@ class Deterministic(fa.FiniteAutomaton):
 
     def _reachable(self, state, visited = set()): #todo: migrate to FA.
         visited |= {state}
-        for i in self.states[state]._transitions.values():
-            for j in i:
-                if not j in visited:
-                    self._reachable(j, visited)
+        for i in self.states[state.name].reach:
+            if not i in visited:
+                self._reachable(i, visited)
 
     def reachable(self):
 

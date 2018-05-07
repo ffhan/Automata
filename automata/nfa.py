@@ -6,11 +6,6 @@ class NFA(fa.FiniteAutomaton):
     Non-deterministic finite automata.
     '''
 
-    def __init__(self, states, inputs, functions, start_state, final_states, in_type = str):
-        super().__init__(states, inputs, functions, start_state, final_states, in_type)
-
-        self.current = {self.current} #NFA holds current states in a set
-
     def _check_fis_output(self, funcs_added):
         #does nothing for NFA.
         pass
@@ -51,7 +46,7 @@ class NFA(fa.FiniteAutomaton):
 
         # print(value)
         for state in sorted(list(self.current)):
-            res = state.forward(self.type(value))
+            res = state.forward(value)
 
             # print(state, res)
 
@@ -64,14 +59,14 @@ class NFA(fa.FiniteAutomaton):
         # print("-" * 20)
         self.current = old_currents
 
-class E_NFA(NFA):
+class EPSILON_NFA(NFA):
 
-    def __init__(self, states, inputs, functions, start_state, final_states, epsilon = '$', in_type = str):
+    def __init__(self, states, inputs, functions, start_state, final_states, epsilon = '$'):
 
-        inputs |= {epsilon}
+        inputs.add(epsilon)
         self._epsilon = epsilon
 
-        super().__init__(states, inputs, functions, start_state, final_states, in_type)
+        super().__init__(states, inputs, functions, start_state, final_states)
 
     def e_closure(self, state, closure = set()):
         if state not in self:

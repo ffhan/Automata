@@ -139,7 +139,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
             for entry in api.split_coma_list(entries):
                 self.entries[-1].append(entry)
 
-    def parse(self, text): #todo: create helper API that handles small parse tasks. (maintain DRY)
+    def parse(self, text):
         lines = api.split_newline_list(text)
 
         self._extract_entries(lines[0])

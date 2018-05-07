@@ -93,12 +93,12 @@ class State:
     @property
     def reach(self):
 
-        return list(self._transitions.values())
+        reach = set()
 
-    @property
-    def transitions(self):
-
-        return list(self._transitions.items())
+        for states in self._transitions.values():
+            for state in states:
+                reach.add(state)
+        return reach
 
     @staticmethod
     def __clean(value):
@@ -124,7 +124,7 @@ class State:
                 if self._transitions.get(ev, -1) == -1:
                     self._transitions[ev] = {state}
                 else:
-                    self._transitions[ev] |= {state}
+                    self._transitions[ev].add(state)
 
     def __repr__(self):
         # result = 'State {} (value {}):\n'.format(self.name, self.value)
@@ -135,9 +135,16 @@ class State:
         # return result + self.__wrap(side)
         return str(self.name)
 
-    @staticmethod
-    def __wrap(state_string):
-        return ('{\n' + state_string).replace('\n', '\n\t') + '\n}'
+    # def __str__(self):
+    #
+    #     def wrap(text):
+    #         return '\t' + text.replace('\n', '\n\t')
+    #     result = 'State {} (value {}):\n'.format(self.name, self.value)
+    #     side = ''
+    #     for state, trans_value in self._transitions.items():
+    #         side += 'on {} -> {}\n'.format(state, trans_value)
+    #     side = side[:-1]
+    #     return result + wrap(side)
 
     def __lt__(self, other):
 
@@ -157,18 +164,10 @@ class State:
         if not isinstance(other, self.__class__):
             return False
 
-        if other.name == self.name and other.value == self.value and other._transitions == self._transitions:
-            return True
-        return False
+        return other.name == self.name and other.value == self.value
 
     def __hash__(self):
-        result = '{}{}'.format(self.name.name, self.value)
-        side = ''
-        for state, trans_value in self._transitions.items():
-            side += '{}{}\n'.format(state, trans_value)
-        side = result + side[:-1]
-
-        return hash(self.name) + hash(self.value) + hash(side) + hash(len(self._transitions))
+        return hash(self.name) + hash(self.value)
 
     def forward(self, value):
 

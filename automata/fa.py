@@ -9,7 +9,7 @@ class FiniteAutomaton(abc.ABC):
     This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     """
 
-    def __init__(self, states, inputs, functions, start_state, final_states, in_type=str): #todo: bridge for parsing functional strings.
+    def __init__(self, states, inputs, functions, start_state, final_states): #todo: bridge for parsing functional strings.
         """
         Initialises a finite state automata.
 
@@ -27,13 +27,10 @@ class FiniteAutomaton(abc.ABC):
         # I deliberately include functions although they are not defined in FA class so that __repr__ can be written
         # only in the base class.
 
-        #only strings should probably be used.
-        self.type = in_type # todo: build tests for types. I assume type casting isn't stable enough to be used efficiently.
-
         self._records = []
 
         for one_input in inputs:
-            self.inputs |= {self.type(one_input)}
+            self.inputs |= {one_input}
 
         for state in states: # todo: create Parser that parses a specific format and then calls up an abstract factory of FAs'.
             new_state = State(state, 1 if state in final_states else 0) # todo: avoid direct State creation. It should be done beforehand.
@@ -43,7 +40,7 @@ class FiniteAutomaton(abc.ABC):
 
         if self.states.get(start_state, 0):
             self.start_state = start_state
-            self.current = self.states[start_state]
+            self.current = {self.states[start_state]}
         else:
             raise ValueError('State {} not defined in this automaton.'.format(start_state))
 
@@ -222,7 +219,7 @@ class FiniteAutomaton(abc.ABC):
             except (AttributeError, ValueError) as error:
                 raise type(error)('Invalid function instruction string at line {}. Check your function string.'.format(functions_added + 1))
 
-            value = self.type(value.strip('"').strip("'"))  # sanitizing input, removing braces
+            value = value.strip('"').strip("'")  # sanitizing input, removing braces
 
             if start not in self:
                 raise ValueError(self._state_error(end, '(starting)'))

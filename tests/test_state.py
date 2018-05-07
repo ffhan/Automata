@@ -9,10 +9,15 @@ class TestStateName(unittest.TestCase):
 
     def test_add(self):
 
+        self.assertEqual(self.test + self.test, 'testingtesting')
+
         self.assertEqual(self.test + 'second', 'testingsecond')
 
         self.test += 'third'
         self.assertEqual(self.test.name, 'testingthird')
+
+        self.test += self.test
+        self.assertEqual(self.test.name, 'testingthirdtestingthird')
 
     def test_lt(self):
 
@@ -61,3 +66,52 @@ class TestStateName(unittest.TestCase):
         self.assertEqual(self.test.name, change)
         self.assertEqual(test2.name, change)
         self.assertEqual(test3.name, change)
+
+class TestState(unittest.TestCase):
+
+    def setUp(self):
+
+        self.s1 = State('state1', 0)
+        self.s2 = State('state2', 0)
+        self.s3 = State('state3', 1)
+
+        self.s1.add_function(self.s2, 1)
+        self.s1.add_function(self.s1, 0)
+
+        self.s2.add_function(self.s3, 1)
+        self.s2.add_function(self.s2, 0)
+
+        self.s3.add_function(self.s1, 1)
+        self.s3.add_function(self.s3, 0)
+
+    def test_reach(self):
+
+        self.assertEqual(self.s1.reach, {self.s1, self.s2})
+        self.assertEqual(self.s2.reach, {self.s2, self.s3})
+        self.assertEqual(self.s3.reach, {self.s1, self.s3})
+
+    def test_lt(self):
+
+        self.assertTrue(self.s1 < self.s2)
+        self.assertTrue(self.s2 < self.s3)
+        self.assertTrue(self.s1 < 1)
+
+    def test_eq(self):
+
+        self.assertFalse(self.s1 == self.s2)
+        self.assertFalse(self.s2 == self.s3)
+
+        self.assertFalse(self.s1 == 1)
+        self.assertTrue(self.s1 == self.s1)
+
+        s2 = self.s1
+        self.assertTrue(self.s1 == s2)
+
+    def test_forward(self):
+
+        self.assertEqual(self.s1.clean_forward(0), self.s1)
+        self.assertEqual(self.s1.clean_forward(1), self.s2)
+
+        self.s1.add_function(self.s3, 0)
+
+        self.assertEqual(self.s1.forward(0), {self.s1, self.s3})
