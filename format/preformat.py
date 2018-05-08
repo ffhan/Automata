@@ -1,6 +1,7 @@
 from automata.nfa import EpsilonNFA
 from automata.dfa import DFA
-from format.parsers import StandardFormatWithInputParser, StandardFormatParser
+from automata.pda import PushDownAutomaton
+from format.parsers import StandardFormatWithInputParser, StandardFormatParser, PushDownFormatWithInputParser
 from format.compositors import StandardCompositor
 from format.readers import Reader
 
@@ -108,6 +109,21 @@ def get_e_nfa(string):
         e_nfa.enter(*entries)
         e_nfa.reset()
     return e_nfa
+
+def get_pda(string):
+    parser = PushDownFormatWithInputParser()
+    pda = PushDownAutomaton(string, parser)
+
+    for entries in parser.entries:
+        pda.enter(*entries)
+        pda.reset()
+    return pda
+
+def test_pda(string, test_output):
+    pda = get_pda(string)
+    # print(pda)
+    print(pda.records)
+    return True
 
 def test_e_nfa(string, test_output):
     e_nfa = get_e_nfa(string)

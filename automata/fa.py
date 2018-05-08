@@ -32,8 +32,14 @@ class FiniteAutomaton(abc.ABC):
             raise ValueError(self._state_error(parser.start_state.name))
 
         for name, state in self.states.items():
-            assert isinstance(name, StateName)
-            assert isinstance(state, State)
+            try:
+                assert isinstance(name, StateName)
+            except AssertionError:
+                raise TypeError('Type {} is NOT StateName'.format(name.__class__.__name__))
+            try:
+                assert isinstance(state, State)
+            except AssertionError:
+                raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
 
         assert isinstance(parser.start_state, State)
 
@@ -86,7 +92,9 @@ class FiniteAutomaton(abc.ABC):
         :return StateName: Current State identical to the old State
         """
         # print(alias, type(alias))
-        assert isinstance(alias, StateName)
+        # assert isinstance(alias, StateName)
+        if isinstance(alias, State):
+            alias = alias.name
         found = self._alias.get(alias, alias)
         if found in self._alias.keys() and found != alias:
             found = self._get_alias(found)
@@ -309,6 +317,7 @@ class FiniteAutomaton(abc.ABC):
             for event, end_states in state.transitions.items(): #extremely bad code, but it's a part of an interface
                 result += '{},{}->'.format(self._get_alias(state.name), event)
                 for end in end_states:
+                    # print(end, type(end))
                     result += '{},'.format(self._get_alias(end.name))
                 result = result[:-1] + '\n'
 
@@ -316,4 +325,4 @@ class FiniteAutomaton(abc.ABC):
 
         self.start_state = self._get_alias(self.start_state.name)
 
-        return result
+        return result.strip()

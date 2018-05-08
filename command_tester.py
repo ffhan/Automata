@@ -13,9 +13,9 @@ DESTINATION = '.'
 INPUT_FORMAT = '.a'
 TEST_FORMAT = '.b'
 
-known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN'}
+known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN', 'PDA'}
 
-test_type = 'DFA'
+test_type = 'E_NFA'
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", help="Test types: DFA, NFA, E_NFA, DFA_MIN. The default is {} run. Not case sensitive.".format(test_type))
@@ -64,12 +64,14 @@ def tester(func):
 
 test_e_nfa = tester(preformat.test_e_nfa) #define E_NFA tester function
 test_dfa_min = tester(preformat.test_dfa_min)
-test_dpa = tester(preformat.get_dfa_min)
+test_dpa = tester(preformat.test_pda)
 
 exec_function = test_e_nfa
 
 if test_type == 'DFA_MIN':
     exec_function = test_dfa_min
+elif test_type == 'PDA':
+    exec_function = test_dpa
 
 def execute_test(destination, input_format, test_format, test_function):
     for root, dirs, files in os.walk(destination):

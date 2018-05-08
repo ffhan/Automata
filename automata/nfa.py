@@ -15,23 +15,14 @@ class NFA(fa.FiniteAutomaton):
         if value not in self.inputs:
             raise ValueError(self._input_error(value))
 
-        # print(value, self.current)
-
         old_currents = set()
 
-        # print(value)
         for state in sorted(list(self.current)):
             res = state.forward(value)
 
-            # print(state, res)
-
-            # print(state, state._transitions)
-
             for end in res:
                 old_currents.add(self.states[self._get_alias(end.name)])
-                # print(end, old_currents)
-        # print(old_currents)
-        # print("-" * 20)
+
         self.current = old_currents
 
 class EpsilonNFA(NFA):

@@ -46,6 +46,13 @@ class StandardFormatParser(Parser):
         If the transition function doesn't produce an end state then use # (start,value->#).
         If the transition function has multiple end states they are separated by a comma. (start,value->s1,s2,s3,s4)
     """
+
+    def _replace_state_keys(self):
+        states = dict()
+        for state in self.states.values():
+            states[state.name] = state
+        self.states = states
+
     def _extract_states(self, states, accepted):
         """
         Extracts and packages States from specified lines.
@@ -87,10 +94,7 @@ class StandardFormatParser(Parser):
         self._extract_start_state(lines[3])
         self._extract_functions(lines[4:])
 
-        states = dict()
-        for state in self.states.values():
-            states[state.name] = state
-        self.states = states
+        self._replace_state_keys()
 
 class StandardFormatWithInputParser(StandardFormatParser):
     """
@@ -119,7 +123,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
                 self.entries[-1].append(entry)
 
     def parse(self, text):
-        lines = api.split_newline_list(text)
+        lines = api.split_lines_without_removal(text)
 
         self._extract_entries(lines[0])
         self._extract_states(lines[1], lines[3])
@@ -127,12 +131,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
         self._extract_start_state(lines[4])
         self._extract_functions(lines[5:])
 
-        states = dict()
-
-        for state in self.states.values():
-            states[state.name] = state
-
-        self.states = states
+        self._replace_state_keys()
 
 class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
@@ -178,7 +177,10 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
         self.start_stack = symbol
 
     def parse(self, text):
-        lines = api.split_newline_list(text)
+        lines = api.split_lines_without_removal(text)
+
+        # print(text)
+        # print(lines)
 
         self._extract_entries(lines[0])
         self._extract_states(lines[1], lines[4])
@@ -187,4 +189,6 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
         self._extract_start_state(lines[5])
         self._extract_starting_stack_symbol(lines[6])
         self._extract_functions(lines[7:])
+
+        self._replace_state_keys()
 
