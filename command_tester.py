@@ -3,6 +3,7 @@ import argparse
 from format import preformat
 import logging
 import datetime
+from format.readers import Reader
 
 LOG_FILENAME = 'log{}.log'.format(datetime.datetime.date(datetime.datetime.utcnow()))
 
@@ -43,16 +44,12 @@ example:
     python tester --type e_nfa 
 '''
 
-def tester(func, comparator = preformat.compare_output):
+def tester(func):
 
     def wrapper(in_file, out_file):
         def file_to_string(file):
-            text = ''
 
-            with open(file, 'r') as inp:
-                for s in inp.readlines():
-                    text += s
-            return text
+            return Reader.read_file(file)
 
         in_text = ''
         out_text = ''
@@ -61,12 +58,13 @@ def tester(func, comparator = preformat.compare_output):
 
         out_text = file_to_string(out_file)
 
-        return comparator(func(in_text), out_text)
+        return func(in_text, out_text)
 
     return wrapper
 
-test_e_nfa = tester(preformat.parse_e_nfa) #define E_NFA tester function
-test_dfa_min = tester(preformat.parse_dfa, preformat.compare_encoding)
+test_e_nfa = tester(preformat.test_e_nfa) #define E_NFA tester function
+test_dfa_min = tester(preformat.test_dfa_min)
+test_dpa = tester(preformat.get_dfa_min)
 
 exec_function = test_e_nfa
 

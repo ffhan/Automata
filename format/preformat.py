@@ -1,25 +1,14 @@
-from automata.nfa import EPSILON_NFA
+from automata.nfa import EpsilonNFA
 from automata.dfa import DFA
 from format.parsers import StandardFormatWithInputParser, StandardFormatParser
+from format.compositors import StandardCompositor
+from format.readers import Reader
 
 '''
 Preformatting scripts, an endpoint between FA system and outer format connections. 
 '''
 
-def parse_e_nfa(string):
-    parser = StandardFormatWithInputParser()
-    nfa = EPSILON_NFA(string, parser)
-
-    records = []
-
-    for entry in parser.entries:
-        records.append(nfa.record(*entry).copy())
-        nfa.reset()
-    # print(entries)
-    # print(len(functions.replace(';', ';\n')))
-    return records
-
-def parse_dfa(string):
+def get_dfa_min(string):
     # waste, states, inputs, final, start, functions= general_parse('\n' + string)
     # print(waste, states, inputs, final, start, functions)
     # print(states,inputs,final,start,functions,waste)
@@ -31,6 +20,10 @@ def parse_dfa(string):
     dfa.minimize()
 
     return dfa
+
+def test_dfa_min(string, test_output):
+    dfa = get_dfa_min(string)
+    return StandardCompositor(dfa).composite_automaton() == test_output.strip()
 
 def encode(automat):
     def general_it(iterable, symbol = ','):
@@ -71,7 +64,7 @@ def encode(automat):
 
 def encode_minimized_dfa(text):
 
-    return encode(parse_dfa(text))
+    return encode(get_dfa_min(text))
 
 def fa_output(records):
     result = ''
@@ -106,3 +99,17 @@ def compare_encoding(fa, test_output):
 
 def print_encoding(fa):
     print(encode(fa))
+
+def get_e_nfa(string):
+    parser = StandardFormatWithInputParser()
+    e_nfa = EpsilonNFA(string, parser)
+
+    for entries in parser.entries:
+        e_nfa.enter(*entries)
+        e_nfa.reset()
+    return e_nfa
+
+def test_e_nfa(string, test_output):
+    e_nfa = get_e_nfa(string)
+    return StandardCompositor(e_nfa).composite_output() == test_output.strip()
+

@@ -83,5 +83,7 @@ class TestPushDownFormatWithInputParser(unittest.TestCase):
         print(self.test.stack_alphabet)
         print(self.test.start_state)
         print(self.test.start_stack)
+        for state in self.test.states.values():
+            print(state, state.transitions)
         self.assertEqual(self.test.stack_alphabet, {'K', 'X', 'Y'})
         self.assertEqual(self.test.start_stack, 'K')

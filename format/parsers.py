@@ -2,6 +2,7 @@ import abc
 import sys
 import format.parser_api as api
 from automata.state import State
+from automata.pda import Stack, InputPack
 
 class Parser(abc.ABC):
 
@@ -135,9 +136,11 @@ class StandardFormatWithInputParser(StandardFormatParser):
 
 class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
-    def __init__(self, state_class = State):
+    def __init__(self, state_class = State, stack = Stack):
 
         super().__init__(state_class)
+
+        self.stack_imp = stack
 
         self.stack_alphabet = set()
         self.start_stack = ''
@@ -152,7 +155,14 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
             end_state, stack = api.split_coma_list(ends)
 
-            self.states[start].add_function((self.states[end_state], stack), (end_state, symbol))
+            st = self.stack_imp()
+            for sym in stack:
+                st.push(sym)
+
+            key = InputPack(value, symbol)
+            value = InputPack(self.states[end_state], st)
+
+            self.states[start].add_function(value, key)
 
     def _extract_stack_alphabet(self, symbols):
         """

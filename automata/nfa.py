@@ -34,7 +34,7 @@ class NFA(fa.FiniteAutomaton):
         # print("-" * 20)
         self.current = old_currents
 
-class EPSILON_NFA(NFA):
+class EpsilonNFA(NFA):
 
     def __init__(self, text, parser, epsilon = '$'):
 

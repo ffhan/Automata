@@ -22,8 +22,6 @@ class FiniteAutomaton(abc.ABC):
         self.states = parser.states
 
         self.inputs = set(parser.inputs)
-        # I deliberately include functions although they are not defined in FA class so that __repr__ can be written
-        # only in the base class.
 
         self.records = []
 
@@ -112,7 +110,7 @@ class FiniteAutomaton(abc.ABC):
 
         :return:
         """
-        self.records.clear()
+        # self.records.clear()
         self.current = {self.start_state}
 
     def _not_defined_substring(self):
@@ -234,20 +232,14 @@ class FiniteAutomaton(abc.ABC):
         Processes the entry arguments.
 
         :param entry: entries that have to be handled.
-        :param processor: A function that can output steps in computation.
         :return:
         """
-        # for inp in entry:
-        #     if isinstance(inp, collections.Iterable):
-        #         for i in inp:
-        #             self._access(i)
-        #     else:
-        #         self._access(inp)
-        self.records.clear()
-        self.records.append(self.current)
+
+        self.records.append([])
+        self.records[-1].append(self.current)
         for inp in entry:
             self._access(inp)
-            self.records.append(self.current)
+            self.records[-1].append(self.current)
 
     @abc.abstractmethod
     def _access(self, value):
