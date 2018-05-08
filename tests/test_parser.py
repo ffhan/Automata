@@ -64,3 +64,24 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
                            'a', 'b', 'c', 'b', 'a', 'd', 'a', 'd', 'a', 'a', 'a', 'b', 'c', 'b', 'a', 'a'],
                           ['a', 'b', 'c', 'b', 'c', 'b', 'c', 'b', 'b', 'c', 'b', 'a', 'd', 'a', 'd', 'a', 'a', 'a',
                            'a', 'b', 'c', 'd', 'a', 'b']])
+
+class TestPushDownFormatWithInputParser(unittest.TestCase):
+
+    def setUp(self):
+        self.test = ps.PushDownFormatWithInputParser()
+
+    def test_file_parsing(self):
+
+        try:
+            text = rs.Reader.read_file('.\\push_file_test.in')
+            self.test.parse(text)
+        except FileNotFoundError:
+            self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
+        print(self.test.entries)
+        print(self.test.states)
+        print(self.test.inputs)
+        print(self.test.stack_alphabet)
+        print(self.test.start_state)
+        print(self.test.start_stack)
+        self.assertEqual(self.test.stack_alphabet, {'K', 'X', 'Y'})
+        self.assertEqual(self.test.start_stack, 'K')

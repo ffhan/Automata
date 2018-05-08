@@ -1,7 +1,7 @@
 import abc
 import sys
 import format.parser_api as api
-from automata.state import State, StateName
+from automata.state import State
 
 class Parser(abc.ABC):
 
@@ -46,6 +46,13 @@ class StandardFormatParser(Parser):
         If the transition function has multiple end states they are separated by a comma. (start,value->s1,s2,s3,s4)
     """
     def _extract_states(self, states, accepted):
+        """
+        Extracts and packages States from specified lines.
+
+        :param str states: All States
+        :param str accepted: All accepted states
+        :return:
+        """
         accepted_states = api.split_coma_set(accepted)
         for state in api.split_coma_list(states):
             state_obj = self.state_imp(state, 1 if state in accepted_states else 0)
@@ -125,3 +132,49 @@ class StandardFormatWithInputParser(StandardFormatParser):
             states[state.name] = state
 
         self.states = states
+
+class PushDownFormatWithInputParser(StandardFormatWithInputParser):
+
+    def __init__(self, state_class = State):
+
+        super().__init__(state_class)
+
+        self.stack_alphabet = set()
+        self.start_stack = ''
+
+    def _extract_functions(self, functions):
+        for line in functions:
+            if line == '':
+                continue
+            start_value_symbol, ends = api.split_factory('->', list)(line)
+
+            start, value, symbol = api.split_coma_list(start_value_symbol)
+
+            end_state, stack = api.split_coma_list(ends)
+
+            self.states[start].add_function((self.states[end_state], stack), (end_state, symbol))
+
+    def _extract_stack_alphabet(self, symbols):
+        """
+        Extracts and packages stack alphabet.
+
+        :param str symbols: All stack symbols
+        :return:
+        """
+        for sym in api.split_coma_list(symbols):
+            self.stack_alphabet.add(sym)
+
+    def _extract_starting_stack_symbol(self, symbol):
+        self.start_stack = symbol
+
+    def parse(self, text):
+        lines = api.split_newline_list(text)
+
+        self._extract_entries(lines[0])
+        self._extract_states(lines[1], lines[4])
+        self._extract_inputs(lines[2])
+        self._extract_stack_alphabet(lines[3])
+        self._extract_start_state(lines[5])
+        self._extract_starting_stack_symbol(lines[6])
+        self._extract_functions(lines[7:])
+

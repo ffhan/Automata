@@ -120,7 +120,7 @@ class State:
         event = self.__clean(event)
 
         for state in end_state:
-            assert isinstance(state, self.__class__)
+            # assert isinstance(state, self.__class__)
             for ev in event:
                 if self.transitions.get(ev, -1) == -1:
                     self.transitions[ev] = {state}
