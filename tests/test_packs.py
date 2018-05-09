@@ -6,9 +6,9 @@ class TestRecords(unittest.TestCase):
     def setUp(self):
         self.r = Records(1,2,3,4,5,6)
 
-    def test_add(self):
-        self.r.add_records(7, 8, 9)
-        self.assertEqual(self.r.records, [i + 1 for i in range(9)])
+    # def test_add(self):
+    #     self.r.add_records(7, 8, 9)
+    #     self.assertEqual(self.r.records, [i + 1 for i in range(9)])
 
     def test_iteration(self):
 

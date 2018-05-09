@@ -1,8 +1,7 @@
 import abc
-import sys
 import format.parser_api as api
-from automata.state import State, PushState
-from automata.pda import Stack, InputPack
+import automata.state as st
+import automata.packs as pk
 
 class Parser(abc.ABC):
 
@@ -11,7 +10,7 @@ class Parser(abc.ABC):
     Parsers do not have the same interface, which is fine.
     """
 
-    def __init__(self, state_class = State):
+    def __init__(self, state_class = st.State):
 
         """
         Initialises a Parser.
@@ -109,7 +108,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
         If the transition function has multiple end states they are separated by a comma. (start,value->s1,s2,s3,s4)
     """
 
-    def __init__(self, state_class = State):
+    def __init__(self, state_class = st.State):
         super().__init__(state_class)
         self.entries = list()
 
@@ -135,7 +134,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
 
 class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
-    def __init__(self, state_class = PushState, stack = Stack):
+    def __init__(self, state_class = st.PushState, stack = pk.Stack):
 
         super().__init__(state_class)
 
@@ -158,7 +157,7 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
             for sym in stack:
                 st.push(sym)
 
-            key = InputPack(value, symbol)
+            key = pk.InputPack(value, symbol)
             self.states[end_state].stack = st
             value = self.states[end_state]
 

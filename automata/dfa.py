@@ -1,6 +1,6 @@
-from .fa import FiniteAutomaton
+import automata.fa as fa
 
-class DFA(FiniteAutomaton):
+class DFA(fa.FiniteAutomaton):
     '''
     Deterministic finite automata.
     '''
