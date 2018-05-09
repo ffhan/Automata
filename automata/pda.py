@@ -1,5 +1,5 @@
-import automata
-import format
+from .dfa import DFA
+from .state import PushState
 import copy
 
 class Stack:
@@ -110,7 +110,7 @@ class InputPack:
             return self.value < other.value
         return self.key < other.key
 
-class DeterministicPA(automata.dfa.DFA): #todo: correct implementation would be to inherit from abstract PA.
+class DeterministicPA(DFA): #todo: correct implementation would be to inherit from abstract PA.
 
     def __init__(self, text, parser, empty_symbol = '$'):
 
@@ -124,7 +124,7 @@ class DeterministicPA(automata.dfa.DFA): #todo: correct implementation would be 
         self.inputs.add(empty_symbol)
         self.empty_symbol = empty_symbol
 
-        self.failed_symbol = automata.state.PushState('fail', 0)
+        self.failed_symbol = PushState('fail', 0)
 
     def _check_structure(self):
         pass #not checking anything. todo: check parser results.
@@ -150,7 +150,7 @@ class DeterministicPA(automata.dfa.DFA): #todo: correct implementation would be 
         #todo: check izlaz.txt for a detailed overview.
 
         self.current = current
-        if not isinstance(current, automata.state.PushState):
+        if not isinstance(current, PushState):
             self.current = self.failed_symbol
 
 

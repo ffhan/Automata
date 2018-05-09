@@ -1,5 +1,5 @@
 import unittest
-from format.parser_api import *
+from format.parser_api import split_factory
 
 class TestSplitting(unittest.TestCase):
 

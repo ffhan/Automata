@@ -1,5 +1,5 @@
 import unittest
-from automata.state import *
+from automata.state import StateName, State
 
 class TestStateName(unittest.TestCase):
 

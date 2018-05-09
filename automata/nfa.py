@@ -1,7 +1,6 @@
-from automata import fa
+from .fa import FiniteAutomaton
 
-
-class NFA(fa.FiniteAutomaton):
+class NFA(FiniteAutomaton):
     '''
     Non-deterministic finite automata.
     '''

@@ -1,5 +1,5 @@
 import collections
-import automata
+from .pda import Stack
 
 class StateName:
     '''
@@ -213,7 +213,7 @@ class State:
 
 class PushState(State):
 
-    def __init__(self, name, value, epsilon = '$', stack = automata.pda.Stack()):
+    def __init__(self, name, value, epsilon = '$', stack = Stack()):
 
         super().__init__(name, value, epsilon)
         self.stack = stack

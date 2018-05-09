@@ -1,23 +1,24 @@
 import unittest
-import format.parsers as ps
-import format.readers as rs
+from format.parsers import Parser, StandardFormatParser, \
+    StandardFormatWithInputParser, PushDownFormatWithInputParser
+from format.readers import Reader
 
 class TestParser(unittest.TestCase):
 
     def test_abstraction(self):
 
         with self.assertRaises(TypeError):
-            test = ps.Parser()
+            test = Parser()
 
 class TestStandardFormatParser(unittest.TestCase):
 
     def setUp(self):
-        self.test = ps.StandardFormatParser()
+        self.test = StandardFormatParser()
 
     def test_file_parsing(self):
 
         try:
-            text = rs.Reader.read_file('.\\file_test.a')
+            text = Reader.read_file('.\\file_test.a')
             self.test.parse(text)
         except FileNotFoundError:
             self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
@@ -42,12 +43,12 @@ class TestStandardFormatParser(unittest.TestCase):
 class TestStandardFormatWithInputParser(TestStandardFormatParser):
 
     def setUp(self):
-        self.test = ps.StandardFormatWithInputParser()
+        self.test = StandardFormatWithInputParser()
 
     def test_file_parsing(self):
 
         try:
-            text = rs.Reader.read_file('.\\file_test_w_input.a')
+            text = Reader.read_file('.\\file_test_w_input.a')
             self.test.parse(text)
         except FileNotFoundError:
             self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
@@ -68,12 +69,12 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
 class TestPushDownFormatWithInputParser(unittest.TestCase):
 
     def setUp(self):
-        self.test = ps.PushDownFormatWithInputParser()
+        self.test = PushDownFormatWithInputParser()
 
     def test_file_parsing(self):
 
         try:
-            text = rs.Reader.read_file('.\\push_file_test.in')
+            text = Reader.read_file('.\\push_file_test.in')
             self.test.parse(text)
         except FileNotFoundError:
             self.fail('File not found. Check if file_test_w_input.a exists in format/tests')

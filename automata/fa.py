@@ -1,6 +1,5 @@
-import automata
+from .state import StateName, State
 import abc, re, collections
-
 
 class FiniteAutomaton(abc.ABC):
     """
@@ -33,15 +32,15 @@ class FiniteAutomaton(abc.ABC):
 
         for name, state in self.states.items():
             try:
-                assert isinstance(name, automata.state.StateName)
+                assert isinstance(name, StateName)
             except AssertionError:
                 raise TypeError('Type {} is NOT StateName'.format(name.__class__.__name__))
             try:
-                assert isinstance(state, automata.state.State)
+                assert isinstance(state, State)
             except AssertionError:
                 raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
 
-        assert isinstance(parser.start_state, automata.state.State)
+        assert isinstance(parser.start_state, State)
 
         self._check_structure()
 
@@ -93,7 +92,7 @@ class FiniteAutomaton(abc.ABC):
         """
         # print(alias, type(alias))
         # assert isinstance(alias, StateName)
-        if isinstance(alias, automata.state.State):
+        if isinstance(alias, State):
             alias = alias.name
         found = self._alias.get(alias, alias)
         if found in self._alias.keys() and found != alias:
@@ -228,9 +227,9 @@ class FiniteAutomaton(abc.ABC):
         :return:
         """
         assert not isinstance(item, str)
-        if isinstance(item, automata.state.StateName):
+        if isinstance(item, StateName):
             return self.__contains_helper(item)
-        elif isinstance(item, automata.state.State):
+        elif isinstance(item, State):
             return self.__contains_helper(item.name)
         else:
             return False
