@@ -1,4 +1,5 @@
 import collections
+import automata
 
 class StateName:
     '''
@@ -209,3 +210,11 @@ class State:
         for i in state.direct_reach:
             if not i in visited:
                 self._reachable(i, visited)
+
+class PushState(State):
+
+    def __init__(self, name, value, epsilon = '$', stack = automata.pda.Stack()):
+
+        super().__init__(name, value, epsilon)
+        self.stack = stack
+

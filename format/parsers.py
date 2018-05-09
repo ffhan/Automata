@@ -1,7 +1,7 @@
 import abc
 import sys
 import format.parser_api as api
-from automata.state import State
+from automata.state import State, PushState
 from automata.pda import Stack, InputPack
 
 class Parser(abc.ABC):
@@ -135,7 +135,7 @@ class StandardFormatWithInputParser(StandardFormatParser):
 
 class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
-    def __init__(self, state_class = State, stack = Stack):
+    def __init__(self, state_class = PushState, stack = Stack):
 
         super().__init__(state_class)
 
@@ -159,7 +159,8 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
                 st.push(sym)
 
             key = InputPack(value, symbol)
-            value = InputPack(self.states[end_state], st)
+            self.states[end_state].stack = st
+            value = self.states[end_state]
 
             self.states[start].add_function(value, key)
 

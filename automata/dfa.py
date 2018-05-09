@@ -15,7 +15,7 @@ class DFA(fa.FiniteAutomaton):
 
         function_num = 0
 
-        error_msg = 'Incorrect {} structure.'.format(self.__class__)
+        error_msg = 'Incorrect {} structure.'.format(self.__class__.__name__)
 
         for state in self.states.values():
             if len(state.transitions) != len(self.inputs):
@@ -27,7 +27,7 @@ class DFA(fa.FiniteAutomaton):
     def reset(self):
 
         super().reset()
-        self.current = {self.start_state}
+        self.current = self.start_state
 
     def _access(self, value):
 

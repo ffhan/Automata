@@ -1,4 +1,5 @@
 import abc
+import automata
 
 class Compositor(abc.ABC):
 
@@ -23,25 +24,17 @@ class StandardCompositor(Compositor):
 
     def composite_output(self):
         result = ''
-        # print(self.automaton.records)
-        # for records in self.automaton.records:
-        #     for group in records:
-        #         #print(group)
-        #         string = str(sorted(list(group)))[1:-1]
-        #         result += string + '|'
-        #     result = result[:-1] + '\n'
-        # return result.strip()
+
         for entry in self.automaton.records:
-            line = ''
             for group in entry:
                 for value in sorted(list(group)):
 
-                    line += repr(value) + ','
-                line = line[:-1] + '|'
+                    result += repr(value) + ','
+                result = result[:-1] + '|'
                 if len(group) == 0:
-                    line += '#|'
+                    result += '#|'
                     continue
-            result += line[:-1] + '\n'
+            result = result[:-1] + '\n'
         return result[:-1].strip()
 
     def composite_automaton(self):
@@ -69,3 +62,32 @@ class StandardCompositor(Compositor):
         result += '\n' + functions
 
         return result.strip().strip('\n').strip()
+
+class StandardPushDownCompositor(Compositor): #could inherit Standard compositor but doesn't matter.
+
+    def composite_output(self):
+
+        def handle_stack(stack):
+            res = ''
+            for val in stack:
+                res += val
+            return res[::-1]
+
+        result = ''
+        print(self.automaton.records)
+        for entry in self.automaton.records:
+            for value in entry:
+                #value is an InputPack
+                state, stack = value.pack
+                result += repr(state) + '#'
+                if state != self.automaton.failed_symbol:
+                    result += handle_stack(stack) + ','
+                result = result[:-1] + '|'
+                if len(entry) == 0:
+                    result += '#|'
+                    continue
+            result = result[:-1] + '\n' #todo: FA accepted (not accepted_states) property.
+        return result[:-1].strip()
+
+    def composite_automaton(self):
+        raise NotImplementedError

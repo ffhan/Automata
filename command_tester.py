@@ -96,7 +96,6 @@ def execute_test(destination, input_format, test_format, test_function):
                 result = test_function(root + '\\' + in_file, root + '\\' + test_file)
 
                 message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
-
                 print(message)
 
                 if not result:

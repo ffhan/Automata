@@ -1,8 +1,5 @@
-from automata.nfa import EpsilonNFA
-from automata.dfa import DFA
-from automata.pda import PushDownAutomaton
-from format.parsers import StandardFormatWithInputParser, StandardFormatParser, PushDownFormatWithInputParser
-from format.compositors import StandardCompositor
+import format
+import automata
 from format.readers import Reader
 
 '''
@@ -14,9 +11,9 @@ def get_dfa_min(string):
     # print(waste, states, inputs, final, start, functions)
     # print(states,inputs,final,start,functions,waste)
 
-    parser = StandardFormatParser()
+    parser = format.parsers.StandardFormatParser()
 
-    dfa = DFA(string, parser)
+    dfa = automata.dfa.DFA(string, parser)
 
     dfa.minimize()
 
@@ -24,7 +21,7 @@ def get_dfa_min(string):
 
 def test_dfa_min(string, test_output):
     dfa = get_dfa_min(string)
-    return StandardCompositor(dfa).composite_automaton() == test_output.strip()
+    return format.compositors.StandardCompositor(dfa).composite_automaton() == test_output.strip()
 
 def encode(automat):
     def general_it(iterable, symbol = ','):
@@ -102,8 +99,8 @@ def print_encoding(fa):
     print(encode(fa))
 
 def get_e_nfa(string):
-    parser = StandardFormatWithInputParser()
-    e_nfa = EpsilonNFA(string, parser)
+    parser = format.parsers.StandardFormatWithInputParser()
+    e_nfa = automata.nfa.EpsilonNFA(string, parser)
 
     for entries in parser.entries:
         e_nfa.enter(*entries)
@@ -111,8 +108,8 @@ def get_e_nfa(string):
     return e_nfa
 
 def get_pda(string):
-    parser = PushDownFormatWithInputParser()
-    pda = PushDownAutomaton(string, parser)
+    parser = format.parsers.PushDownFormatWithInputParser()
+    pda = automata.pda.DeterministicPA(string, parser)
 
     for entries in parser.entries:
         pda.enter(*entries)
@@ -122,10 +119,14 @@ def get_pda(string):
 def test_pda(string, test_output):
     pda = get_pda(string)
     # print(pda)
-    print(pda.records)
-    return True
+    # print(pda.records)
+    result = format.compositors.StandardPushDownCompositor(pda).composite_output()
+
+    print(result)
+    print(test_output.strip())
+    return result == test_output.strip()
 
 def test_e_nfa(string, test_output):
     e_nfa = get_e_nfa(string)
-    return StandardCompositor(e_nfa).composite_output() == test_output.strip()
+    return format.compositors.StandardCompositor(e_nfa).composite_output() == test_output.strip()
 

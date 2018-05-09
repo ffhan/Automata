@@ -1,4 +1,5 @@
-from automata.nfa import NFA
+import automata
+import format
 import copy
 
 class Stack:
@@ -13,8 +14,15 @@ class Stack:
     def pop(self):
         return self._container.pop()
 
+    def peek(self):
+        return self._container[-1]
+
     def clear(self):
         self._container.clear()
+
+    @property
+    def container(self):
+        return copy.deepcopy(self._container)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -71,132 +79,87 @@ class Stack:
         self._reset_index()
         raise StopIteration
 
-class InputPack: #todo: seems more like a hack than a solution.
-    def __init__(self, inp, symbol):
-        """
-        Initializes an InputPack.
-        It has interface that mathes both StateName (partly) and State.
+class InputPack:
+    """
+    Contains State as a 'key', stack symbol as a 'value'
+    """
+    def __init__(self, key, value):
 
-        :param inp: input
-        :param symbol: input symbol
-        """
-        self.name = inp
-        self.value = symbol
-    def __repr__(self):
-        return '(' + repr(self.name) + ',' + repr(self.value) + ')'
+        self.key = key
+        self.value = value
+
+    @property
+    def pack(self):
+        return self.key, self.value
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.name == other.name and self.value == other.value
+
+        return self.key == other.key and self.value == other.value
+
     def __hash__(self):
-        return hash(self.name) + hash(self.value)
+        return hash(self.key) + hash(self.value)
 
-class PushDownAutomaton(NFA):
+    def __repr__(self):
 
-    def __init__(self, text, parser, empty_symbol = '$', fail_symbol = '\b'):
+        return '(' + repr(self.key) + ',' + repr(self.value) + ')'
 
-        self.empty_symbol = empty_symbol
+    def __lt__(self, other):
+        if self.key == other.key:
+            return self.value < other.value
+        return self.key < other.key
+
+class DeterministicPA(automata.dfa.DFA): #todo: correct implementation would be to inherit from abstract PA.
+
+    def __init__(self, text, parser, empty_symbol = '$'):
+
         super().__init__(text, parser)
 
-        self.inputs.add(self.empty_symbol)
+        self.start_symbol = parser.start_stack
+        self.stack = Stack(self.start_symbol)
 
         self.stack_alphabet = parser.stack_alphabet
-        self.stack_alphabet.add(self.empty_symbol)
 
-        self.fail_symbol = fail_symbol
+        self.inputs.add(empty_symbol)
+        self.empty_symbol = empty_symbol
 
-        self.stack_start = parser.start_stack
-        self.stack = Stack(self.stack_start)
+        self.failed_symbol = automata.state.PushState('fail', 0)
 
-        assert self.stack_start in self.stack_alphabet
+    def _check_structure(self):
+        pass #not checking anything. todo: check parser results.
 
     def reset(self):
         super().reset()
+        # self.current = self.start_state
         self.stack.clear()
-        self.stack.push(self.stack_start)
+        self.stack.push(self.start_symbol)
 
     def _access(self, value):
-
-        if self.current == self.fail_symbol:
-            return
-        if value not in self.inputs:
-            raise ValueError(self._input_error(value))
-
-        old_currents = set()
-        try:
+        if self.stack.size > 0:
             symbol = self.stack.pop()
-        except Exception:
-            self.current = self.fail_symbol
+        else:
+            self.current = self.failed_symbol
             return
 
-        for state in sorted(list(self.current)):
+        if self.current == self.failed_symbol:
+            return
 
-            res = state.forward(InputPack(value, symbol))
+        current = self.current.clean_forward(InputPack(value, symbol))
 
-            for res in sorted(list(res)):
-                st = res.name
-                sym = res.value
-                self.stack.push(sym)
-                old_currents.add(st) #todo: fix pushdown automata. Records don't work, stack isn't correct, structure seems incorrect.
+        #todo: check izlaz.txt for a detailed overview.
 
-        self.current = old_currents
+        self.current = current
+        if not isinstance(current, automata.state.PushState):
+            self.current = self.failed_symbol
 
-    def __repr__(self):
-        def wrap_in_braces(string, last_brace_newline=False):
-            return '{' + string + ('\n}' if last_brace_newline else '}')
 
-        def tab(string):
-            return '\t' + string.replace('\n', '\n\t')
+        self.stack += self.current.stack
 
-        def space(*strings):
-            result = ''
-            for s in strings:
-                result += s + ' '
-            return result[:-1]
+    def _process(self, *entry):
+        self.records.append([])
+        self.records[-1].append(InputPack(self.current, self.stack.container))
+        for inp in entry:
+            self._access(inp)
+            self.records[-1].append(InputPack(self.current, self.stack.container))
 
-        def newline(*lines):
-            """
-            Returns concatenated string composed of all line arguments with newline added between them.
-
-            :param str lines: lines of text that need to be newlined.
-            :return: full string composed of individual lines concatenated with newline in-between
-            """
-            res = '\n'
-            for line in lines:
-                res += line + '\n'
-            return res[:-1]
-        states = ''
-        final = ''
-
-        for state, state_object in self.states.items():
-            states += state + ','
-            if state_object.value:
-                # print(final, state)
-                final += state.name
-
-        final = 'F=' + wrap_in_braces(final)
-
-        states = 'Q=' + wrap_in_braces(states[:-1])
-
-        stack_alphabet = ''
-        for sym in self.stack_alphabet:
-            stack_alphabet += sym
-
-        stack_alphabet = u'\u0394=' + wrap_in_braces(stack_alphabet[:-1])
-
-        inputs = ''
-
-        for inp in self.inputs:
-            inputs += str(inp) + ','
-
-        inputs = u'\u03A3=' + wrap_in_braces(inputs[:-1])
-
-        start_stack = u'\u0393=' + self.stack_start
-
-        funcs = u'\u03B4=' + wrap_in_braces(self.functions)
-
-        start = 'q0=' + self.start_state.name
-
-        return '{} '.format(self.__class__.__name__) + wrap_in_braces(tab(
-            newline(states, inputs, stack_alphabet, funcs, start, start_stack, final)
-        ), True)
