@@ -79,15 +79,19 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
 
         result = ''
         # print(self.automaton.records)
-        for entry in self.automaton.records:
-            # print(entry, *entry.unpack)
-            state, accepted, stack = entry.unpack
-            #value is an InputPack
-            result += repr(state) + '#'
-            if state != self.automaton.failed_state:
-                result += handle_stack(stack) + ','
-            result = result[:-1] + '|'
-        result += ('1' if accepted else '0') + '|' #todo: FA accepted (not accepted_states) property.
+        for record in self.automaton.records:
+
+            for entry in record:
+                # print(entry, *entry.unpack)
+                state, accepted, stack = entry.unpack
+                #value is an InputPack
+                result += repr(state) + '#'
+                if state != self.automaton.failed_state:
+                    result += handle_stack(stack) + ','
+                result = result[:-1] + '|'
+            result += ('1' if accepted else '0') + '|'  # todo: FA accepted (not accepted_states) property.
+            result = result[:-1] + '\n'
+
 
         return result[:-1].strip()
 

@@ -18,7 +18,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         self.empty_symbol = empty_symbol
 
         self.failed_state = st.PushState('fail', 0, epsilon = empty_symbol)
-        self.processed_all = False
+        self.processed_all = True
 
     def _check_structure(self):
         pass #not checking anything. todo: check parser results.
@@ -32,7 +32,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
     def reset(self):
         super().reset()
         # self.current = self.start_state
-        self.processed_all = False
+        self.processed_all = True
         self.stack.clear()
         self.stack.push(self.start_symbol)
 
@@ -48,14 +48,14 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         symbol = self.stack.pop()
 
         current = self.current.clean_forward(pk.InputPack(self.empty_symbol, symbol))
-        print(self.current, self.empty_symbol, symbol, current, self.stack)
+        # print(self.current, self.empty_symbol, symbol, current, self.stack)
 
         if current == set():
             current = self.current.clean_forward(pk.InputPack(value, symbol))
-            print(self.current, value, symbol, current, self.stack)
+            # print(self.current, value, symbol, current, self.stack)
             if current == set():
                 self.current = self.failed_state
-                error_print('Both failed')
+                # error_print('Both failed')
                 return True
         else:
             go_on = False
@@ -64,7 +64,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         self.stack += stack.exclude(self.empty_symbol)
 
         self.current = current
-        print('Go on: {}'.format(go_on), self.stack, self.current)
+        # print('Go on: {}'.format(go_on), self.stack, self.current)
         return go_on
 
     def _access_epsilon(self):
@@ -74,7 +74,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         symbol = self.stack.pop()
 
         current = self.current.clean_forward(pk.InputPack(self.empty_symbol, symbol))
-        print(self.current, self.empty_symbol, symbol, current, self.stack)
+        # print(self.current, self.empty_symbol, symbol, current, self.stack)
 
         if current == set():
             return False
@@ -86,29 +86,26 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         return True
 
     def _process(self, *entry):
+        record = pk.Records()
         entry = list(entry)
+
         while len(entry) > 0: # go through epsilon transitions until the stack is depleted or there aren't any possible moves left.
-            self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
+            record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
             # print(entry)
             if self.current == self.failed_state:
-                return
+                self.processed_all = False
+                break
             value = entry.pop(0)
 
             if not self._access(value):
                 entry.insert(0, value)
-        self.processed_all = True
-        self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
-
-        while not self.accepted and self._access_epsilon():
-            self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
-
-        # self._access(self.empty_symbol)
-        # for inp in entry:
-        #
-        #     if self.current == self.failed_state:
-        #         break
-        #     self._access(inp)
-        #
         # self.processed_all = True
-        # self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
+        if self.processed_all:
+            record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
 
+            while (not self.accepted) and self._access_epsilon():
+                record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack)) # todo: all records are being held in the same container. separate containers.
+
+        self.records.add_record(record)
+
+        # print(self.records)

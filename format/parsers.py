@@ -149,6 +149,7 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
         for line in functions:
             if line == '':
                 continue
+
             start_value_symbol, ends = api.split_factory('->', list)(line)
 
             start, value, symbol = api.split_coma_list(start_value_symbol)
