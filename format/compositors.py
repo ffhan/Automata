@@ -72,7 +72,6 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
             res = ''
             if stck.size > 0:
                 res = repr(stck)
-                print(res)
                 res = res[1:-1].replace(',','').replace("'", '')
             else:
                 res = self.automaton.empty_symbol

@@ -133,6 +133,17 @@ class Stack:
             counter += 1
         return res
 
+    def reverse(self):
+        self._container.reverse()
+        return self
+
+    def exclude(self, symbol):
+
+        temp = self.__class__()
+        for i in self:
+            if i != symbol: temp.push(i)
+
+        return temp.reverse()
 
     @property
     def size(self):
