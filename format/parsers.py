@@ -74,6 +74,7 @@ class StandardFormatParser(Parser):
             self.inputs.add(inp)
 
     def _extract_functions(self, functions):
+
         for line in functions:
             if line == '':
                 continue
@@ -144,6 +145,7 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
         self.start_stack = ''
 
     def _extract_functions(self, functions):
+
         for line in functions:
             if line == '':
                 continue
@@ -153,15 +155,14 @@ class PushDownFormatWithInputParser(StandardFormatWithInputParser):
 
             end_state, stack = api.split_coma_list(ends)
 
-            st = self.stack_imp()
+            stck = self.stack_imp()
             for sym in stack:
-                st.push(sym)
+                stck.push(sym)
 
             key = pk.InputPack(value, symbol)
-            self.states[end_state].stack = st
-            value = self.states[end_state]
+            end = self.states[end_state]
 
-            self.states[start].add_function(value, key)
+            self.states[start].add_function(pk.InputPack(end, stck), key)
 
     def _extract_stack_alphabet(self, symbols):
         """

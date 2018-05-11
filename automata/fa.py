@@ -1,4 +1,5 @@
 import automata.state as st
+import automata.packs as pk
 import abc, re, collections
 
 class FiniteAutomaton(abc.ABC):
@@ -22,7 +23,7 @@ class FiniteAutomaton(abc.ABC):
 
         self.inputs = set(parser.inputs)
 
-        self.records = []
+        self.records = pk.Records()
 
         if self.states.get(parser.start_state.name, 0):
             self.start_state = parser.start_state
@@ -53,6 +54,11 @@ class FiniteAutomaton(abc.ABC):
 
         :return:
         """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def accepted(self):
         pass
 
     @property
@@ -242,11 +248,10 @@ class FiniteAutomaton(abc.ABC):
         :return:
         """
 
-        self.records.append([])
-        self.records[-1].append(self.current)
+        self.records.add_record(pk.RecordPack(self.current, self.accepted))
         for inp in entry:
             self._access(inp)
-            self.records[-1].append(self.current)
+            self.records.add_record(pk.RecordPack(self.current, self.accepted))
 
     @abc.abstractmethod
     def _access(self, value):
@@ -285,11 +290,8 @@ class FiniteAutomaton(abc.ABC):
         :param entry: Inputs
         :return bool: Outputs True if end state is acceptable, False if not
         """
-        results = self.enter(*entry)
-        for result in results:
-            if result.value > 0:
-                return True
-        return False
+        self.enter(*entry)
+        return self.accepted
 
     def distinguish(self):
         """

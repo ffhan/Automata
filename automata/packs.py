@@ -5,22 +5,28 @@ class RecordPack:
     def __init__(self, current, accepted):
 
         self.current = current
-        self.accepted = accepted
+        self.accepted = copy.deepcopy(accepted)
 
     @property
-    def pack(self):
+    def unpack(self):
         return self.current, self.accepted
+
+    def __repr__(self):
+        return 'pack:[{}, {}]'.format(self.current, self.accepted)
 
 class PushRecordPack(RecordPack):
 
     def __init__(self, current, accepted, stack):
 
         super().__init__(current, accepted)
-        self.stack = stack
+        self.stack = copy.deepcopy(stack)
 
     @property
-    def pack(self):
-        return super().pack, self.stack
+    def unpack(self):
+        return self.current, self.accepted, self.stack
+
+    def __repr__(self):
+        return 'pushpack:[{}, {}, {}]'.format(self.current, self.accepted, self.stack)
 
 class Records:
 
@@ -31,7 +37,7 @@ class Records:
         self.add_records(*records)
 
     def __repr__(self):
-        return repr(self.records)
+        return 'records:' + repr(self.records)
 
     @property
     def size(self):
@@ -70,7 +76,7 @@ class InputPack:
         self.value = value
 
     @property
-    def pack(self):
+    def unpack(self):
         return self.key, self.value
 
     def __eq__(self, other):
@@ -145,8 +151,9 @@ class Stack:
     def __add__(self, other):
         assert isinstance(other, self.__class__)
         tmp = copy.deepcopy(self) # DO NOT REMOVE OR CHANGE.
-        for val in other:
-            tmp.push(val)
+        tmp2 = copy.deepcopy(other)
+        tmp2._container.reverse()
+        tmp._container += tmp2.container
 
         return tmp
 

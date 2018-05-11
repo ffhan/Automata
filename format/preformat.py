@@ -19,9 +19,13 @@ def get_dfa_min(string):
 
     return dfa
 
-def test_dfa_min(string, test_output):
+def test_dfa_min(string, test_output, verbose = 0):
     dfa = get_dfa_min(string)
-    return format.compositors.StandardCompositor(dfa).composite_automaton() == test_output.strip()
+    result = format.compositors.StandardCompositor(dfa).composite_automaton()
+
+    print_verbose(result, test_output, verbose)
+
+    return result == test_output.strip()
 
 def encode(automat):
     def general_it(iterable, symbol = ','):
@@ -109,24 +113,51 @@ def get_e_nfa(string):
 
 def get_pda(string):
     parser = format.parsers.PushDownFormatWithInputParser()
-    pda = automata.pda.DeterministicPA(string, parser)
+    pda = automata.pda.DeterministicPDA(string, parser)
 
     for entries in parser.entries:
         pda.enter(*entries)
         pda.reset()
+    # print(pda.records)
     return pda
 
-def test_pda(string, test_output):
-    pda = get_pda(string)
-    # print(pda)
-    # print(pda.records)
-    result = format.compositors.StandardPushDownCompositor(pda).composite_output()
+# def test_pda(string, test_output, verbose = 0):
+#     pda = get_pda(string)
+#     # print(pda)
+#     # print(pda.records)
+#     result = format.compositors.StandardPushDownCompositor(pda).composite_output()
+#
+#     print_verbose(result, test_output, verbose)
+#
+#     return result == test_output.strip()
 
-    print(result)
-    print(test_output.strip())
+def test_e_nfa(string, test_output, verbose = 0):
+    e_nfa = get_e_nfa(string)
+    result = format.compositors.StandardCompositor(e_nfa).composite_output()
+
+    print_verbose(result, test_output, verbose)
+
     return result == test_output.strip()
 
-def test_e_nfa(string, test_output):
-    e_nfa = get_e_nfa(string)
-    return format.compositors.StandardCompositor(e_nfa).composite_output() == test_output.strip()
+def print_verbose(result, test_output, level):
+    def printer(res, out):
+        print(res)
+        print(out.strip())
+    if level == 1 and result != test_output.strip():
+        printer(result, test_output)
+    elif level == 2:
+        printer(result, test_output)
 
+def test_factory(getter_func, compositor, compositor_method):
+
+    def wrapper(string, test_output, verbose):
+        fa = getter_func(string)
+        result = compositor_method(compositor(fa))
+
+        print_verbose(result, test_output, verbose)
+
+        return result == test_output.strip()
+
+    return wrapper
+
+test_pda = test_factory(get_pda, format.compositors.StandardPushDownCompositor, format.compositors.StandardPushDownCompositor.composite_output)

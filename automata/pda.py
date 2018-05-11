@@ -3,7 +3,7 @@ import automata.state as st
 import automata.packs as pk
 import copy
 
-class DeterministicPA(dfa.DFA): #todo: correct implementation would be to inherit from abstract PA.
+class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inherit from abstract PA.
 
     def __init__(self, text, parser, empty_symbol = '$'):
 
@@ -17,10 +17,17 @@ class DeterministicPA(dfa.DFA): #todo: correct implementation would be to inheri
         self.inputs.add(empty_symbol)
         self.empty_symbol = empty_symbol
 
-        self.failed_symbol = st.PushState('fail', 0)
+        self.failed_state = st.PushState('fail', 0, epsilon = empty_symbol)
+        self.processed_all = False
 
     def _check_structure(self):
         pass #not checking anything. todo: check parser results.
+
+    @property
+    def accepted(self):
+        if self.processed_all:
+            return self.current in self.accepted_states
+        return False
 
     def reset(self):
         super().reset()
@@ -29,30 +36,56 @@ class DeterministicPA(dfa.DFA): #todo: correct implementation would be to inheri
         self.stack.push(self.start_symbol)
 
     def _access(self, value):
-        if self.stack.size > 0:
-            symbol = self.stack.pop()
+        def error_print(msg):
+            print(msg, self.current, value, symbol, self.stack)
+        go_on = True
+        if self.stack.size == 0:
+            self.current = self.failed_state
+            error_print('Stack size 0')
+            return True
+
+        symbol = self.stack.pop()
+
+        current = self.current.clean_forward(pk.InputPack(self.empty_symbol, symbol))
+        print(self.current, self.empty_symbol, symbol, current, self.stack)
+
+        if current == set():
+            current = self.current.clean_forward(pk.InputPack(value, symbol))
+            print(self.current, value, symbol, current, self.stack)
+            if current == set():
+                self.current = self.failed_state
+                error_print('Both failed')
+                return True
         else:
-            self.current = self.failed_symbol
-            return
+            go_on = False
+        current, stack = current.unpack
 
-        if self.current == self.failed_symbol:
-            return
-
-        current = self.current.clean_forward(pk.InputPack(value, symbol))
-
-        #todo: check izlaz.txt for a detailed overview.
+        self.stack += stack
 
         self.current = current
-        if not isinstance(current, st.PushState):
-            self.current = self.failed_symbol
 
-
-        self.stack += self.current.stack
+        return go_on
 
     def _process(self, *entry):
-        self.records.append([])
-        self.records[-1].append(pk.InputPack(self.current, self.stack.container))
-        for inp in entry:
-            self._access(inp)
-            self.records[-1].append(pk.InputPack(self.current, self.stack.container))
+        entry = list(entry)
+        while len(entry) > 0:
+            self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
+            # print(entry)
+            if self.current == self.failed_state:
+                return
+            value = entry.pop(0)
+
+            if not self._access(value):
+                entry.insert(0, value)
+
+        self.processed_all = True
+        self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
+        # for inp in entry:
+        #
+        #     if self.current == self.failed_state:
+        #         break
+        #     self._access(inp)
+        #
+        # self.processed_all = True
+        # self.records.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
 

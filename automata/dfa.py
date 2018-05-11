@@ -11,6 +11,10 @@ class DFA(fa.FiniteAutomaton):
 
         self.current = list(self.current)[0]
 
+    @property
+    def accepted(self):
+        return self.current in self.accepted_states
+
     def _check_structure(self):
 
         function_num = 0

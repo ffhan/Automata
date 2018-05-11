@@ -211,10 +211,15 @@ class State:
             if not i in visited:
                 self._reachable(i, visited)
 
+    def __contains__(self, item):
+
+        return item in self.transitions
+
 class PushState(State):
 
     def __init__(self, name, value, epsilon = '$', stack = pk.Stack()):
 
         super().__init__(name, value, epsilon)
         self.stack = stack
+
 

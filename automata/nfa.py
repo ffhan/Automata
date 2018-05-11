@@ -9,6 +9,13 @@ class NFA(fa.FiniteAutomaton):
         #does nothing.
         pass
 
+    @property
+    def accepted(self):
+        for state in self.current:
+            if state in self.accepted_states:
+                return True
+        return False
+
     def _access(self, value):
 
         if value not in self.inputs:
@@ -33,6 +40,13 @@ class EpsilonNFA(NFA):
         super().__init__(text, parser)
 
         self.inputs.add(epsilon)
+
+    @property
+    def accepted(self):
+        for state in self._all_closures():
+            if state in self.accepted_states:
+                return True
+        return False
 
     def _e_closure(self, state, closure = set()):
         if state not in self:

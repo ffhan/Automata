@@ -76,4 +76,4 @@ class TestInputPack(unittest.TestCase):
 
     def test_pack(self):
 
-        self.assertEqual(self.s1.pack, (1, 'a'))
+        self.assertEqual(self.s1.unpack, (1, 'a'))

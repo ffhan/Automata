@@ -125,3 +125,8 @@ class TestState(unittest.TestCase):
 
         self.assertTrue(self.s3.accepted)
         self.assertFalse(self.s1.accepted)
+
+    def test_contains(self):
+
+        self.assertTrue(1 in self.s1)
+        self.assertFalse(12 in self.s1)

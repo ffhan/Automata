@@ -1,0 +1,4 @@
+
+
+class CommandTestError(RuntimeError):
+    pass

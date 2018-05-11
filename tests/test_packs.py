@@ -1,4 +1,4 @@
-from automata.packs import Records
+from automata.packs import Records, PushRecordPack
 import unittest
 
 class TestRecords(unittest.TestCase):
@@ -22,3 +22,11 @@ class TestRecords(unittest.TestCase):
         self.assertEqual(self.r[1], 2)
         self.assertEqual(self.r[0:3], [1,2,3])
         self.assertEqual(self.r[1:4:2], [2,4])
+
+class TestPushRecordPack(unittest.TestCase):
+
+    def setUp(self):
+        self.r = PushRecordPack(1,2,3)
+
+    def test_unpack(self):
+        self.assertEqual(self.r.unpack, (1,2,3))

@@ -25,6 +25,8 @@ class StandardCompositor(Compositor):
         result = ''
 
         for entry in self.automaton.records:
+            entry, accepted = entry.unpack
+            print(entry) #todo: fix compositors.
             for group in entry:
                 for value in sorted(list(group)):
 
@@ -66,26 +68,28 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
 
     def composite_output(self):
 
-        def handle_stack(stack):
+        def handle_stack(stck):
             res = ''
-            for val in stack:
-                res += val
+            if stck.size > 0:
+                res = repr(stck)
+                print(res)
+                res = res[1:-1].replace(',','').replace("'", '')
+            else:
+                res = self.automaton.empty_symbol
             return res[::-1]
 
         result = ''
-        print(self.automaton.records)
+        # print(self.automaton.records)
         for entry in self.automaton.records:
-            for value in entry:
-                #value is an InputPack
-                state, stack = value.pack
-                result += repr(state) + '#'
-                if state != self.automaton.failed_symbol:
-                    result += handle_stack(stack) + ','
-                result = result[:-1] + '|'
-                if len(entry) == 0:
-                    result += '#|'
-                    continue
-            result = result[:-1] + '\n' #todo: FA accepted (not accepted_states) property.
+            # print(entry, *entry.unpack)
+            state, accepted, stack = entry.unpack
+            #value is an InputPack
+            result += repr(state) + '#'
+            if state != self.automaton.failed_state:
+                result += handle_stack(stack) + ','
+            result = result[:-1] + '|'
+        result += ('1' if accepted else '0') + '|' #todo: FA accepted (not accepted_states) property.
+
         return result[:-1].strip()
 
     def composite_automaton(self):
