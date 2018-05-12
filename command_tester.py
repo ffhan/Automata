@@ -6,16 +6,16 @@ import datetime
 from format.readers import Reader
 from misc.errors import CommandTestError
 
-LOG_FILENAME = 'log{}.log'.format(datetime.datetime.date(datetime.datetime.utcnow()))
+# LOG_FILENAME = 'log{}.log'.format(datetime.datetime.date(datetime.datetime.utcnow()))
 
-logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+# logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 
 DESTINATION = '.'
 INPUT_FORMAT = '.a'
 TEST_FORMAT = '.b'
 ERROR_FORCE = False
 
-known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN', 'DPDA'}
+# known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN', 'DPDA'}
 
 test_type = 'E_NFA'
 
@@ -47,88 +47,107 @@ if args.fe:
 
 #0 for no verbosity, 1 for failed, 2 for all
 if args.v:
-    verbose_level = 2
+    verbose_lvl = 2
 else:
-    verbose_level = 1 if args.vf else 0
+    verbose_lvl = 1 if args.vf else 0
 
-def tester(func, verbose = 0):
+class CommandTester: #todo: implement listener pattern.
 
-    def wrapper(in_file, out_file):
-        def file_to_string(file):
+    def __init__(self, input_format, test_format, destination = '.', verbose_level = 0):
 
-            return Reader.read_file(file)
+        self.DESTINATION = destination
+        self.INPUT_FORMAT = input_format
+        self.TEST_FORMAT = test_format
 
-        in_text = ''
-        out_text = ''
+        self.LOG_FILENAME = 'log{}.log'.format(datetime.datetime.date(datetime.datetime.utcnow()))
+        logging.basicConfig(filename = self.LOG_FILENAME, level = logging.DEBUG)
 
-        in_text = file_to_string(in_file)
+        self.verbose_level = verbose_level
 
-        out_text = file_to_string(out_file)
+        self._tests = dict()
 
-        return func(in_text, out_text, verbose)
+        self.listeners = list()
 
-    return wrapper
+    def register_listener(self, listener_function):
+        self.listeners.append(listener_function)
 
-test_e_nfa = tester(preformat.test_e_nfa, verbose_level) #define E_NFA tester function
-test_dfa_min = tester(preformat.test_dfa_min, verbose_level)
-test_dpda = tester(preformat.test_pda, verbose_level)
+    @property
+    def tests(self):
+        self._tests.clear()
+        self._tests['E_NFA'] = self._test_factory(preformat.test_e_nfa) #define E_NFA tester function
+        self._tests['DFA_MIN'] = self._test_factory(preformat.test_dfa_min)
+        self._tests['DPDA'] = self._test_factory(preformat.test_pda)
+        return self._tests
 
-exec_function = test_e_nfa
+    def execute_test(self, test_type, error_force = False):  # todo: implement a test output listener.
+        test_type = test_type.upper()
+        tests = self.tests
 
-if not test_type in known_tests:
-    raise TypeError("Test {} doesn't exist".format(test_type))
+        if test_type not in tests:
+            raise NotImplementedError("Test {} has not yet been implemented.".format(test_type))
 
-if test_type == 'DFA_MIN':
-    exec_function = test_dfa_min
-elif test_type == 'DPDA':
-    exec_function = test_dpda
-elif test_type == 'E_NFA':
-    exec_function = test_e_nfa
-else:
-    raise NotImplementedError("Test {} has not yet been implemented.".format(test_type))
+        test_function = tests.get(test_type)
 
-def execute_test(destination, input_format, test_format, test_function): #todo: implement a test output listener.
-    print(input_format, test_format, destination, test_type)
-    counter = 0
-    for root, dirs, files in os.walk(destination):
-        path = root.split(os.sep)
-        inp, outp = False, False
+        print(self.INPUT_FORMAT, self.TEST_FORMAT, self.DESTINATION, test_type)
+        counter = 0
+        for root, dirs, files in os.walk(self.DESTINATION):
+            path = root.split(os.sep)
+            inp, outp = False, False
 
-        folder = os.path.basename(root)
+            folder = os.path.basename(root)
 
-        # print((len(path) - 1) * '---', os.path.basename(root))
-        for file in files:
-            if file.endswith(input_format):
-                in_file = file
-                inp = True
-            elif file.endswith(test_format):
-                test_file = file
-                outp = True
+            # print((len(path) - 1) * '---', os.path.basename(root))
+            for file in files:
+                if file.endswith(self.INPUT_FORMAT):
+                    in_file = file
+                    inp = True
+                elif file.endswith(self.TEST_FORMAT):
+                    test_file = file
+                    outp = True
 
+                if inp and outp:
+                    break
             if inp and outp:
-                break
-        if inp and outp:
-            try:
-                result = test_function(root + '\\' + in_file, root + '\\' + test_file)
-                counter += 1
+                try:
+                    result = test_function(root + '\\' + in_file, root + '\\' + test_file)
+                    counter += 1
 
-                message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
-                print(message)
+                    message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
+                    print(message)
 
-                if not result:
-                    logging.warning(message)
-                else:
-                    logging.info(message)
+                    for listener_function in self.listeners:
+                        listener_function(result)
 
-                if ERROR_FORCE and not result:
-                    raise CommandTestError('Forced a test stop.')
-            except Exception as e:
-                print('Test {}: !FAILED!'.format(folder))
-                logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
-                raise e
-    if counter == 0:
-        print('NO TESTS FOUND')
+                    if not result:
+                        logging.warning(message)
+                    else:
+                        logging.info(message)
+
+                    if error_force and not result:
+                        raise CommandTestError('Forced a test stop.')
+                except Exception as e:
+                    print('Test {}: !FAILED!'.format(folder))
+                    logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
+                    raise e
+        if counter == 0:
+            print('NO TESTS FOUND')
+
+    def _test_factory(self, func):
+        def wrapper(in_file, out_file):
+            def file_to_string(file):
+                return Reader.read_file(file)
+
+            in_text = ''
+            out_text = ''
+
+            in_text = file_to_string(in_file)
+
+            out_text = file_to_string(out_file)
+
+            return func(in_text, out_text, self.verbose_level)
+
+        return wrapper
 
 if __name__ == '__main__':
-    # print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
-    execute_test(DESTINATION, INPUT_FORMAT, TEST_FORMAT, exec_function)
+    executor = CommandTester(INPUT_FORMAT, TEST_FORMAT, DESTINATION, verbose_lvl)
+    executor.execute_test(test_type, ERROR_FORCE)
