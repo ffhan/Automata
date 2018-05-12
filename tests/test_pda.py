@@ -1,10 +1,10 @@
 import unittest
-import command_tester as cmd
+from misc.command_testers import CommandTester
 
 class TestDeterministicPDA(unittest.TestCase):
 
     def setUp(self):
-        self.executor = cmd.CommandTester('.in', '.out', '..')
+        self.executor = CommandTester('.in', '.out', '..')
 
     def test_all(self):
 

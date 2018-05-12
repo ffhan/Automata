@@ -1,10 +1,10 @@
 import unittest
-import command_tester
+from misc.command_testers import CommandTester
 
 class TestDeterministicFA(unittest.TestCase):
 
     def setUp(self):
-        self.executor = command_tester.CommandTester('.ul', '.iz', '..')
+        self.executor = CommandTester('.ul', '.iz', '..')
 
     def test_all(self):
 
