@@ -15,7 +15,7 @@ INPUT_FORMAT = '.a'
 TEST_FORMAT = '.b'
 ERROR_FORCE = False
 
-known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN', 'PDA'}
+known_tests = {'DFA', 'NFA', 'E_NFA', 'DFA_MIN', 'DPDA'}
 
 test_type = 'E_NFA'
 
@@ -50,12 +50,6 @@ if args.v:
     verbose_level = 2
 else:
     verbose_level = 1 if args.vf else 0
-'''
-RUN FROM DIRECTORY IN WHICH TESTS ARE CARRIED OUT
-
-example:
-    python tester --type e_nfa 
-'''
 
 def tester(func, verbose = 0):
 
@@ -77,7 +71,7 @@ def tester(func, verbose = 0):
 
 test_e_nfa = tester(preformat.test_e_nfa, verbose_level) #define E_NFA tester function
 test_dfa_min = tester(preformat.test_dfa_min, verbose_level)
-test_dpa = tester(preformat.test_pda, verbose_level)
+test_dpda = tester(preformat.test_pda, verbose_level)
 
 exec_function = test_e_nfa
 
@@ -86,14 +80,16 @@ if not test_type in known_tests:
 
 if test_type == 'DFA_MIN':
     exec_function = test_dfa_min
-elif test_type == 'PDA':
-    exec_function = test_dpa
+elif test_type == 'DPDA':
+    exec_function = test_dpda
 elif test_type == 'E_NFA':
     exec_function = test_e_nfa
 else:
     raise NotImplementedError("Test {} has not yet been implemented.".format(test_type))
 
-def execute_test(destination, input_format, test_format, test_function):
+def execute_test(destination, input_format, test_format, test_function): #todo: implement a test output listener.
+    print(input_format, test_format, destination, test_type)
+    counter = 0
     for root, dirs, files in os.walk(destination):
         path = root.split(os.sep)
         inp, outp = False, False
@@ -114,6 +110,7 @@ def execute_test(destination, input_format, test_format, test_function):
         if inp and outp:
             try:
                 result = test_function(root + '\\' + in_file, root + '\\' + test_file)
+                counter += 1
 
                 message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
                 print(message)
@@ -129,7 +126,9 @@ def execute_test(destination, input_format, test_format, test_function):
                 print('Test {}: !FAILED!'.format(folder))
                 logging.error(' [{}] {} - {}'.format(datetime.datetime.utcnow().time(), folder, e))
                 raise e
+    if counter == 0:
+        print('NO TESTS FOUND')
 
 if __name__ == '__main__':
-    print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
+    # print(INPUT_FORMAT, TEST_FORMAT, DESTINATION, test_type)
     execute_test(DESTINATION, INPUT_FORMAT, TEST_FORMAT, exec_function)

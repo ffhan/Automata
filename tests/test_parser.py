@@ -16,12 +16,10 @@ class TestStandardFormatParser(unittest.TestCase):
         self.test = StandardFormatParser()
 
     def test_file_parsing(self):
-
-        try:
+        with self.assertRaises(FileNotFoundError):
             text = Reader.read_file('.\\file_test.a')
             self.test.parse(text)
-        except FileNotFoundError:
-            self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
+            fail_text = Reader.read_file('.\\doesnt.exist')
 
         self._output_testing()
 
@@ -47,11 +45,8 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
 
     def test_file_parsing(self):
 
-        try:
-            text = Reader.read_file('.\\file_test_w_input.a')
-            self.test.parse(text)
-        except FileNotFoundError:
-            self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
+        text = Reader.read_file('.\\file_test_w_input.a')
+        self.test.parse(text)
 
         self._output_testing()
 
@@ -73,11 +68,8 @@ class TestPushDownFormatWithInputParser(unittest.TestCase):
 
     def test_file_parsing(self):
 
-        try:
-            text = Reader.read_file('.\\push_file_test.in')
-            self.test.parse(text)
-        except FileNotFoundError:
-            self.fail('File not found. Check if file_test_w_input.a exists in format/tests')
+        text = Reader.read_file('.\\push_file_test.in')
+        self.test.parse(text)
         print(self.test.entries)
         print(self.test.states)
         print(self.test.inputs)

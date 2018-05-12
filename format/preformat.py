@@ -19,89 +19,6 @@ def get_dfa_min(string):
 
     return dfa
 
-def test_dfa_min(string, test_output, verbose = 0):
-    dfa = get_dfa_min(string)
-    result = format.compositors.StandardCompositor(dfa).composite_automaton()
-
-    print_verbose(result, test_output, verbose)
-
-    return result == test_output.strip()
-
-def encode(automat):
-    def general_it(iterable, symbol = ','):
-        res = ''
-        for iter in iterable:
-            res += '{}{}'.format(iter, symbol)
-        return res[:-1] + '\n'
-    def coma_it(iterable):
-        return general_it(iterable)
-
-    '''
-    Format za zapis definicije ulaznog i izlaznog automata jest sljedeći:
-    1. redak: Skup stanja odvojenih zarezom, leksikografski poredana.
-    2. redak: Skup simbola abecede odvojenih zarezom, leksikografski poredana.
-    3. redak: Skup prihvatljivih stanja odvojenih zarezom, leksikografski poredana.
-    4. redak: Početno stanje.
-    5. redak i svi ostali retci: Funkcija prijelaza u formatu
-    :param FA automatum: FA that has to be encoded
-    :return str: String output
-    '''
-
-    states = list(sorted(automat.states.values()))
-    inputs = list(sorted(automat.inputs))
-    final = list(sorted(automat.accepted_states))
-    start_state = automat.start_state
-    functions = automat.functions
-    # print(states,inputs,final,start_state,functions)
-
-    result = ''
-
-    result += coma_it(states)
-    result += coma_it(inputs)
-    result += coma_it(final)
-    result += str(start_state)
-    result += '\n' + functions
-
-    return result.strip().strip('\n').strip()
-
-def encode_minimized_dfa(text):
-
-    return encode(get_dfa_min(text))
-
-def fa_output(records):
-    result = ''
-
-    for record in records:
-        r = list(record)
-        for s in r:
-            states = sorted(list(s))
-            if len(states) == 0:
-                result += '#' + '|'
-                continue
-            for state in states:
-                result += state.name + ','
-            result = result[:-1]
-            result += '|'
-        result = result[:-1]
-        result += '\n'
-
-    return result
-
-def print_output(records):
-
-    print(fa_output(records))
-
-def compare_output(records, test_output):
-
-    return fa_output(records) == test_output
-
-def compare_encoding(fa, test_output):
-    # print(encode(fa))
-    return encode(fa).strip() == test_output.strip().strip('\n').strip()
-
-def print_encoding(fa):
-    print(encode(fa))
-
 def get_e_nfa(string):
     parser = format.parsers.StandardFormatWithInputParser()
     e_nfa = automata.nfa.EpsilonNFA(string, parser)
@@ -120,24 +37,6 @@ def get_pda(string):
         pda.reset()
     # print(pda.records)
     return pda
-
-# def test_pda(string, test_output, verbose = 0):
-#     pda = get_pda(string)
-#     # print(pda)
-#     # print(pda.records)
-#     result = format.compositors.StandardPushDownCompositor(pda).composite_output()
-#
-#     print_verbose(result, test_output, verbose)
-#
-#     return result == test_output.strip()
-
-def test_e_nfa(string, test_output, verbose = 0):
-    e_nfa = get_e_nfa(string)
-    result = format.compositors.StandardCompositor(e_nfa).composite_output()
-
-    print_verbose(result, test_output, verbose)
-
-    return result == test_output.strip()
 
 def print_verbose(result, test_output, level):
     def printer(res, out):
@@ -161,3 +60,5 @@ def test_factory(getter_func, compositor, compositor_method):
     return wrapper
 
 test_pda = test_factory(get_pda, format.compositors.StandardPushDownCompositor, format.compositors.StandardPushDownCompositor.composite_output)
+test_e_nfa = test_factory(get_e_nfa, format.compositors.StandardCompositor, format.compositors.StandardCompositor.composite_output)
+test_dfa_min = test_factory(get_dfa_min, format.compositors.StandardCompositor, format.compositors.StandardCompositor.composite_automaton)

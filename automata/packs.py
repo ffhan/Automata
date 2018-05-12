@@ -93,6 +93,7 @@ class InputPack:
         return '(' + repr(self.key) + ',' + repr(self.value) + ')'
 
     def __lt__(self, other):
+        if not isinstance(other, self.__class__): return False
         if self.key == other.key:
             return self.value < other.value
         return self.key < other.key
