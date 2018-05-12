@@ -24,12 +24,12 @@ class StandardCompositor(Compositor):
     def composite_output(self):
         result = ''
 
-        for entry in self.automaton.records:
-            entry, accepted = entry.unpack
-            print(entry) #todo: fix compositors.
-            for group in entry:
-                for value in sorted(list(group)):
 
+        for entry in self.automaton.records:
+            for group in entry:
+                group, accepted = group.unpack
+                for value in sorted(list(group)):
+                    # value, accepted = value.unpack
                     result += repr(value) + ','
                 result = result[:-1] + '|'
                 if len(group) == 0:
@@ -89,7 +89,7 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
                 if state != self.automaton.failed_state:
                     result += handle_stack(stack) + ','
                 result = result[:-1] + '|'
-            result += ('1' if accepted else '0') + '|'  # todo: FA accepted (not accepted_states) property.
+            result += ('1' if accepted else '0') + '|'
             result = result[:-1] + '\n'
 
 

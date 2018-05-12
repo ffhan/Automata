@@ -247,11 +247,13 @@ class FiniteAutomaton(abc.ABC):
         :param entry: entries that have to be handled.
         :return:
         """
-
-        self.records.add_record(pk.RecordPack(self.current, self.accepted))
+        records = pk.Records()
+        records.add_record(pk.RecordPack(self.current, self.accepted))
         for inp in entry:
             self._access(inp)
-            self.records.add_record(pk.RecordPack(self.current, self.accepted))
+            records.add_record(pk.RecordPack(self.current, self.accepted))
+
+        self.records.add_record(records)
 
     @abc.abstractmethod
     def _access(self, value):

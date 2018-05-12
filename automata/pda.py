@@ -3,7 +3,7 @@ import automata.state as st
 import automata.packs as pk
 import copy
 
-class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inherit from abstract PA.
+class DeterministicPDA(dfa.DFA): # the correct implementation would be to inherit from abstract PA.
 
     def __init__(self, text, parser, empty_symbol = '$'):
 
@@ -21,7 +21,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
         self.processed_all = True
 
     def _check_structure(self):
-        pass #not checking anything. todo: check parser results.
+        pass #not checking anything. should be checking if every symbol, input and state is registered within pda.
 
     @property
     def accepted(self):
@@ -104,7 +104,7 @@ class DeterministicPDA(dfa.DFA): #todo: correct implementation would be to inher
             record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
 
             while (not self.accepted) and self._access_epsilon():
-                record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack)) # todo: all records are being held in the same container. separate containers.
+                record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
 
         self.records.add_record(record)
 
