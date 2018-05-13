@@ -1,6 +1,16 @@
+"""
+Defines a Compositor interface (abstract class) and all
+concrete implementations.
+
+In the other words, it defines all input formats.
+"""
 import abc
 
 class Compositor(abc.ABC):
+
+    """
+    An abstract Compositor. Defines an interface that all following Compositors should follow.
+    """
 
     def __init__(self, automaton):
         """
@@ -12,14 +22,28 @@ class Compositor(abc.ABC):
         self.automaton = automaton
 
     @abc.abstractmethod
-    def composite_output(self):
+    def composite_output(self) -> str:
+        """
+        Returns outputs of an automaton.
+
+        :return str: outputs of an automaton.
+        """
         pass
 
     @abc.abstractmethod
-    def composite_automaton(self):
+    def composite_automaton(self) -> str:
+        """
+        Returns a string automaton representation.
+
+        :return str: automaton representation
+        """
         pass
 
 class StandardCompositor(Compositor):
+
+    """
+    Standard form Compositor.
+    """
 
     def composite_output(self):
         result = ''
@@ -27,12 +51,13 @@ class StandardCompositor(Compositor):
 
         for entry in self.automaton.records:
             for group in entry:
-                group, accepted = group.unpack
+                group = group.unpack
+                group = group[0]
                 for value in sorted(list(group)):
                     # value, accepted = value.unpack
                     result += repr(value) + ','
                 result = result[:-1] + '|'
-                if len(group) == 0:
+                if not group: # same as len(group == 0)
                     result += '#|'
                     continue
             result = result[:-1] + '\n'
@@ -40,12 +65,26 @@ class StandardCompositor(Compositor):
 
     def composite_automaton(self):
         def general_it(iterable, symbol=','):
+            """
+            Puts a symbol between every item from iterable.
+
+            :param iterable: a collection of items
+            :param str symbol: symbol to be added
+            :return str: result string
+            """
             res = ''
-            for iter in iterable:
-                res += '{}{}'.format(iter, symbol)
+            for single_item in iterable:
+                res += '{}{}'.format(single_item, symbol)
             return res[:-1] + '\n'
 
         def coma_it(iterable):
+            """
+            Adds a comma between each item in an iterable.
+            See general_it for further details.
+
+            :param iterable: a collection of items
+            :return str: result string
+            """
             return general_it(iterable)
         states = list(sorted(self.automaton.states.values()))
         inputs = list(sorted(self.automaton.inputs))
@@ -66,13 +105,23 @@ class StandardCompositor(Compositor):
 
 class StandardPushDownCompositor(Compositor): #could inherit Standard compositor but doesn't matter.
 
+    """
+    Standard form Compositor for Push down automata.
+    """
+
     def composite_output(self):
 
         def handle_stack(stck):
+            """
+            Puts a comma between each stack item.
+
+            :param Stack stck: a stack
+            :return str: result string
+            """
             res = ''
             if stck.size > 0:
                 res = repr(stck)
-                res = res[1:-1].replace(',','').replace("'", '')
+                res = res[1:-1].replace(',', '').replace("'", '')
             else:
                 res = self.automaton.empty_symbol
             return res[::-1]

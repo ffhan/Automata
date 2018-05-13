@@ -1,5 +1,10 @@
+"""
+Defines State type which is one of the basic building
+blocks of the library.
+
+Also includes StateName.
+"""
 import collections
-import automata.packs as pk
 
 class StateName:
     '''
@@ -11,7 +16,7 @@ class StateName:
         #super().__init__()
         self._name = ''
         self.name = name
-		
+
     def __add__(self, other):
         """
         Concatenates a string or other State name.
@@ -35,6 +40,11 @@ class StateName:
 
     @property
     def name(self):
+        """
+        Returns state name
+
+        :return str: state name
+        """
         return self._name
 
     @name.setter
@@ -55,6 +65,7 @@ class StateName:
 
         if other.name == self.name:
             return True
+        return False
 
     def __hash__(self):
 
@@ -65,14 +76,16 @@ class StateName:
         return self.name
 
 class State:
-    def __init__(self, name, value, epsilon = '$'):
+    """
+    Defines an automaton State.
+    Contains State name, the value it holds and all transition functions.
+    """
+    def __init__(self, name, value, epsilon='$'):
         '''
         Initialises an automata state.
 
         :param name: name of the state
-        :param value: value the state holds (can be used externally to define if a state is accepted or not)
-        :param parent: parent automata (any class derived from FA)
-        :param rules: transition functions
+        :param value: value the state holds
         '''
 
         self.name = StateName(name)
@@ -94,6 +107,12 @@ class State:
     @property
     def direct_reach(self):
 
+        """
+        Returns all directly reachable states.
+
+        :return: all directly reachable states
+        """
+
         reach = set()
 
         for states in self.transitions.values():
@@ -103,6 +122,13 @@ class State:
 
     @staticmethod
     def __clean(value):
+
+        """
+        Cleans output of a state forward.
+
+        :param value: forward return value
+        :return:
+        """
 
         if not isinstance(value, collections.Iterable) or isinstance(value, str):
             value = {value}
@@ -122,17 +148,17 @@ class State:
 
         for state in end_state:
             # assert isinstance(state, self.__class__)
-            for ev in event:
-                if self.transitions.get(ev, -1) == -1:
-                    self.transitions[ev] = {state}
+            for single_event in event:
+                if self.transitions.get(single_event, -1) == -1:
+                    self.transitions[single_event] = {state}
                 else:
-                    self.transitions[ev].add(state)
+                    self.transitions[single_event].add(state)
 
     def __repr__(self):
-        # result = 'State {} (value {}):\n'.format(self.name, self.value)
+        # result = 'State {} (value {}):\n'.form(self.name, self.value)
         # side = ''
         # for state, trans_value in self.__transitions.items():
-        #     side += 'on {} -> {}\n'.format(state, trans_value)
+        #     side += 'on {} -> {}\n'.form(state, trans_value)
         # side = side[:-1]
         # return result + self.__wrap(side)
         return str(self.name)
@@ -141,10 +167,10 @@ class State:
     #
     #     def wrap(text):
     #         return '\t' + text.replace('\n', '\n\t')
-    #     result = 'State {} (value {}):\n'.format(self.name, self.value)
+    #     result = 'State {} (value {}):\n'.form(self.name, self.value)
     #     side = ''
     #     for state, trans_value in self._transitions.items():
-    #         side += 'on {} -> {}\n'.format(state, trans_value)
+    #         side += 'on {} -> {}\n'.form(state, trans_value)
     #     side = side[:-1]
     #     return result + wrap(side)
 
@@ -174,7 +200,6 @@ class State:
         return hash(self.name) + hash(self.value)
 
     def forward(self, value):
-
         '''
         Pass a value through the automatum and return the end state.
 
@@ -200,12 +225,30 @@ class State:
 
     @property
     def indirect_reach(self):
+        """
+        Returns an indirect reach.
+        Recursively finds all States that can be reached out of this State.
+
+        Differs from direct_reach because it also returns all reachable
+        states of directly reachable states.
+
+        :return: all indirectly reachable states.
+        """
 
         visits = set()
         self._reachable(self, visits)
         return visits
 
-    def _reachable(self, state, visited = set()):
+    def _reachable(self, state, visited):
+        """
+        Returns all indirectly reachable states for a specified state.
+        Defined in a separate (internal) method because
+        it could be a subject of change in derived classes.
+
+        :param State state: specified State
+        :param set visited: set of all currently visited States.
+        :return:
+        """
         visited |= {state}
         for i in state.direct_reach:
             if not i in visited:
@@ -214,12 +257,3 @@ class State:
     def __contains__(self, item):
 
         return item in self.transitions
-
-class PushState(State):
-
-    def __init__(self, name, value, epsilon = '$', stack = pk.Stack()):
-
-        super().__init__(name, value, epsilon)
-        self.stack = stack
-
-

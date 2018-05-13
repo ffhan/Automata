@@ -1,9 +1,18 @@
+"""
+Defines Non-deterministic finite automata, including epsilon non deterministic finite automata.
+"""
 import automata.fa as fa
 
 class NFA(fa.FiniteAutomaton):
     '''
     Non-deterministic finite automata.
     '''
+
+    def distinguish(self):
+        raise NotImplementedError
+
+    def minimize(self):
+        raise NotImplementedError
 
     def _check_structure(self):
         #does nothing.
@@ -32,12 +41,21 @@ class NFA(fa.FiniteAutomaton):
         self.current = old_currents
 
 class EpsilonNFA(NFA):
+    """
+    Epsilon non-deterministic finite automata.
+    """
 
-    def __init__(self, text, parser, epsilon = '$'):
+    def minimize(self):
+        raise NotImplementedError
+
+    def distinguish(self):
+        raise NotImplementedError
+
+    def __init__(self, text, lexer, epsilon='$'):
 
         self._epsilon = epsilon
 
-        super().__init__(text, parser)
+        super().__init__(text, lexer)
 
         self.inputs.add(epsilon)
 
@@ -48,11 +66,18 @@ class EpsilonNFA(NFA):
                 return True
         return False
 
-    def _e_closure(self, state, closure = set()):
+    def _e_closure(self, state, closure):
+        """
+        Returns an epsilon closure of a state.
+
+        :param State state: state
+        :param set closure: closure set
+        :return set: epsilon closure of a state
+        """
         if state not in self:
             raise ValueError(self._input_error(state))
 
-        if type(state) is str:
+        if isinstance(state, str):
             closure -= {state}
             state = self.states[state]
         closure |= {state}
@@ -64,7 +89,13 @@ class EpsilonNFA(NFA):
         return closure
 
     def _e_closures(self, *states):
-        currents = set(states) if type(states) is not set else states
+        """
+        Returns epsilon closure for all specified states.
+
+        :param states: specified states
+        :return set: epsilon closure for specified states
+        """
+        currents = set(states) if not isinstance(states, set) else states
 
         for i in states:
             currents |= self._e_closure(i, currents)
@@ -72,6 +103,12 @@ class EpsilonNFA(NFA):
         return currents
 
     def _all_closures(self):
+
+        """
+        Returns epsilon closure of all current states.
+
+        :return set: epsilon closure
+        """
 
         return self._e_closures(*self.current)
 
@@ -86,5 +123,3 @@ class EpsilonNFA(NFA):
         self.current = self._all_closures()
 
         return super()._process(*entry)
-
-

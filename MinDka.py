@@ -1,10 +1,10 @@
-import format.preformat as pf
-import format.readers as rs
-import format.parsers as ps
-import format.compositors as cs
+"""
+Endpoint for checking minimized DFA representation.
+"""
+import form.preformat as pf
+import form.readers as rs
+import form.compositors as cs
 
-from automata.dfa import DFA
-
-text = rs.Reader.read_input()
-dfa = pf.get_dfa_min(text)
-print(cs.StandardCompositor(dfa).composite_automaton())
+TEXT = rs.Reader.read_input()
+DFA = pf.get_dfa_min(TEXT)
+print(cs.StandardCompositor(DFA).composite_automaton())

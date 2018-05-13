@@ -1,1 +1,4 @@
-from . import format, automata, misc, tests, command_tester, SimEnka, SimPa, MinDka
+"""
+Lingua is a library that enables easy and fast language and grammar creation, checking and parsing.
+"""
+from . import form, automata, misc, command_tester, SimEnka, SimPa, MinDka

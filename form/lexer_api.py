@@ -1,4 +1,8 @@
-def split_factory(split_by = ',', cast_to = list, remove_empty = True):
+"""
+Defines methods that are commonly used in Lexer classes.
+"""
+
+def split_factory(split_by=',', cast_to=list, remove_empty=True):
     """
     Creates a uniform function split by a selected expression.
 
@@ -9,7 +13,7 @@ def split_factory(split_by = ',', cast_to = list, remove_empty = True):
     """
 
     try:
-        assert type(cast_to) is type
+        assert isinstance(cast_to, type)
     except AssertionError:
         raise RuntimeError('cast_to has to be a type. For example, use set instead of set().')
 
@@ -34,10 +38,10 @@ def split_factory(split_by = ',', cast_to = list, remove_empty = True):
 
     return wrapper
 
-split_coma_set = split_factory(',', set)
-split_coma_list = split_factory(',', list)
+SPLIT_COMMA_SET = split_factory(',', set)
+SPLIT_COMMA_LIST = split_factory(',', list)
 
-split_newline_set = split_factory('\n', set)
-split_newline_list = split_factory('\n', list)
+SPLIT_NEWLINE_SET = split_factory('\n', set)
+SPLIT_NEWLINE_LIST = split_factory('\n', list)
 
-split_lines_without_removal = split_factory('\n', list, False)
+SPLIT_LINES_WITHOUT_REMOVAL = split_factory('\n', list, False)

@@ -1,27 +1,35 @@
+"""
+Defines Push down automata (currently only Deterministic version).
+"""
 import automata.dfa as dfa
 import automata.state as st
 import automata.packs as pk
-import copy
 
 class DeterministicPDA(dfa.DFA): # the correct implementation would be to inherit from abstract PA.
 
-    def __init__(self, text, parser, empty_symbol = '$'):
+    """
+    Deterministic push down automaton implementation.
+    """
 
-        super().__init__(text, parser)
+    def __init__(self, text, lexer, empty_symbol='$'):
 
-        self.start_symbol = parser.start_stack
+        super().__init__(text, lexer)
+
+        self.start_symbol = lexer.start_stack
         self.stack = pk.Stack(self.start_symbol)
 
-        self.stack_alphabet = parser.stack_alphabet
+        self.stack_alphabet = lexer.stack_alphabet
 
         self.inputs.add(empty_symbol)
         self.empty_symbol = empty_symbol
 
-        self.failed_state = st.PushState('fail', 0, epsilon = empty_symbol)
+        self.failed_state = st.State('fail', 0, epsilon=empty_symbol)
         self.processed_all = True
 
     def _check_structure(self):
-        pass #not checking anything. should be checking if every symbol, input and state is registered within pda.
+        # not checking anything. should be checking if every symbol,
+        # input and state is registered within pda.
+        pass
 
     @property
     def accepted(self):
@@ -37,8 +45,6 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
         self.stack.push(self.start_symbol)
 
     def _access(self, value):
-        def error_print(msg):
-            print(msg, self.current, value, symbol, self.stack)
         go_on = True
         if self.stack.size == 0:
             self.current = self.failed_state
@@ -64,10 +70,17 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
         self.stack += stack.exclude(self.empty_symbol)
 
         self.current = current
-        # print('Go on: {}'.format(go_on), self.stack, self.current)
+        # print('Go on: {}'.form(go_on), self.stack, self.current)
         return go_on
 
     def _access_epsilon(self):
+
+        """
+        Goes through all possible epsilon transitions if
+        the stack is not empty and DPDA is still not accepted.
+
+        :return:
+        """
 
         if self.stack.size == 0:
             return False
@@ -89,7 +102,9 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
         record = pk.Records()
         entry = list(entry)
 
-        while len(entry) > 0: # go through epsilon transitions until the stack is depleted or there aren't any possible moves left.
+        while entry: # same as len(entry) > 0
+            # go through epsilon transitions until the stack is depleted
+            # or there aren't any possible moves left.
             record.add_record(pk.PushRecordPack(self.current, self.accepted, self.stack))
             # print(entry)
             if self.current == self.failed_state:

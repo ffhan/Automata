@@ -1,24 +1,24 @@
 import unittest
-from format.parsers import Parser, StandardFormatParser, \
+from form.lexers import Lexer, StandardFormatLexer, \
     StandardFormatWithInputParser, PushDownFormatWithInputParser
-from format.readers import Reader
+from form.readers import Reader
 
 class TestParser(unittest.TestCase):
 
     def test_abstraction(self):
 
         with self.assertRaises(TypeError):
-            test = Parser()
+            test = Lexer()
 
 class TestStandardFormatParser(unittest.TestCase):
 
     def setUp(self):
-        self.test = StandardFormatParser()
+        self.test = StandardFormatLexer()
 
     def test_file_parsing(self):
         with self.assertRaises(FileNotFoundError):
             text = Reader.read_file('.\\filetest.a')
-            self.test.parse(text)
+            self.test.scan(text)
             fail_text = Reader.read_file('.\\doesnt.exist')
 
         self._output_testing()
@@ -46,7 +46,7 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
     def test_file_parsing(self):
 
         text = Reader.read_file('.\\filetestwinput.a')
-        self.test.parse(text)
+        self.test.scan(text)
 
         self._output_testing()
 
@@ -73,7 +73,7 @@ class TestPushDownFormatWithInputParser(unittest.TestCase):
             import sys
             print(sys.path)
             self.fail(repr(e))
-        self.test.parse(text)
+        self.test.scan(text)
         print(self.test.entries)
         print(self.test.states)
         print(self.test.inputs)

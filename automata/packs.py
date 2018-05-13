@@ -1,14 +1,36 @@
+"""
+Defines all types that contain complex data.
+It allows separation of concern and managing complex behaviour.
+
+Packs are used to transport complex data through the system.
+"""
 import copy
 
 class RecordPack:
 
+    """
+    Packs a current state of an automaton.
+    """
+
     def __init__(self, current, accepted):
+
+        """
+        Initializes a RecordPack.
+
+        :param current: current state(s)
+        :param bool accepted: automaton acceptance for the current automaton state
+        """
 
         self.current = current
         self.accepted = copy.deepcopy(accepted)
 
     @property
     def unpack(self):
+        """
+        Unpacks inner values.
+
+        :return: unpacked values
+        """
         return self.current, self.accepted
 
     def __repr__(self):
@@ -16,7 +38,19 @@ class RecordPack:
 
 class PushRecordPack(RecordPack):
 
+    """
+    Record pack that also contains a stack. Used primarily in Push down automata.
+    """
+
     def __init__(self, current, accepted, stack):
+
+        """
+        Initializes a PushRecordPack.
+
+        :param current: current state(s)
+        :param accepted: automaton acceptance
+        :param stack: automaton stack
+        """
 
         super().__init__(current, accepted)
         self.stack = copy.deepcopy(stack)
@@ -30,9 +64,20 @@ class PushRecordPack(RecordPack):
 
 class Records:
 
+    """
+    Collection of RecordPacks.
+    """
+
     def __init__(self, *records):
 
+        """
+        Initializes a Records object.
+
+        :param records: (Push)RecordPacks
+        """
+
         self.records = []
+        self._index = 0
 
         self.add_records(*records)
 
@@ -41,13 +86,28 @@ class Records:
 
     @property
     def size(self):
+        """
+        :return int: count of records held internally
+        """
         return len(self.records)
 
     def add_record(self, record):
+        """
+        Adds a RecordPack.
+
+        :param RecordPack record: a record
+        :return:
+        """
 
         self.records.append(record)
 
     def add_records(self, *records):
+        """
+        Adds multiple records.
+
+        :param records: records
+        :return:
+        """
 
         for record in records:
             self.add_record(record)
@@ -69,6 +129,9 @@ class Records:
 class InputPack:
     """
     Contains State as a 'key', stack symbol as a 'value'
+    Differs from RecordPack in usage and internal mechanisms.
+    InputPack is designed so that it can be reinitialized and
+    reproduced and be identical to objects created on a different reference.
     """
     def __init__(self, key, value):
 
@@ -77,6 +140,11 @@ class InputPack:
 
     @property
     def unpack(self):
+        """
+        Unpacks internal values
+
+        :return: internal values in a tuple
+        """
         return self.key, self.value
 
     def __eq__(self, other):
@@ -93,38 +161,77 @@ class InputPack:
         return '(' + repr(self.key) + ',' + repr(self.value) + ')'
 
     def __lt__(self, other):
-        if not isinstance(other, self.__class__): return False
+        if not isinstance(other, self.__class__):
+            return False
         if self.key == other.key:
             return self.value < other.value
         return self.key < other.key
 
 class Stack:
+    """
+    A classic Stack implementation.
+    """
     def __init__(self, *items):
+        """
+        Initializes a Stack.
+
+        :param items: items to be added to a stack
+        """
         self._container = list()
         for item in items:
             self.push(item)
+
+        self._index = 1
     def push(self, *item):
-        for it in item:
-            self._container.append(it)
+        """
+        Push items to the stack.
+
+        :param item: items to be added
+        :return:
+        """
+        for single_item in item:
+            self._container.append(single_item)
 
     def pop(self):
+        """
+        Pop the last item of a stack.
+
+        :return: last item of a stack
+        """
         return self._container.pop()
 
     def peek(self):
+        """
+        Return the last item of a stack but don't remove it.
+
+        :return: last item of a stack
+        """
         return self._container[-1]
 
     def clear(self):
+        """
+        Clears the stack.
+
+        :return:
+        """
         self._container.clear()
 
     @property
     def container(self):
+        """
+        Returns the internal stack container.
+        It returns a deep copy so it's not bound by reference to the original object.
+        Changing the returned container doesn't change Stack container.
+
+        :return list: deep copy of an internal container
+        """
         return copy.deepcopy(self._container)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
 
-        return self._container == other._container
+        return self._container == other.container
 
     def __hash__(self):
         res = 0
@@ -135,23 +242,50 @@ class Stack:
         return res
 
     def reverse(self):
+        """
+        Reverses a Stack.
+        Doesn't copy the stack so the returned reference is exactly the same as this object.
+        Changing returned object also changes this object.
+
+        :return Stack: reversed stack
+        """
         self._container.reverse()
         return self
 
     def exclude(self, symbol):
+        """
+        Excludes all occurrences of a specified item (symbol) from a stack.
+        Returns a Stack that is not bound by reference to this object.
+        Changing the returned Stack does not change this stack.
+
+        :param symbol: an item to be excluded from a stack.
+        :return Stack: new Stack with all elements without a specified symbol.
+        """
 
         temp = self.__class__()
         for i in self:
-            if i != symbol: temp.push(i)
+            if i != symbol:
+                temp.push(i)
 
         return temp.reverse()
 
     @property
     def size(self):
+        """
+        Returns the size of the container
+
+        :return: size
+        """
         return len(self._container)
 
     def __repr__(self):
         def wrap(text):
+            """
+            Wraps a text in []
+
+            :param str text: text to be wrapped
+            :return str: wrapped text
+            """
             return '[' + text + ']'
 
         result = ''
@@ -164,7 +298,7 @@ class Stack:
         assert isinstance(other, self.__class__)
         tmp = copy.deepcopy(self) # DO NOT REMOVE OR CHANGE.
         tmp2 = copy.deepcopy(other)
-        tmp2._container.reverse()
+        tmp2.reverse()
         tmp._container += tmp2.container
 
         return tmp

@@ -1,7 +1,11 @@
-import format.preformat as pf
-import format.readers as rs
-import format.compositors as cs
-text = rs.Reader.read_input()
-e_nfa = pf.get_e_nfa(text)
+"""
+Endpoint for checking epsilon NFA output.
+"""
+import form.preformat as pf
+import form.readers as rs
+import form.compositors as cs
+
+TEXT = rs.Reader.read_input()
+E_NFA = pf.get_e_nfa(TEXT)
 # cs.StandardCompositor(e_nfa).composite_output()
-print(cs.StandardCompositor(e_nfa).composite_output())
+print(cs.StandardCompositor(E_NFA).composite_output())

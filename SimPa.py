@@ -1,10 +1,10 @@
-import format.preformat as pf
-import format.readers as rs
-import format.parsers as ps
-import format.compositors as cs
+"""
+Endpoint for checking Deterministic PDA output.
+"""
+import form.preformat as pf
+import form.readers as rs
+import form.compositors as cs
 
-from automata.dfa import DFA
-
-text = rs.Reader.read_input()
-dfa = pf.get_pda(text)
-print(cs.StandardPushDownCompositor(dfa).composite_output())
+TEXT = rs.Reader.read_input()
+DFA = pf.get_dpda(TEXT)
+print(cs.StandardPushDownCompositor(DFA).composite_output())

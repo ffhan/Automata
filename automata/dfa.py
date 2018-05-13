@@ -1,3 +1,6 @@
+"""
+Defines Deterministic finite automata.
+"""
 import automata.fa as fa
 
 class DFA(fa.FiniteAutomaton):
@@ -5,19 +8,22 @@ class DFA(fa.FiniteAutomaton):
     Deterministic finite automata.
     '''
 
-    def __init__(self, text, parser):
+    def __init__(self, text, lexer):
 
-        super().__init__(text, parser)
+        super().__init__(text, lexer)
 
         self.current = list(self.current)[0]
 
     @property
-    def accepted(self):
+    def accepted(self) -> bool:
+        """
+        Defines if current automaton state is defined
+
+        :return bool: True if accepted, False if not
+        """
         return self.current in self.accepted_states
 
     def _check_structure(self):
-
-        function_num = 0
 
         error_msg = 'Incorrect {} structure.'.format(self.__class__.__name__)
 
@@ -30,6 +36,13 @@ class DFA(fa.FiniteAutomaton):
 
     def reset(self):
 
+        """
+        Resets the current state.
+        Doesn't delete the records.
+
+        :return:
+        """
+
         super().reset()
         self.current = self.start_state
 
@@ -39,15 +52,24 @@ class DFA(fa.FiniteAutomaton):
 
     def distinguish(self):
 
-        def is_in(v1, v2, tab):
-            return (v1,v2) in tab or (v2,v1) in tab
+        def is_in(value_1, value_2, tab):
+            """
+            Determines if tuple of values is in a collection.
+
+            :param value_1: any value
+            :param value_2: any value
+            :param tab: any collection
+            :return bool: does (value_1, value_2) or (value_2, value_1) exist in tab?
+            """
+            return (value_1, value_2) in tab or (value_2, value_1) in tab
 
 
         states = list(self.states.values())
 
         table = set()
 
-        for i in range(len(states)):
+        for i in enumerate(states):
+            i = i[0]
             for j in range(i + 1, len(states)):
                 if states[i].value == states[j].value:
                     table.add((states[i], states[j]))
@@ -59,21 +81,21 @@ class DFA(fa.FiniteAutomaton):
             temp = table.copy()
             for inp in self.inputs:
 
-                for s1, s2 in temp:
+                for state_1, state_2 in temp:
 
-                    r1, r2 = s1.clean_forward(inp), s2.clean_forward(inp)
-                    if r1 != r2 and not is_in(r1, r2, table):
-                        table -= {(s1,s2)} | {(s2, s1)}
+                    result_1, result_2 = state_1.clean_forward(inp), state_2.clean_forward(inp)
+                    if result_1 != result_2 and not is_in(result_1, result_2, table):
+                        table -= {(state_1, state_2)} | {(state_2, state_1)}
                         added += 1
 
-        for s1, s2 in table:
-            if s1.name > s2.name:
-                c = s1
-                s1 = s2
-                s2 = c
-            self._set_alias(s1.name, s2.name)
+        for state_1, state_2 in table:
+            if state_1.name > state_2.name:
+                temporary = state_1
+                state_1 = state_2
+                state_2 = temporary
+            self._set_alias(state_1.name, state_2.name)
 
-        for old_state, new_state in self._alias.items():
+        for old_state in self._alias:
             self.states.pop(old_state)
 
         return table

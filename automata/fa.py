@@ -1,35 +1,40 @@
+"""
+Defines finite automata abstract class.
+In other words, it defines an interface that all derived classes have to follow.
+"""
+import abc
 import automata.state as st
 import automata.packs as pk
-import abc, re, collections
 
 class FiniteAutomaton(abc.ABC):
     """
     Finite automata base abstract class. It isn't aware of transition functions.
 
-    This is not an initialisable class. It serves exclusively as a template for more defined derived classes such as DFA and NFA.
+    This is not an initialisable class.
+    It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     """
 
-    def __init__(self, text, parser):
+    def __init__(self, text, lexer):
         """
         Initialises a finite state automata.
 
         :param str text: Input text
-        :param format.parser.Parser parser: Concrete Parser implementation
+        :param format.lexers.Lexer lexer: Concrete Lexer implementation
         """
 
-        parser.parse(text)
+        lexer.scan(text)
 
-        self.states = parser.states
+        self.states = lexer.states
 
-        self.inputs = set(parser.inputs)
+        self.inputs = set(lexer.inputs)
 
         self.records = pk.Records()
 
-        if self.states.get(parser.start_state.name, 0):
-            self.start_state = parser.start_state
-            self.current = {parser.start_state}
+        if self.states.get(lexer.start_state.name, 0):
+            self.start_state = lexer.start_state
+            self.current = {lexer.start_state}
         else:
-            raise ValueError(self._state_error(parser.start_state.name))
+            raise ValueError(self._state_error(lexer.start_state.name))
 
         for name, state in self.states.items():
             try:
@@ -41,24 +46,29 @@ class FiniteAutomaton(abc.ABC):
             except AssertionError:
                 raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
 
-        assert isinstance(parser.start_state, st.State)
+        assert isinstance(lexer.start_state, st.State)
 
         self._check_structure()
 
         self._alias = dict() # used to ensure backwards compatibility after FA minimization.
 
     @abc.abstractmethod
-    def _check_structure(self):
+    def _check_structure(self) -> bool:
         """
         Checks if inner structure is correct. Raises a ValueError if not correct.
 
-        :return:
+        :return bool: True
         """
         pass
 
     @property
     @abc.abstractmethod
-    def accepted(self):
+    def accepted(self) -> bool:
+        """
+        Defines if current automaton state is defined
+
+        :return bool: True if accepted, False if not
+        """
         pass
 
     @property
@@ -107,6 +117,12 @@ class FiniteAutomaton(abc.ABC):
 
     def reachable(self):
 
+        """
+        Removes all unreachable states.
+
+        :return:
+        """
+
         visited = self.start_state.indirect_reach
 
         states = dict()
@@ -128,7 +144,8 @@ class FiniteAutomaton(abc.ABC):
 
     def _not_defined_substring(self):
         """
-        Method used to follow DRY principle in error reporting. May be moved to custom Error classes.
+        Method used to follow DRY principle in error reporting.
+        May be moved to custom Error classes.
 
         :return str: Returns 'is not defined in this "name of the class"' string for an error.
         """
@@ -148,9 +165,9 @@ class FiniteAutomaton(abc.ABC):
         :param str prefix: Possible beginning of the error.
         :return str: state error string
         """
-
-        return '{}{}tate "{}"'.format(prefix, 'S' if prefix == '' else ' s', state,
-                                      type(self).__name__) + self._not_defined_substring()
+        start_prefix = 'S' if prefix == '' else ' s'
+        return '{}{}tate "{}" {}'.format(prefix, start_prefix, state,
+                                         type(self).__name__) + self._not_defined_substring()
 
     def _input_error(self, inp):
         """
@@ -164,20 +181,36 @@ class FiniteAutomaton(abc.ABC):
 
     def __repr__(self):
         def wrap_in_braces(string, last_brace_newline=False):
+            """
+            Wraps up a string in {}.
+
+            :param str string: string to be wrapped
+            :param bool last_brace_newline: defines if newline will be put after braces
+            :return str: wrapped string
+            """
             return '{' + string + ('\n}' if last_brace_newline else '}')
 
         def tab(string):
-            return '\t' + string.replace('\n', '\n\t')
+            """
+            Puts tabs in front of all lines in a string.
 
-        def space(*strings):
-            result = ''
-            for s in strings:
-                result += s + ' '
-            return result[:-1]
+            Example:
+            -------------
+            For example,
+            this becomes:
+            -------------
+                For example,
+                this becomes:
+            -------------
+
+            :param str string: input string
+            :return str: tabbed strings
+            """
+            return '\t' + string.replace('\n', '\n\t')
 
         def newline(*lines):
             """
-            Returns concatenated string composed of all line arguments with newline added between them.
+            Returns string composed of all line arguments with newline added between them.
 
             :param str lines: lines of text that need to be newlined.
             :return: full string composed of individual lines concatenated with newline in-between
@@ -186,6 +219,7 @@ class FiniteAutomaton(abc.ABC):
             for line in lines:
                 res += line + '\n'
             return res[:-1]
+
         states = ''
         final = ''
 
@@ -237,10 +271,10 @@ class FiniteAutomaton(abc.ABC):
             return self.__contains_helper(item)
         elif isinstance(item, st.State):
             return self.__contains_helper(item.name)
-        else:
-            return False
+        return False
 
-    def _process(self, *entry): #exists to precisely define how entries are handled. Enter is just interface endpoint
+    # exists to precisely define how entries are handled. Enter is just interface endpoint
+    def _process(self, *entry):
         """
         Processes the entry arguments.
 
@@ -298,26 +332,32 @@ class FiniteAutomaton(abc.ABC):
     def distinguish(self):
         """
         Distinguishes identical states from non-identical and updates the automatum.
-        
-        :return: 
+
+        :return:
         """
         raise NotImplementedError()
 
     def minimize(self):
+        """
+        Minimizes an automaton.
+
+        :return:
+        """
         raise NotImplementedError()
 
     @property
-    def functions(self):
+    def functions(self) -> str:
         """
-        Updates functions and start state according to changes made in the automatum.
+        Returns functions for repr() function.
 
-        :return:
+        :return str: string representation of transition functions
         """
 
         result = ''
 
         for state in sorted(self.states.values()):
-            for event, end_states in state.transitions.items(): #extremely bad code, but it's a part of an interface
+            for event, end_states in state.transitions.items():
+                # extremely bad code, but it's a part of an interface
                 result += '{},{}->'.format(self._get_alias(state.name), event)
                 for end in end_states:
                     # print(end, type(end))

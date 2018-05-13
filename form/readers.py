@@ -1,7 +1,9 @@
+"""
+Defines all readers.
+"""
 import sys
 
 class Reader:
-
     """
     Used in handling reading input.
     """
