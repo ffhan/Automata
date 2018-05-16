@@ -32,6 +32,7 @@ class FiniteAutomaton(abc.ABC):
 
         if self.states.get(lexer.start_state.name, 0):
             self.start_state = lexer.start_state
+            assert isinstance(self.start_state, st.State)
             self.current = {lexer.start_state}
         else:
             raise ValueError(self._state_error(lexer.start_state.name))
@@ -47,6 +48,7 @@ class FiniteAutomaton(abc.ABC):
                 raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
 
         assert isinstance(lexer.start_state, st.State)
+        assert isinstance(self.start_state, st.State)
 
         self._check_structure()
 
@@ -180,6 +182,7 @@ class FiniteAutomaton(abc.ABC):
         return 'Input "{}"'.format(inp) + self._not_defined_substring()
 
     def __repr__(self):
+        assert isinstance(self.start_state, st.State)
         def wrap_in_braces(string, last_brace_newline=False):
             """
             Wraps up a string in {}.
@@ -224,10 +227,10 @@ class FiniteAutomaton(abc.ABC):
         final = ''
 
         for state, state_object in self.states.items():
-            states += state + ','
+            states += str(state) + ','
             if state_object.value:
                 # print(final, state)
-                final += state.name
+                final += str(state.name)
 
         final = 'F=' + wrap_in_braces(final)
 
@@ -242,8 +245,17 @@ class FiniteAutomaton(abc.ABC):
 
         funcs = u'\u03B4=' + wrap_in_braces(self.functions)
 
-        start = 'q0=' + self.start_state.name
-
+        try:
+            assert isinstance(self.start_state, st.State)
+        except AssertionError as error:
+            print("Start state is not state, it's {}".format(type(self.start_state)), error)
+            raise AssertionError
+        start = 'q0=' + str(self.start_state.name)
+        try:
+            assert isinstance(self.start_state, st.State)
+        except AssertionError as error:
+            print("Start state is not state, it's {}".format(type(self.start_state)), error)
+            raise AssertionError
         return '{} '.format(self.__class__.__name__) + wrap_in_braces(tab(
             newline(states, inputs, funcs, start, final)
         ), True)
@@ -363,9 +375,5 @@ class FiniteAutomaton(abc.ABC):
                     # print(end, type(end))
                     result += '{},'.format(self._get_alias(end.name))
                 result = result[:-1] + '\n'
-
-        # print(result)
-
-        self.start_state = self._get_alias(self.start_state.name)
 
         return result.strip()
