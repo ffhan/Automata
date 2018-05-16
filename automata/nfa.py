@@ -90,7 +90,7 @@ class EpsilonNFA(NFA):
 
         return closure
 
-    def _e_closures(self, *states):
+    def e_closures(self, *states):
         """
         Returns epsilon closure for all specified states.
 
@@ -112,7 +112,7 @@ class EpsilonNFA(NFA):
         :return set: epsilon closure
         """
 
-        return self._e_closures(*self.current)
+        return self.e_closures(*self.current)
 
     def _access(self, value):
 
@@ -140,7 +140,7 @@ class EpsilonNFA(NFA):
 
         :param EpsilonNFA other: other epsilon NFA
         :return EpsilonNFA: resulting NFA
-        """
+        """ #todo: ensure current and start state and records are not bound by reference to the original.
         import form.lexers as lex
 
         #ensuring state names are not identical when doing multiple additions.
