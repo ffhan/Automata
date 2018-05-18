@@ -77,6 +77,7 @@ class StandardFormatLexer(Lexer):
         """
         accepted_states = api.SPLIT_COMMA_SET(accepted)
         for state in api.SPLIT_COMMA_LIST(states):
+            # epsilon is format-specific so it should be bound to a specific Lexer implementation.
             state_obj = self.state_imp(state, 1 if state in accepted_states else 0)
             self.states[state] = state_obj
 

@@ -1,6 +1,7 @@
 """
 Defines Push down automata (currently only Deterministic version).
 """
+import copy
 import automata.dfa as dfa
 import automata.state as st
 import automata.packs as pk
@@ -11,14 +12,14 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
     Deterministic push down automaton implementation.
     """
 
-    def __init__(self, text, lexer, empty_symbol='$'):
+    def __init__(self, states, inputs, start_state, stack_alphabet, start_stack, empty_symbol='$'):
 
-        super().__init__(text, lexer)
+        super().__init__(states, inputs, start_state)
 
-        self.start_symbol = lexer.start_stack
+        self.start_symbol = start_stack
         self.stack = pk.Stack(self.start_symbol)
 
-        self.stack_alphabet = lexer.stack_alphabet
+        self.stack_alphabet = stack_alphabet
 
         self.inputs.add(empty_symbol)
         self.empty_symbol = empty_symbol
@@ -124,3 +125,15 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
         self.records.add_record(record)
 
         # print(self.records)
+
+    @staticmethod
+    def factory(input_text, lexer):
+        lexer.scan(input_text)
+        return __class__(lexer.states, lexer.inputs, lexer.start_state, lexer.stack_alphabet, lexer.start_stack)
+
+    def _create_copy(self, *args):
+        return self.__class__(*args, empty_symbol=copy.deepcopy(self.empty_symbol),
+                              start_stack=copy.deepcopy(self.start_symbol),
+                              stack_alphabet=copy.deepcopy(self.stack_alphabet))
+    def _create_state(self, *args):
+        return st.State(*args, epsilon=self.empty_symbol)

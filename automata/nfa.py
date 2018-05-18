@@ -42,6 +42,11 @@ class NFA(fa.FiniteAutomaton):
 
         self.current = old_currents
 
+    @staticmethod
+    def factory(input_text, lexer):
+        lexer.scan(input_text)
+        return __class__(lexer.states, lexer.inputs, lexer.start_state)
+
 class EpsilonNFA(NFA):
     """
     Epsilon non-deterministic finite automata.
@@ -53,11 +58,11 @@ class EpsilonNFA(NFA):
     def distinguish(self):
         raise NotImplementedError
 
-    def __init__(self, text, lexer, epsilon='$'):
+    def __init__(self, states, inputs, start_state, epsilon='$'):
 
         self._epsilon = epsilon
 
-        super().__init__(text, lexer)
+        super().__init__(states, inputs, start_state)
 
         self.inputs.add(epsilon)
 
@@ -126,33 +131,27 @@ class EpsilonNFA(NFA):
 
         return super()._process(*entry)
 
-    def __add__(self, other): #todo: implement deepcopy of FA.
-        def item_copy(item):
-            """
-            Deepcopies an item.
-
-            :param item: item to copy
-            :return: deep copied item
-            """
-            return copy.deepcopy(item)
+    def __add__(self, other):
         """
         Allows for epsilon NFA addition.
 
         :param EpsilonNFA other: other epsilon NFA
         :return EpsilonNFA: resulting NFA
-        """ #todo: ensure current and start state and records are not bound by reference to the original.
+        """
         import form.lexers as lex
 
         #ensuring state names are not identical when doing multiple additions.
         ending = 'end_'
         for state in self.accepted_states:
             ending += str(state.name)
+        for state in other.accepted_states:
+            ending += str(state.name)
 
         # ensuring state names are not identical when doing multiple additions.
-        starting = 'start_' + str(self.start_state.name)
+        starting = 'start_' + str(self.start_state.name) + str(other.start_state.name)
 
         #we need a clean epsilon NFA instance. See NFA union.
-        new_e_nfa = self.__class__(
+        new_e_nfa = self.factory(
             """{0},{1}
             
             {1}
@@ -163,24 +162,17 @@ class EpsilonNFA(NFA):
         starting = new_e_nfa.start_state
         ending = list(new_e_nfa.accepted_states)[0]
 
-        for state in self.states.values():
-            copied_state = item_copy(state)
-            new_e_nfa.states[copied_state.name] = copied_state
-        for state in other.states.values():
-            copied_state = item_copy(state)
-            new_e_nfa.states[copied_state.name] = copied_state
+        copied_self = self.deepcopy()
+        copied_other = other.deepcopy()
 
-        for start in new_e_nfa.states.values():
-            for event, states in start.transitions.items():
-                replace_set = set()
-                for state in states:
-                    replace_set.add(new_e_nfa.states[state.name])
-                start.transitions[event] = replace_set
+        for state in copied_self.states.values():
+            new_e_nfa.states[state.name] = state
+        for state in copied_other.states.values():
+            new_e_nfa.states[state.name] = state
 
-        for single_input in self.inputs:
-            new_e_nfa.inputs.add(item_copy(single_input))
-        for single_input in other.inputs:
-            new_e_nfa.inputs.add(item_copy(single_input))
+        new_e_nfa.states.update(copied_self.states)
+        new_e_nfa.states.update(copied_other.states)
+        new_e_nfa.inputs |= copied_self.inputs | copied_other.inputs
 
         starting.add_function(new_e_nfa.states[self.start_state.name], self._epsilon)
         starting.add_function(new_e_nfa.states[other.start_state.name], self._epsilon)
@@ -188,11 +180,6 @@ class EpsilonNFA(NFA):
         for state in new_e_nfa.accepted_states:
             if state != ending:
                 state.add_function(ending, self._epsilon)
-        #
-        # for state in other.accepted_states:
-        #     state.add_function(ending, self._epsilon)
-
-        new_e_nfa = item_copy(new_e_nfa)
 
         for state in new_e_nfa.accepted_states:
             if state != ending:
@@ -201,14 +188,6 @@ class EpsilonNFA(NFA):
         return new_e_nfa
 
     def __mul__(self, other):
-        def item_copy(item):
-            """
-            Deep copies an item.
-
-            :param item: item to copy
-            :return: deep copied item
-            """
-            return copy.deepcopy(item)
         """
         Allows for multiplying epsilon NFA-s.
 
@@ -216,38 +195,19 @@ class EpsilonNFA(NFA):
         :return EpsilonNFA: multiplied NFA-s
         """
 
-        first = item_copy(self)
-        for state in other.states.values():
-            copied_state = item_copy(state)
-            first.states[copied_state.name] = copied_state
-        for single_input in other.inputs:
-            first.inputs.add(single_input)
+        first = self.deepcopy()
+        other = other.deepcopy()
+
+        first.states.update(other.states)
+        first.inputs |= other.inputs
+
         for state in first.accepted_states:
             if state not in other.accepted_states:
                 state.value = 0
-                state.add_function(item_copy(other.start_state), self._epsilon)
 
-        for start in first.states.values():
-            for event, states in start.transitions.items():
-                replace_set = set()
-                for state in states:
-                    replace_set.add(first.states[state.name])
-                start.transitions[event] = replace_set
-
-        new_e_nfa = copy.deepcopy(first)
-
-        return new_e_nfa
+        return first
 
     def kleene_operator(self):
-
-        def item_copy(item):
-            """
-            Deep copy an item.
-
-            :param item: item to copy
-            :return: deep copied item
-            """
-            return copy.deepcopy(item)
 
         import form.lexers as lex
 
@@ -260,7 +220,7 @@ class EpsilonNFA(NFA):
         starting = 'start_' + str(self.start_state.name)
 
         # we need a clean epsilon NFA instance. See NFA union.
-        new_e_nfa = self.__class__(
+        new_e_nfa = self.factory(
             """{0},{1}
 
             {1}
@@ -272,19 +232,10 @@ class EpsilonNFA(NFA):
         ending = list(new_e_nfa.accepted_states)[0]
         starting.add_function(ending, self._epsilon)
 
-        for state in self.states.values():
-            copied_state = item_copy(state)
-            new_e_nfa.states[copied_state.name] = copied_state
+        copied_self = self.deepcopy()
 
-        for start in new_e_nfa.states.values():
-            for event, states in start.transitions.items():
-                replace_set = set()
-                for state in states:
-                    replace_set.add(new_e_nfa.states[state.name])
-                start.transitions[event] = replace_set
-
-        for single_input in self.inputs:
-            new_e_nfa.inputs.add(item_copy(single_input))
+        new_e_nfa.states.update(copied_self.states)
+        new_e_nfa.inputs |= copied_self.inputs
 
         starting.add_function(new_e_nfa.states[self.start_state.name], self._epsilon)
         ending.add_function(new_e_nfa.states[self.start_state.name], self._epsilon)
@@ -292,12 +243,20 @@ class EpsilonNFA(NFA):
         for state in new_e_nfa.accepted_states:
             if state != ending:
                 state.add_function(ending, self._epsilon)
-        #
-        # for state in other.accepted_states:
-        #     state.add_function(ending, self._epsilon)
 
         for state in new_e_nfa.accepted_states:
             if state != ending:
                 state.value = 0
 
         return new_e_nfa
+
+    @staticmethod
+    def factory(input_text, lexer):
+        lexer.scan(input_text)
+        return __class__(lexer.states, lexer.inputs, lexer.start_state)
+
+    def _create_copy(self, *args):
+        return self.__class__(*args, epsilon=copy.deepcopy(self._epsilon))
+
+    def _create_state(self, *args):
+        return st.State(*args, epsilon=self._epsilon)

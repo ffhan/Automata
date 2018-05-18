@@ -1,7 +1,10 @@
+"""
+API used to cast various automata to other types.
+"""
 import copy
 import automata.nfa
 
-def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA):
+def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA): # todo: fix this cast, add tests
     """
     Casts epsilon NFA to NFA.
 
@@ -18,9 +21,9 @@ def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA):
         """
         return copy.deepcopy(item)
 
-    work = item_copy(e_nfa)
+    work = e_nfa.deepcopy()
     closure = set()
-    work._e_closure(work.start_state, closure)
+    work._e_closure(work.start_state, closure) # NOT the same as state.indirect_reach
     for state in closure:
         if state.value:
             work.start_state.value = 1

@@ -8,9 +8,9 @@ class DFA(fa.FiniteAutomaton):
     Deterministic finite automata.
     '''
 
-    def __init__(self, text, lexer):
+    def __init__(self, states, inputs, start_state):
 
-        super().__init__(text, lexer)
+        super().__init__(states, inputs, start_state)
 
         self.current = list(self.current)[0]
 
@@ -107,3 +107,8 @@ class DFA(fa.FiniteAutomaton):
         self.distinguish()
         # print(self)
         self.start_state = self.states[self._get_alias(self.start_state.name)]
+
+    @staticmethod
+    def factory(input_text, lexer):
+        lexer.scan(input_text)
+        return __class__(lexer.states, lexer.inputs, lexer.start_state)

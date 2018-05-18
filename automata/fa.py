@@ -2,7 +2,7 @@
 Defines finite automata abstract class.
 In other words, it defines an interface that all derived classes have to follow.
 """
-import abc
+import abc, copy
 import automata.state as st
 import automata.packs as pk
 
@@ -14,28 +14,28 @@ class FiniteAutomaton(abc.ABC):
     It serves exclusively as a template for more defined derived classes such as DFA and NFA.
     """
 
-    def __init__(self, text, lexer):
+    def __init__(self, states, inputs, start_state):
         """
-        Initialises a finite state automata.
+        Initialises a finite state automaton.
+        Direct use is highly discouraged. Use factory method instead.
 
-        :param str text: Input text
-        :param format.lexers.Lexer lexer: Concrete Lexer implementation
+        :param states: all State objects
+        :param inputs: all inputs
+        :param State start_state: starting State object
         """
 
-        lexer.scan(text)
+        self.states = states
 
-        self.states = lexer.states
-
-        self.inputs = set(lexer.inputs)
+        self.inputs = set(inputs)
 
         self.records = pk.Records()
 
-        if self.states.get(lexer.start_state.name, 0):
-            self.start_state = lexer.start_state
+        if self.states.get(start_state.name, 0):
+            self.start_state = start_state
             assert isinstance(self.start_state, st.State)
-            self.current = {lexer.start_state}
+            self.current = {start_state}
         else:
-            raise ValueError(self._state_error(lexer.start_state.name))
+            raise ValueError(self._state_error(start_state.name))
 
         for name, state in self.states.items():
             try:
@@ -47,7 +47,7 @@ class FiniteAutomaton(abc.ABC):
             except AssertionError:
                 raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
 
-        assert isinstance(lexer.start_state, st.State)
+        assert isinstance(start_state, st.State)
         assert isinstance(self.start_state, st.State)
 
         self._check_structure()
@@ -377,3 +377,66 @@ class FiniteAutomaton(abc.ABC):
                 result = result[:-1] + '\n'
 
         return result.strip()
+
+    @staticmethod
+    def factory(input_text, lexer):
+        """
+        Encapsulates FA object creation through a string and a lexer.
+        Use this method for FA object creation instead of direct __init__
+
+        :param type class_type: class type that has to be created
+        :param str input_text: text that defines the FA
+        :param Lexer lexer: a conecrete Lexer implementation
+        :return FA: a concrete FA object
+        """
+        lexer.scan(input_text)
+        return __class__(lexer.states, lexer.inputs, lexer.start_state)
+
+    def _create_copy(self, *args):
+        """
+        Handles copy creation. Enables easy extension of deepcopy.
+        Internal method. Do not use directly.
+
+        :param args: arguments for creation.
+        :return: FA object
+        """
+        return self.__class__(*args)
+
+    def _create_state(self, *args):
+        """
+        Creates a State object.
+        Exists solely for easy deepcopy extensions.
+
+        Do NOT use directly.
+
+        :param args: arguments for State creation.
+        :return State: a State object
+        """
+        return st.State(*args)
+
+    def deepcopy(self):
+        """
+        Deep copies an instance of FA.
+
+        :return: FA object not bound by any references to the original object
+        """
+        # copying states has to be done inside FAs' because references have to be the same.
+        copied_states = set()
+        for state in self.states.values():
+            name = copy.deepcopy(state.name)
+            copied_states.add(self._create_state(name.name, copy.deepcopy(state.value)))
+        inputs = copy.deepcopy(self.inputs)
+
+        states = dict()
+        for state in copied_states:
+            states[state.name] = state
+
+        for name, state in self.states.items():
+            for event, transition_states in state.transitions.items():
+                transitions = set()
+                for transition_state in transition_states:
+                    transitions.add(states[transition_state.name])
+                states[name].transitions[event] = transitions
+        start_state = states[self.start_state.name]
+
+        return self._create_copy(states, inputs, start_state)

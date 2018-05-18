@@ -17,7 +17,7 @@ def get_dfa_min(string):
 
     parser = form.lexers.StandardFormatLexer()
 
-    dfa = automata.dfa.DFA(string, parser)
+    dfa = automata.dfa.DFA.factory(string, parser)
 
     dfa.minimize()
 
@@ -31,7 +31,7 @@ def get_e_nfa(string):
     :return: epsilon NFA
     """
     parser = form.lexers.StandardFormatWithInputParser()
-    e_nfa = automata.nfa.EpsilonNFA(string, parser)
+    e_nfa = automata.nfa.EpsilonNFA.factory(string, parser)
 
     for entries in parser.entries:
         e_nfa.enter(*entries)
@@ -46,7 +46,7 @@ def get_dpda(string):
     :return: deterministic push down automaton
     """
     parser = form.lexers.PushDownFormatWithInputParser()
-    pda = automata.pda.DeterministicPDA(string, parser)
+    pda = automata.pda.DeterministicPDA.factory(string, parser)
 
     for entries in parser.entries:
         pda.enter(*entries)

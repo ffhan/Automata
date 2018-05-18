@@ -9,3 +9,5 @@ class TestEpsilonNFA(unittest.TestCase):
 
     def test_all(self):
         self.executor.execute_test('e_nfa', True)
+
+    #todo: test kleene operator, addition etc.

@@ -13,7 +13,7 @@ class StateName:
     '''
 
     def __init__(self, name):
-        #super().__init__()
+        assert isinstance(name, str)
         self._name = ''
         self.name = name
 
@@ -93,7 +93,11 @@ class State:
 
         self.transitions = dict()
 
-        self.epsilon = epsilon
+        self._epsilon = epsilon
+
+    @property
+    def epsilon(self):
+        return self._epsilon
 
     @property
     def accepted(self):
@@ -224,7 +228,7 @@ class State:
         return res
 
     @property
-    def indirect_reach(self):
+    def indirect_reach(self): #todo: implement epsilon closure
         """
         Returns an indirect reach.
         Recursively finds all States that can be reached out of this State.
@@ -232,12 +236,45 @@ class State:
         Differs from direct_reach because it also returns all reachable
         states of directly reachable states.
 
-        :return: all indirectly reachable states.
+        Differs from epsilon closure because it returns all states
+        directly or indirectly reachable, not just states bound by epsilon transitions.
+
+        :return set: all indirectly reachable states.
         """
 
         visits = set()
         self._reachable(self, visits)
         return visits
+
+    @property
+    def epsilon_closure(self):
+        """
+        Returns an epsilon closure.
+
+        To see differences between direct reach, indirect reach and epsilon closure
+        see indirect_reach method documentation.
+
+        :return set: epsilon closure for the state
+        """
+        visited = set()
+        return self._epsilon_closure(visited)
+
+    def _epsilon_closure(self, visited): # todo: use this instead of usual E_NFA closure.
+        """
+        Internal recursive epsilon closure finder.
+        Do not use directly.
+
+        Does NOT return the whole epsilon closure.
+
+        :param set visited: set of currently visited States
+        :return set: part of epsilon closure
+        """
+
+        visited.add(self)
+        for state in self.forward(self.epsilon):
+            if not state in visited:
+                visited |= state._epsilon_closure(visited)
+        return visited
 
     def _reachable(self, state, visited):
         """
