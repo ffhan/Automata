@@ -1,4 +1,4 @@
 """
 Holds all modules that don't belong to a specific package.
 """
-from . import errors
+from . import errors, command_testers, helper

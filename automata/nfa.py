@@ -67,6 +67,10 @@ class EpsilonNFA(NFA):
         self.inputs.add(epsilon)
 
     @property
+    def epsilon(self):
+        return self._epsilon
+
+    @property
     def accepted(self):
         for state in self._all_closures():
             if state in self.accepted_states:

@@ -131,7 +131,7 @@ class DeterministicPDA(dfa.DFA): # the correct implementation would be to inheri
         lexer.scan(input_text)
         return __class__(lexer.states, lexer.inputs, lexer.start_state, lexer.stack_alphabet, lexer.start_stack)
 
-    def _create_copy(self, *args):
+    def _create_copy(self, *args): #todo use kwargs instead of args
         return self.__class__(*args, empty_symbol=copy.deepcopy(self.empty_symbol),
                               start_stack=copy.deepcopy(self.start_symbol),
                               stack_alphabet=copy.deepcopy(self.stack_alphabet))

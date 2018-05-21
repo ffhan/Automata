@@ -41,11 +41,11 @@ class FiniteAutomaton(abc.ABC):
             try:
                 assert isinstance(name, st.StateName)
             except AssertionError:
-                raise TypeError('Type {} is NOT StateName'.format(name.__class__.__name__))
+                raise TypeError('Type {} is NOT StateName (Name: {})'.format(name.__class__.__name__, name))
             try:
                 assert isinstance(state, st.State)
             except AssertionError:
-                raise TypeError('Type {} is NOT State'.format(state.__class__.__name__))
+                raise TypeError('Type {} is NOT State (Object {})'.format(state.__class__.__name__, state))
 
         assert isinstance(start_state, st.State)
         assert isinstance(self.start_state, st.State)
