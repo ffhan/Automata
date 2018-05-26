@@ -226,19 +226,19 @@ class FiniteAutomaton(abc.ABC):
         states = ''
         final = ''
 
-        for state, state_object in self.states.items():
+        for state, state_object in sorted(self.states.items(), key=lambda t : t[0]):
             states += str(state) + ','
             if state_object.value:
                 # print(final, state)
-                final += str(state.name)
+                final += str(state.name) + ','
 
-        final = 'F=' + wrap_in_braces(final)
+        final = 'F=' + wrap_in_braces(final[:-1])
 
         states = 'Q=' + wrap_in_braces(states[:-1])
 
         inputs = ''
 
-        for inp in self.inputs:
+        for inp in sorted(self.inputs):
             inputs += str(inp) + ','
 
         inputs = u'\u03A3=' + wrap_in_braces(inputs[:-1])
