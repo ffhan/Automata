@@ -13,6 +13,7 @@ class StateName:
     '''
 
     def __init__(self, name):
+
         assert isinstance(name, str)
         self._name = ''
         self.name = name
@@ -228,7 +229,7 @@ class State:
         return res
 
     @property
-    def indirect_reach(self): #todo: implement epsilon closure
+    def indirect_reach(self):
         """
         Returns an indirect reach.
         Recursively finds all States that can be reached out of this State.
@@ -259,7 +260,7 @@ class State:
         visited = set()
         return self._epsilon_closure(visited)
 
-    def _epsilon_closure(self, visited): # todo: use this instead of usual E_NFA closure.
+    def _epsilon_closure(self, visited):
         """
         Internal recursive epsilon closure finder.
         Do not use directly.

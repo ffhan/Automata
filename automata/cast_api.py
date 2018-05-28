@@ -5,7 +5,7 @@ import copy
 import automata.nfa, automata.dfa
 import automata.state as st
 
-def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo: fix this cast, add tests
+def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo: add tests
     """
     Casts epsilon NFA to NFA.
 
@@ -25,26 +25,35 @@ def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo
 
     structure = work.deepcopy()
     #hold a structure, but use references from work.
-
     for state in work.states.values():
         for single_input in work.inputs - {state.epsilon}:
             closure = structure.states[state.name].epsilon_closure
             caught_states = set()
             for state_of_closure in closure:
-                # if state_of_closure != state:
-                #     caught_states.add(state_of_closure)
+                # forward = state_of_closure.forward(single_input)
+                # new_forward = set()
+                # for one_state in forward:
+                #     new_forward.add(work.states[one_state.name])
                 caught_states |= state_of_closure.forward(single_input)
 
             state.transitions[single_input] = work.e_closures(*caught_states)
         if state.epsilon in state.transitions:
             state.transitions.pop(state.epsilon)
-        transit = copy.copy(state.transitions)
-        for event, transitions in state.transitions.items():
-            if not transitions:
-                transit.pop(event)
-        state.transitions = transit
+
+        for event in work.inputs:
+            if not state.transitions.get(event, True):
+                state.transitions.pop(event)
 
     work.inputs.remove(work.epsilon)
+
+    for state in work.states:
+        for event, end_states in work.states[state].transitions.items():
+            transitions = set()
+            for end_state in end_states:
+                transitions.add(work.states[end_state.name])
+            work.states[state].transitions[event] = transitions
+
+    print(work.states)
 
     return automata.nfa.NFA(work.states, work.inputs, work.start_state)
 
@@ -109,7 +118,6 @@ def nfa_to_dfa(nfa: automata.nfa.NFA)->automata.dfa.DFA:
 
     for name, state in created_states.items():
         work.states[name] = state
-    print(work.states)
     return automata.dfa.DFA(work.states, work.inputs, work.start_state)
 
 def epsilon_nfa_to_dfa(automaton: automata.nfa.EpsilonNFA)->automata.dfa.DFA:
@@ -121,5 +129,3 @@ def epsilon_nfa_to_dfa(automaton: automata.nfa.EpsilonNFA)->automata.dfa.DFA:
     """
 
     return nfa_to_dfa(epsilon_nfa_to_nfa(automaton))
-
-#todo: both casts do not work properly.

@@ -62,6 +62,7 @@ class CommandTester:
         self._tests['E_NFA'] = self._test_factory(preformat.TEST_E_NFA)
         self._tests['DFA_MIN'] = self._test_factory(preformat.TEST_DFA_MIN)
         self._tests['DPDA'] = self._test_factory(preformat.TEST_PDA)
+        self._tests['PARSER'] = self._test_factory(preformat.TEST_PARSER)
         return self._tests
 
     @property
@@ -100,6 +101,7 @@ class CommandTester:
 
         print(self.input_format, self.test_format, self.destination, test_type)
         counter = 0
+        success_counter = 0
         for root in os.walk(self.destination):
             # path = root.split(os.sep)
             root, files = root[0], root[2]
@@ -124,6 +126,8 @@ class CommandTester:
                     counter += 1
 
                     message = 'Test {}: {}'.format(folder, ' PASSED ' if result else '!FAILED!')
+                    if result:
+                        success_counter += 1
                     print(message)
 
                     for listener_function in self.listeners:
@@ -136,6 +140,10 @@ class CommandTester:
 
                     if error_force and not result:
                         raise CommandTestError('Forced a test stop.')
+                except CommandTestError:
+                    print('------------------------------------------')
+                    print('Force stopped execution (-fe flag present)')
+                    exit(1)
                 except Exception as exception_error:
                     print('Test %s: !FAILED!' %folder)
                     logging.error(' [%s] %s - %s' %(
@@ -144,6 +152,10 @@ class CommandTester:
                     raise exception_error
         if counter == 0:
             print('NO TESTS FOUND')
+        else:
+            print("-" * 60)
+            print("{:30s}{:^20s}".format("Successful tests: " + str(success_counter) + '/' + str(counter),
+                                          "Rate of success: " + "{:.2f}%".format(success_counter * 100 / counter)))
 
     def _test_factory(self, func):
         """

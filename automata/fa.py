@@ -267,9 +267,9 @@ class FiniteAutomaton(abc.ABC):
         :param StateName item: State name
         :return bool: True if State exists
         """
-        if not self.states.get(item, False):
-            return False
-        return True
+        assert type(item) is st.StateName
+
+        return item in self.states
 
     def __contains__(self, item):
         """
@@ -278,6 +278,7 @@ class FiniteAutomaton(abc.ABC):
         :param item: State name
         :return:
         """
+
         assert not isinstance(item, str)
         if isinstance(item, st.StateName):
             return self.__contains_helper(item)
@@ -440,3 +441,30 @@ class FiniteAutomaton(abc.ABC):
         start_state = states[self.start_state.name]
 
         return self._create_copy(states, inputs, start_state)
+
+    def rename_state(self, old_name: st.StateName, new_name: str):
+        """
+        Renames a state inside the FA.
+
+        It's critical to use this method to rename a state.
+
+        If renaming states through iterator contain the keys in a list or a set,
+        otherwise renaming will be incorrect (the dictionary changes size
+        during iteration).
+        For example:
+        for name in list(automaton.states):
+            ...
+            automaton.rename_state(name, 'new_name')
+            ...
+        and NOT
+        for name in automaton.states:
+            ...
+
+        :param StateName old_name: state name to be renamed
+        :param str new_name: new state name
+        :return:
+        """
+
+        state = self.states.pop(old_name)
+        state.name.name = new_name
+        self.states[state.name] = state

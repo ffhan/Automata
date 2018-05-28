@@ -85,6 +85,7 @@ class EpsilonNFA(NFA):
         :param set closure: closure set
         :return set: epsilon closure of a state
         """
+
         if state not in self:
             raise ValueError(self._input_error(state))
 

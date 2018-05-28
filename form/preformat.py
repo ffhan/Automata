@@ -111,6 +111,15 @@ def test_factory(getter_func, lexer, lexer_method):
 
     return wrapper
 
+def TEST_PARSER(string, test_output, verbose):
+
+    import Parser
+
+    result = Parser.parser(string)
+    print_verbose(result, test_output, verbose)
+
+    return result == test_output.strip()
+
 TEST_PDA = test_factory(get_dpda, form.compositors.StandardPushDownCompositor,
                         form.compositors.StandardPushDownCompositor.composite_output)
 TEST_E_NFA = test_factory(get_e_nfa, form.compositors.StandardCompositor,
