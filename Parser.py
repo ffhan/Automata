@@ -34,7 +34,7 @@ def parser(text):
     def S()->bool:
         add_output('S')
         character = get_input()
-        printer(character, 'S')
+        # printer(character, 'S')
         if not character:
             return False
         if character == 'a':
@@ -48,7 +48,7 @@ def parser(text):
     def A()->bool:
         character = get_input()
         add_output('A')
-        printer(character, 'A')
+        # printer(character, 'A')
         if not character:
             return False
         if character == 'b':
@@ -60,7 +60,9 @@ def parser(text):
     def B()->bool:
         character = get_input()
         add_output('B')
-        printer(character, 'B')
+        # printer(character, 'B')
+        if not character:
+            return True
         if character == 'c':
             char2 = get_input()
             character += char2
@@ -70,22 +72,23 @@ def parser(text):
                     if character == 'bc':
                         return True
         else:
+            # print('Adding back {}'.format(character))
             set_input(character + text_input)
             return True
         return False
 
     def C()->bool:
-        character = get_input()
+        # character = get_input()
         add_output('C')
         # if not character:
         #     return False
-        printer(character, 'C')
+        # printer('nothing', 'C')
         if A() and A():
             return True
         return False
     set_input(text)
     out = S()
-    result = output + '\n' + ('DA' if out and not text_input else 'NE')
+    result = output + '\n' + ('DA' if out and not bool(text_input) else 'NE')
     return result
 # set_input('bccaabcbaa')
 # out = S()
