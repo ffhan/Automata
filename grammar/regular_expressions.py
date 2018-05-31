@@ -4,12 +4,18 @@ Defines a regular expression type and all default regular expression checkers.
 import grammar.operators as operators
 
 class RegExp:
+    """
+    Defines a class that handles all regular expression needs.
+    Currently compiles to epsilon NFA, but that will be bound to change.
+    """
+    #todo: fix nfa to dfa casting and add compile method that does: operator->e_nfa->nfa->dfa->minimised dfa
     unary_operators = {'+': operators.KleenePlus,
                        '?': operators.QuestionMark,
                        '*': operators.KleeneStar,
                        '': operators.Single}
     binary_operators = {'|': operators.Alternation,
                         '': operators.Concatenation}
+
     def __init__(self, text: str):
         """
         Initializes a regular expression out of rules defined in a text.
@@ -38,6 +44,14 @@ class RegExp:
         self._text = text
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
+        self.automaton = self._groups.execute()
+
+    def check(self, text):
+        for char in text:
+            self.automaton.enter(char)
+        is_ok = self.automaton.accepted
+        self.automaton.reset()
+        return is_ok
 
     def _process(self, group: list)->operators.Operator:
         """
@@ -106,16 +120,18 @@ class RegExp:
         lpar_index = -1 # [ symbol
         dash_index = -1 # - symbol
 
-        for i, item in enumerate(group):
+        compressed = 0
 
+        for i, item in enumerate(group):
             if item == '[':
                 lpar_index = i
             elif item == '-':
                 dash_index = i
             elif item == ']':
                 if dash_index != -1:
-                    collation = operators.Collation(*group[lpar_index+1:i:2])
-                    copied_groups[lpar_index:i+1] = [collation]
+                    collation = operators.Collation(*copied_groups[lpar_index+1-compressed:i-compressed:2])
+                    copied_groups[lpar_index-compressed:i+1-compressed] = [collation]
+                    compressed += 4
                 else:
                     raise ValueError('Collation parsing failed, missing "-" character')
         return copied_groups

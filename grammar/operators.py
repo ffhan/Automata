@@ -115,6 +115,31 @@ class BinaryOperator(Operator):#todo: implement operators that take more than 2 
                                             self._operator,
                                             self._last) + '}'
 
+class GeneralOperator(Operator):
+    """
+    Defines an operator that takes in multiple items.
+    Cannot be instantiated directly.
+    """
+    def __init__(self, operator, *items):
+        super().__init__(operator)
+        item_list = []
+
+        for item in items:
+            self._check_type_err(item)
+            if type(item) is self.__class__:
+                for sub_item in item._items:
+                    item_list.append(sub_item)
+            else:
+                item_list.append(item)
+        self._items = item_list
+
+    def __repr__(self):
+        result = ''
+        for item in self._items:
+            result += (repr(item) if not isinstance(item, str) else item) + self._operator
+        result = result[:-1]
+        return '{' + '{} {}'.format(self.__class__.__name__, result) + '}'
+
 class Collation(BinaryOperator):
     """
     Defines a collation operator which takes in two characters and returns all characters
@@ -156,7 +181,7 @@ class Collation(BinaryOperator):
         generator.StandardFormatGenerator())
         return enfa
 
-class Alternation(BinaryOperator):
+class Alternation(GeneralOperator):
     """
     Defines a union of two items. Those items can be a string or already defined operators.
     For example it's possible to do a union of a character 'a' and a collation of [b-z].
@@ -165,34 +190,29 @@ class Alternation(BinaryOperator):
         'a|b' = 'a', 'b'
     """
     _item_types = {str, Operator}
-    def __init__(self, first_item, second_item):
-        super().__init__(first_item, second_item, '|')
+    def __init__(self, *items):
+        super().__init__('|', *items)
 
     def execute(self)->nfa.EpsilonNFA:
-        if isinstance(self._first, str):
-            first_enfa = nfa.EpsilonNFA.factory(
-                """u0, u1
-                {0}
-                u1
-                u0
-                u0,{0}->u1""".format(self._first),
-            generator.StandardFormatGenerator())
-        elif isinstance(self._first, Operator):
-            first_enfa = self._first.execute()
-        if isinstance(self._last, str):
-            last_enfa = nfa.EpsilonNFA.factory(
-                """u0, u1
-                {0}
-                u1
-                u0
-                u0,{0}->u1""".format(self._last),
-            generator.StandardFormatGenerator())
-        elif isinstance(self._last, Operator):
-            last_enfa = self._last.execute()
+        enfas = []
+        for item in self._items:
+            if isinstance(item, str):
+                enfas.append(nfa.EpsilonNFA.factory(
+                    """u0, u1
+                    {0}
+                    u1
+                    u0
+                    u0,{0}->u1""".format(item),
+                generator.StandardFormatGenerator()))
+            elif isinstance(item, Operator):
+                enfas.append(item.execute())
 
-        return first_enfa + last_enfa
+        result = enfas[0]
+        for i in range(1, len(enfas)):
+            result = result + enfas[i]
+        return result
 
-class Concatenation(BinaryOperator):
+class Concatenation(GeneralOperator):
     """
     Defines a concatenation of two items. Those items can be a string or already defined operators.
     For example it's possible to do a union of a character 'a' and a collation of [b-z].
@@ -203,32 +223,35 @@ class Concatenation(BinaryOperator):
     """
     _item_types = {str, Operator}
 
-    def __init__(self, first_item, second_item):
-        super().__init__(first_item, second_item, '')
+    def __init__(self, *items):
+        super().__init__('', *items)
 
     def execute(self)->nfa.EpsilonNFA:
-        if isinstance(self._first, str):
-            first_enfa = nfa.EpsilonNFA.factory(
-                """c0,c1
-                {0}
-                c1
-                c0
-                c0,{0}->c1""".format(self._first),
-            generator.StandardFormatGenerator())
-        elif isinstance(self._first, Operator):
-            first_enfa = self._first.execute()
+        enfas = []
+        for item in self._items:
+            if isinstance(item, str):
+                enfas.append(nfa.EpsilonNFA.factory(
+                    """c0, c1
+                    {0}
+                    c1
+                    c0
+                    c0,{0}->c1""".format(item),
+                    generator.StandardFormatGenerator()))
+            elif isinstance(item, Operator):
+                enfas.append(item.execute())
 
-        if isinstance(self._last, str):
-            second_enfa = nfa.EpsilonNFA.factory(
-                """c0, c1
-                {0}
-                c1
-                c0
-                c0,{0}->c1""".format(self._last),
-            generator.StandardFormatGenerator())
-        elif isinstance(self._last, Operator):
-            second_enfa = self._last.execute()
-        return first_enfa * second_enfa
+        result = enfas[0]
+        for i in range(1, len(enfas)):
+            result = result * enfas[i]
+        return result
+
+    def __repr__(self):
+        result = ''
+        for item in self._items:
+            result += str(item) if not isinstance(item, str) else item
+        # result = result[:-1]
+        return '{' + '{} {}'.format(self.__class__.__name__, result) + '}'
+
 
 class KleeneStar(UnaryOperator):
     """
