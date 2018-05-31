@@ -1,6 +1,7 @@
 """
 Defines all operator abstractions and their respective default operators.
 """
+#todo: write extensive tests for this module.
 import abc
 import automata.nfa as nfa
 import form.generators as generator
@@ -28,7 +29,7 @@ class Operator(abc.ABC):
 
         :return set: set of all valid item types
         """
-        print(self.__class__, self.__class__._item_types)
+        # print(self.__class__, self.__class__._item_types)
         return self.__class__._item_types
 
     def _check_type_err(self, item):
@@ -68,9 +69,35 @@ class UnaryOperator(Operator):
         super().__init__(operator)
         self._item = item
     def __repr__(self):
-        return '[{} {}{}]'.format(self.__class__.__name__, self._item, self._operator)
+        return '{' + '{} {}{}'.format(self.__class__.__name__, self._item, self._operator) + '}'
 
-class BinaryOperator(Operator):
+class Single(UnaryOperator):
+    """
+    Defines a Single operator, meaning exactly one repetitions.
+    It can take in a character or an already defined operator.
+
+    Essentially does nothing.
+    Example:
+        'a' = 'a'
+    """
+    _item_types = {str, Operator}
+    def __init__(self, item):
+        super().__init__(item, '')
+
+    def execute(self)->nfa.EpsilonNFA:
+        if isinstance(self._item, str):
+            enfa = nfa.EpsilonNFA.factory(
+                """s0,s1
+                {0}
+                s1
+                s0
+                s0,{0}->s1""".format(self._item),
+            generator.StandardFormatGenerator())
+        elif isinstance(self._item, Operator):
+            enfa = self._item.execute()
+        return enfa
+
+class BinaryOperator(Operator):#todo: implement operators that take more than 2 items.
     """
     Defines an operator that takes in two items.
     Cannot be instantiated directly.
@@ -83,7 +110,10 @@ class BinaryOperator(Operator):
         self._last = last
 
     def __repr__(self):
-        return '[{} {}{}{}]'.format(self.__class__.__name__, self._first, self._operator, self._last)
+        return '{' + '{} {}{}{}'.format(self.__class__.__name__,
+                                            str(self._first).replace('\t', '\t'*2),
+                                            self._operator,
+                                            self._last) + '}'
 
 class Collation(BinaryOperator):
     """
@@ -282,7 +312,7 @@ class QuestionMark(UnaryOperator):
                 qm1
                 qm0
                 qm0,{0}->qm1
-                qm0,$->qm1""",
+                qm0,$->qm1""".format(self._item),
             generator.StandardFormatGenerator())
         elif isinstance(self._item, Operator):
             start_enfa = nfa.EpsilonNFA.factory(
@@ -293,6 +323,6 @@ class QuestionMark(UnaryOperator):
                 """,
             generator.StandardFormatGenerator())
             end_enfa = start_enfa.deepcopy()
-            item_enfa = start_enfa*end_enfa + self._item
+            item_enfa = start_enfa*end_enfa + self._item.execute()
         #todo: check if this is correct.
         return item_enfa

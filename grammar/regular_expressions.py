@@ -4,7 +4,12 @@ Defines a regular expression type and all default regular expression checkers.
 import grammar.operators as operators
 
 class RegExp:
-    operators = {'+', '?', '*', '|'}
+    unary_operators = {'+': operators.KleenePlus,
+                       '?': operators.QuestionMark,
+                       '*': operators.KleeneStar,
+                       '': operators.Single}
+    binary_operators = {'|': operators.Alternation,
+                        '': operators.Concatenation}
     def __init__(self, text: str):
         """
         Initializes a regular expression out of rules defined in a text.
@@ -32,7 +37,27 @@ class RegExp:
         """
         self._text = text
         self._groups = self._extract_bracket(text)
-        self._collate()
+        self._groups = self._process(self._groups)
+
+    def _process(self, group: list)->operators.Operator:
+        """
+        Completely processes a text and returns a single Operator
+        for a specified list of items.
+
+        :param list group: a list of items
+        :return Operator: single operator
+        """
+
+        group = self._collate(group)
+        group = self._process_sublists(group)
+        group = self._to_unary_operators(group)
+        group = self._concatenate(group)
+        group = self._alternate(group)
+
+        if len(group) > 1:
+            # print(group)
+            raise ValueError('Parsing failed.')
+        return group[0]
 
     def _extract_bracket(self, text: str)->list:
         """
@@ -45,7 +70,6 @@ class RegExp:
         lpar_index = -1
         rpar_index = -1
         result = []
-        subtext = ''
         # print(text)
         for i, char in enumerate(text):
             if char == '(':
@@ -68,26 +92,124 @@ class RegExp:
         # print("exiting", text, result)
         return result
 
-    def _collate(self):
+    @staticmethod
+    def _collate(group: list)->list:
+        """
+        Processes all collate operators found within a list (string to operator)
 
-        copied_groups = self._groups.copy()
+        :param list group: a list of items
+        :return list: a list where all string like collates where processed to operators
+        """
+
+        copied_groups = group.copy()
 
         lpar_index = -1 # [ symbol
         dash_index = -1 # - symbol
-        # rpar_index = -1 # ] symbol
 
-        for i, item in enumerate(self._groups):
+        for i, item in enumerate(group):
 
             if item == '[':
                 lpar_index = i
             elif item == '-':
                 dash_index = i
             elif item == ']':
-                collation = operators.Collation(*self._groups[lpar_index+1:i:2])
-                copied_groups[lpar_index:i+1] = [collation]
-        self._groups = copied_groups
+                if dash_index != -1:
+                    collation = operators.Collation(*group[lpar_index+1:i:2])
+                    copied_groups[lpar_index:i+1] = [collation]
+                else:
+                    raise ValueError('Collation parsing failed, missing "-" character')
+        return copied_groups
 
-d = RegExp("[a-z](a|b)*((bc+)|(b+c))")
-print(d._groups)
+    def _process_sublists(self, group: list)->list:
+        """
+        Processes all sublists to operators.
+
+        :param list group: a list of items
+        :return list: processed list of items without sublists
+        """
+
+        copied_groups = group.copy()
+
+        for i, item in enumerate(group):
+            if isinstance(item, list):
+                item = self._process(item)
+                copied_groups[i] = item
+        return copied_groups
+
+    def _to_unary_operators(self, group: list)->list:
+        """
+        Processes all unary operators from string representation to operator object.
+
+        :param list group: a list of items
+        :return list: processed list of items
+        """
+
+        copied_groups = group.copy()
+
+        compressed = 0
+
+        for i, item in enumerate(group):
+            if isinstance(item, list):
+                copied_groups[i - compressed] = self._process(item)
+                continue
+            elif item in self.unary_operators:
+                copied_groups[i - 1 - compressed : i + 1 - compressed] = \
+                    [self.unary_operators[item](copied_groups[i - 1 - compressed])]
+                compressed += 1
+        return copied_groups
+
+    def _concatenate(self, group: list)->list:
+        """
+        Processes all concatenations to operators.
+
+        :param list group: a list of items
+        :return list: processed list of items
+        """
+
+        copied_groups = group.copy()
+
+        compressed = 0
+
+        for i, item in enumerate(group):
+            next_char = '' if i + 1 >= len(group) else group[i + 1]
+
+            if isinstance(item, list):
+                processed = self._process(item)
+                copied_groups[i - compressed] = processed
+                continue
+            elif item not in self.binary_operators and (next_char not in self.binary_operators):
+                # print("concatenating", item, next_char)
+                copied_groups[i - compressed : i + 2 - compressed] = \
+                    [operators.Concatenation(copied_groups[i - compressed],
+                                             copied_groups[i + 1 - compressed])]
+                compressed += 1
+
+            # print(item, copied_groups)
+        return copied_groups
+
+    def _alternate(self, group: list)->list:
+        """
+        Processes all alternations to operators.
+
+        :param list group: a list of items
+        :return list: processed list of items
+        """
+
+        copied_groups = group.copy()
+
+        compressed = 0
+
+        for i, item in enumerate(group):
+
+            if isinstance(item, list):
+                processed = self._process(item)
+                copied_groups[i - compressed] = processed
+                continue
+            elif item in self.binary_operators:
+                copied_groups[i - 1 - compressed: i + 2 - compressed] = \
+                    [self.binary_operators[item](copied_groups[i - 1 - compressed],
+                                                 copied_groups[i + 1 - compressed])]
+                compressed += 2
+        return copied_groups
 
 #todo: enable inputting any character in a dfa. (maybe just a specific type.
