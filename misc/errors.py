@@ -8,3 +8,10 @@ class CommandTestError(RuntimeError):
     (with -fe in command prompt or force_error=True in CommandTester)
     """
     pass
+
+class OperatorInputTypeError(RuntimeError):
+    """
+    Defines an error that is raised when the input type for an item in an Operator
+    is not valid. For more info see grammar.operators package.
+    """
+    pass

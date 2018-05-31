@@ -1,7 +1,7 @@
 """
 Pre-formatting scripts, an endpoint between FA system and outer form connections.
 """
-import form.lexers
+import form.generators
 import automata
 
 def get_dfa_min(string):
@@ -15,7 +15,7 @@ def get_dfa_min(string):
     # print(waste, states, inputs, final, start, functions)
     # print(states,inputs,final,start,functions,waste)
 
-    parser = form.lexers.StandardFormatLexer()
+    parser = form.generators.StandardFormatGenerator()
 
     dfa = automata.dfa.DFA.factory(string, parser)
 
@@ -30,7 +30,7 @@ def get_e_nfa(string):
     :param str string: input text
     :return: epsilon NFA
     """
-    parser = form.lexers.StandardFormatWithInputParser()
+    parser = form.generators.StandardFormatWithInputParser()
     e_nfa = automata.nfa.EpsilonNFA.factory(string, parser)
 
     for entries in parser.entries:
@@ -45,7 +45,7 @@ def get_dpda(string):
     :param str string: input text
     :return: deterministic push down automaton
     """
-    parser = form.lexers.PushDownFormatWithInputParser()
+    parser = form.generators.PushDownFormatWithInputParser()
     pda = automata.pda.DeterministicPDA.factory(string, parser)
 
     for entries in parser.entries:
@@ -88,8 +88,8 @@ def test_factory(getter_func, lexer, lexer_method):
     Allows easy test creation.
 
     :param function getter_func: automaton getter function
-    :param Lexer lexer: defines which concrete Lexer implementation to use
-    :param function lexer_method: defines which Lexer method to execute
+    :param Generator lexer: defines which concrete Generator implementation to use
+    :param function lexer_method: defines which Generator method to execute
     :return function: test function
     """
 
@@ -113,9 +113,9 @@ def test_factory(getter_func, lexer, lexer_method):
 
 def TEST_PARSER(string, test_output, verbose):
 
-    import Parser
+    import Parser_implementation
 
-    result = Parser.parser(string)
+    result = Parser_implementation.parser(string)
     print_verbose(result, test_output, verbose)
 
     return result == test_output.strip()

@@ -1,12 +1,12 @@
 """
 Defines all types that check if a string is a particular token
 """
-# from form.lexers import StandardFormatLexer
+# from form.lexers import StandardFormatGenerator
 # from automata.nfa import EpsilonNFA
 #
 # def check_integer(text):
 #
-#     lex = StandardFormatLexer()
+#     lex = StandardFormatGenerator()
 #     fa = EpsilonNFA(
 #         """s0,s1,s2
 #         0,1,2,3,4,5,6,7,8,9

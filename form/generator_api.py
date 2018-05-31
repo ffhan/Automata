@@ -1,5 +1,5 @@
 """
-Defines methods that are commonly used in Lexer classes.
+Defines methods that are commonly used in Generator classes.
 """
 
 def split_factory(split_by=',', cast_to=list, remove_empty=True):

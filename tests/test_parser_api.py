@@ -1,5 +1,5 @@
 import unittest
-from form.lexer_api import split_factory
+from form.generator_api import split_factory
 
 class TestSplitting(unittest.TestCase):
 

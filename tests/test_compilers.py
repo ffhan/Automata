@@ -1,5 +1,5 @@
 import unittest
-from form.lexers import Lexer, StandardFormatLexer, \
+from form.generators import Generator, StandardFormatGenerator, \
     StandardFormatWithInputParser, PushDownFormatWithInputParser
 from form.readers import Reader
 
@@ -8,12 +8,12 @@ class TestParser(unittest.TestCase):
     def test_abstraction(self):
 
         with self.assertRaises(TypeError):
-            test = Lexer()
+            test = Generator()
 
 class TestStandardFormatParser(unittest.TestCase):
 
     def setUp(self):
-        self.test = StandardFormatLexer()
+        self.test = StandardFormatGenerator()
 
     def test_file_parsing(self):
         with self.assertRaises(FileNotFoundError):

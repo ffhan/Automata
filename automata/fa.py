@@ -387,7 +387,7 @@ class FiniteAutomaton(abc.ABC):
 
         :param type class_type: class type that has to be created
         :param str input_text: text that defines the FA
-        :param Lexer lexer: a conecrete Lexer implementation
+        :param Generator lexer: a conecrete Generator implementation
         :return FA: a concrete FA object
         """
         lexer.scan(input_text)

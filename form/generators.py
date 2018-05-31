@@ -1,23 +1,23 @@
 """
-Defines a Lexer interface (abstract class) and all used
-Lexer implementations.
+Defines a Generator interface (abstract class) and all used
+Generator implementations.
 
 In other words, defines all output formats.
 """
 import abc
-import form.lexer_api as api
+import form.generator_api as api
 import automata.state as st
 import automata.packs as pk
 
-class Lexer(abc.ABC):
+class Generator(abc.ABC):
     """
-    Abstract class that defines the interface for all Lexers.
-    Lexers do not have the same interface, which is fine.
+    Abstract class that defines the interface for all generators.
+    Generators do not have the same interface, which is fine.
     """
 
     def __init__(self, state_class=st.State):
         """
-        Initialises a Lexer.
+        Initialises a Generator.
 
         :param type state_class: Specific implementation of State interface.
         """
@@ -29,7 +29,7 @@ class Lexer(abc.ABC):
 
     def reset(self):
         """
-        Resets Lexer state so that new scan can be done correctly.
+        Resets Generator state so that new scan can be done correctly.
 
         :return:
         """
@@ -40,7 +40,7 @@ class Lexer(abc.ABC):
     @abc.abstractmethod
     def scan(self, text):
         """
-        Internal lexer. Used as a central point for parsing a specific text form.
+        Internal generator. Used as a central point for parsing a specific text form.
         Passes all compiled data to appropriate containers which are accessible
         through interface properties.
 
@@ -48,7 +48,7 @@ class Lexer(abc.ABC):
         """
         pass
 
-class StandardFormatLexer(Lexer):
+class StandardFormatGenerator(Generator):
     """
     Format specification:
     Line 1. states
@@ -77,7 +77,7 @@ class StandardFormatLexer(Lexer):
         """
         accepted_states = api.SPLIT_COMMA_SET(accepted)
         for state in api.SPLIT_COMMA_LIST(states):
-            # epsilon is format-specific so it should be bound to a specific Lexer implementation.
+            # epsilon is format-specific so it should be bound to a specific Generator implementation.
             state_obj = self.state_imp(state, 1 if state in accepted_states else 0)
             self.states[state] = state_obj
 
@@ -114,7 +114,7 @@ class StandardFormatLexer(Lexer):
 
         self._replace_state_keys()
 
-class StandardFormatWithInputParser(StandardFormatLexer):
+class StandardFormatWithInputParser(StandardFormatGenerator):
     """
     Format specification:
     Line 1. inputs separated with a comma. Multiple input strings are separated with | symbol.

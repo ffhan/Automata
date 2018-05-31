@@ -143,7 +143,7 @@ class EpsilonNFA(NFA):
         :param EpsilonNFA other: other epsilon NFA
         :return EpsilonNFA: resulting NFA
         """
-        import form.lexers as lex
+        import form.generators as lex
 
         #ensuring state names are not identical when doing multiple additions.
         ending = 'end_'
@@ -161,8 +161,8 @@ class EpsilonNFA(NFA):
             
             {1}
             {0}
-            """.format(starting, ending), lex.StandardFormatLexer()
-        )
+            """.format(starting, ending), lex.StandardFormatGenerator()
+        ) #todo: rename all of the states with unique names. do that also in mul and kleene.
 
         starting = new_e_nfa.start_state
         ending = list(new_e_nfa.accepted_states)[0]
@@ -170,17 +170,23 @@ class EpsilonNFA(NFA):
         copied_self = self.deepcopy()
         copied_other = other.deepcopy()
 
-        for state in copied_self.states.values():
-            new_e_nfa.states[state.name] = state
-        for state in copied_other.states.values():
-            new_e_nfa.states[state.name] = state
+        for state in list(copied_self.states):
+            new_name = 'a_0' + state.name
+            copied_self.rename_state(state, new_name)
+            new_state = copied_self.states[new_name]
+            new_e_nfa.states[new_state.name] = new_state
+        for state in list(copied_other.states):
+            new_name = 'a_1' + state.name
+            copied_other.rename_state(state, new_name)
+            new_state = copied_other.states[new_name]
+            new_e_nfa.states[new_state.name] = new_state
 
         new_e_nfa.states.update(copied_self.states)
         new_e_nfa.states.update(copied_other.states)
         new_e_nfa.inputs |= copied_self.inputs | copied_other.inputs
 
-        starting.add_function(new_e_nfa.states[self.start_state.name], self._epsilon)
-        starting.add_function(new_e_nfa.states[other.start_state.name], self._epsilon)
+        starting.add_function(new_e_nfa.states[copied_self.start_state.name], self._epsilon)
+        starting.add_function(new_e_nfa.states[copied_other.start_state.name], self._epsilon)
 
         for state in new_e_nfa.accepted_states:
             if state != ending:
@@ -203,6 +209,17 @@ class EpsilonNFA(NFA):
         first = self.deepcopy()
         other = other.deepcopy()
 
+        for state in list(first.states):
+            new_name = 'm_0' + state.name
+            first.rename_state(state, new_name)
+        for state in list(other.states):
+            new_name = 'm_1' + state.name
+            other.rename_state(state, new_name)
+
+        for state in first.states.values():
+            if state.value:
+                state.add_function(other.start_state, first.epsilon)
+
         first.states.update(other.states)
         first.inputs |= other.inputs
 
@@ -214,7 +231,7 @@ class EpsilonNFA(NFA):
 
     def kleene_operator(self):
 
-        import form.lexers as lex
+        import form.generators as lex
 
         # ensuring state names are not identical when doing multiple additions.
         ending = 'end_'
@@ -230,7 +247,7 @@ class EpsilonNFA(NFA):
 
             {1}
             {0}
-            """.format(starting, ending), lex.StandardFormatLexer()
+            """.format(starting, ending), lex.StandardFormatGenerator()
         )
 
         starting = new_e_nfa.start_state
