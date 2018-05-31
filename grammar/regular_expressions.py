@@ -46,6 +46,9 @@ class RegExp:
         self._groups = self._process(self._groups)
         self.automaton = self._groups.execute()
 
+    def create_checker(self):
+        return self.check
+
     def check(self, text):
         for char in text:
             self.automaton.enter(char)
@@ -227,5 +230,11 @@ class RegExp:
                                                  copied_groups[i + 1 - compressed])]
                 compressed += 2
         return copied_groups
+
+CHECK_INTEGER = RegExp('[0-9]+').create_checker()
+CHECK_VARIABLE = RegExp('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*').create_checker()
+CHECK_FLOAT = RegExp('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)').create_checker()
+CHECK_NUMBER = RegExp('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)').create_checker()
+#todo: currently spaces can't be introduced in a language. Fix that in FA.
 
 #todo: enable inputting any character in a dfa. (maybe just a specific type.

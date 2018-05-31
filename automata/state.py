@@ -64,9 +64,7 @@ class StateName:
         if not isinstance(other, self.__class__):
             return False
 
-        if other.name == self.name:
-            return True
-        return False
+        return other.name == self.name
 
     def __hash__(self):
 
@@ -197,12 +195,10 @@ class State:
         if not isinstance(other, self.__class__):
             return False
 
-        if other.name == self.name and other.value == self.value:
-            return True
-        return False
+        return self.name == other.name
 
     def __hash__(self):
-        return hash(self.name) + hash(self.value)
+        return hash(self.name)
 
     def forward(self, value):
         '''

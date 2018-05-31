@@ -436,9 +436,16 @@ class FiniteAutomaton(abc.ABC):
             for event, transition_states in state.transitions.items():
                 transitions = set()
                 for transition_state in transition_states:
-                    transitions.add(states[transition_state.name])
+                    try:
+                        transitions.add(states[transition_state.name])
+                    except KeyError as err:
+                        raise err
                 states[name].transitions[event] = transitions
         start_state = states[self.start_state.name]
+
+        assert len(self.states) == len(states)
+        for state in self.states:
+            assert state in states
 
         return self._create_copy(states, inputs, start_state)
 

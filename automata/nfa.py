@@ -169,20 +169,22 @@ class EpsilonNFA(NFA):
 
         copied_self = self.deepcopy()
         copied_other = other.deepcopy()
+        states = dict()
 
-        for state in list(copied_self.states):
-            new_name = 'a_0' + state.name
-            copied_self.rename_state(state, new_name)
-            new_state = copied_self.states[new_name]
-            new_e_nfa.states[new_state.name] = new_state
-        for state in list(copied_other.states):
-            new_name = 'a_1' + state.name
-            copied_other.rename_state(state, new_name)
-            new_state = copied_other.states[new_name]
-            new_e_nfa.states[new_state.name] = new_state
+        for name in list(copied_self.states):
+            new_name = 'a_0' + name.name
+            state = copied_self.states[name]
+            state.name = st.StateName(new_name)
+            states[state.name] = state
+        for name in list(copied_other.states):
+            new_name = 'a_1' + name.name
+            state = copied_other.states[name]
+            state.name = st.StateName(new_name)
+            states[state.name] = state
 
-        new_e_nfa.states.update(copied_self.states)
-        new_e_nfa.states.update(copied_other.states)
+        # new_e_nfa.states.update(copied_self.states)
+        # new_e_nfa.states.update(copied_other.states)
+        new_e_nfa.states.update(states)
         new_e_nfa.inputs |= copied_self.inputs | copied_other.inputs
 
         starting.add_function(new_e_nfa.states[copied_self.start_state.name], self._epsilon)
@@ -207,20 +209,34 @@ class EpsilonNFA(NFA):
         """
 
         first = self.deepcopy()
+        size1 = len(first.states)
         other = other.deepcopy()
+        size2 = len(other.states)
 
-        for state in list(first.states):
-            new_name = 'm_0' + state.name
-            first.rename_state(state, new_name)
-        for state in list(other.states):
-            new_name = 'm_1' + state.name
-            other.rename_state(state, new_name)
+        states = dict()
 
-        for state in first.states.values():
-            if state.value:
-                state.add_function(other.start_state, first.epsilon)
+        for name in list(first.states):
+            new_name = 'm_0' + name.name
+            state = first.states[name]
+            state.name = st.StateName(new_name)
+            states[state.name] = state
 
-        first.states.update(other.states)
+        for name in list(other.states):
+            new_name = 'm_1' + name.name
+            state = other.states[name]
+            state.name = st.StateName(new_name)
+            states[state.name] = state
+
+        for state in list(first.accepted_states):
+            state.add_function(other.start_state, first.epsilon)
+
+        # first.states.update(other.states)
+        first.states = states
+
+        try:
+            assert len(first.states) == size1 + size2
+        except AssertionError as err:
+            raise err
         first.inputs |= other.inputs
 
         for state in first.accepted_states:
