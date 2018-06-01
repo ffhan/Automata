@@ -91,12 +91,14 @@ class RegEx:
         :param str text: input text
         :return bool: True if accepted, False if not
         """
+        #resetting before everything somehow fixed the 't' bug. Don't know how.
+        self.automaton.reset()
         for char in text:
             if not char in self.valid_characters:
                 return False
             self.automaton.enter(char)
         is_ok = self.automaton.accepted
-        self.automaton.reset()
+        # self.automaton.reset()
         return is_ok
 
     def _process(self, group: list)->operators.Operator:

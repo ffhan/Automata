@@ -4,7 +4,7 @@ Defines all Lexer implementations.
 import abc
 import grammar.regular_expressions as rgx
 
-class Token:
+class Token: #todo: some tokens do not have a value. Implement an abstract Token class and then valueless token.
     """
     Defines a Token, a result of a Lexer scan.
     """
@@ -34,21 +34,26 @@ class Lexer:
         """
         self._regexes: list = regexes
 
-    def scan(self, text):
+    def scan(self, text: str)->list:
+        """
+        Scans the text and returns a list of found tokens.
 
+        :param str text: string of text
+        :return list: a list containing tokens
+        """
         start_index = -1
         # end_index = -1
 
         current_regex = None
         tokens = []
-        # print(text)
-        for i, char in enumerate(text):
+        # print("entered", text)
+        for i, char in enumerate(text): #todo: introdu
             # print(i, char, "'{}'".format(text[start_index:i + 1]), current_regex, tokens)
             if start_index == -1:
                 for regex in self._regexes:
                     result = regex.check(char)
-                    #todo: fix a bug where if this is removed it doesn't see t in this
-                    if regex.check(char):
+                    # print("'{}' '{}' {}".format(char, char.strip(), result))
+                    if result:
                         start_index = i
                         current_regex = regex
                         break
@@ -62,7 +67,7 @@ class Lexer:
                         continue_flag = True
                     if continue_flag:
                         break
-                if not continue_flag:
+                if not continue_flag: #todo: for things that are not whitespace but haven't been lexed add an undefined token.
                     tokens.append(Token(current_regex.name, text[start_index:i]))
                     # start_index = -1
                     # current_regex = None
