@@ -30,7 +30,7 @@ def get_e_nfa(string):
     :param str string: input text
     :return: epsilon NFA
     """
-    parser = form.generators.StandardFormatWithInputParser()
+    parser = form.generators.StandardFormatWithInputGenerator()
     e_nfa = automata.nfa.EpsilonNFA.factory(string, parser)
 
     for entries in parser.entries:
@@ -45,7 +45,7 @@ def get_dpda(string):
     :param str string: input text
     :return: deterministic push down automaton
     """
-    parser = form.generators.PushDownFormatWithInputParser()
+    parser = form.generators.PushDownFormatWithInputGenerator()
     pda = automata.pda.DeterministicPDA.factory(string, parser)
 
     for entries in parser.entries:

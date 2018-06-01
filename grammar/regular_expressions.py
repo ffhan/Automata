@@ -9,6 +9,12 @@ class RegEx:
     Currently compiles to epsilon NFA, but that will be bound to change.
     """
     #todo: fix nfa to dfa casting and add compile method that does: operator->e_nfa->nfa->dfa->minimised dfa
+    #todo: multiple collation [a-z,A-Z]
+    #todo: anchoring
+    #todo: {min, max} repetitions
+    #todo: advanced collation with ^ (not operator) and . (any character)
+    # all these things are going to be implemented when the parser is done.
+    # they all require a pretty advanced parser, this structure cannot safely support these features.
     unary_operators = {'+': operators.KleenePlus,
                        '?': operators.QuestionMark,
                        '*': operators.KleeneStar,
@@ -329,7 +335,29 @@ LBRACKET = RegEx('\\[', 'LBRACKET')
 RBRACKET = RegEx('\\]', 'RBRACKET')
 
 ASSIGN = RegEx('=', 'ASSIGN')
-EQUALITY = RegEx('==', 'EQUALITY')
+EQUAL = RegEx('==', 'EQUAL')
+INEQUAL = RegEx('!=', 'INEQUAL')
+
+LT = RegEx('<', 'LT')
+LE = RegEx('<=', 'LE')
+
+GT = RegEx('>', 'GT')
+GE = RegEx('>=', 'GE')
+
+NEWLINE = RegEx('\n', 'NEWLINE')
+TAB = RegEx('\t', 'TAB')
+
+# STAR = RegEx('\\*+', 'STAR') # tests escaping characters used for a regex.
+# print(STAR.check(''))
+# print(STAR.check('*'))
+# print(STAR.check('**'))
+# print(NEWLINE._groups, TAB._groups)
+# print(NEWLINE.check(''))
+# print(NEWLINE.check('\n'))
+# print(NEWLINE.check('\n\n'))
+# print(TAB.check(''))
+# print(TAB.check('\t'))
+# print(TAB.check('\t\t'))
 
 #todo: currently spaces can't be introduced in a language. Fix that in FA.
 

@@ -2,7 +2,7 @@
 Defines methods that are commonly used in Generator classes.
 """
 
-def split_factory(split_by=',', cast_to=list, remove_empty=True):
+def split_factory(split_by=',', cast_to=list, remove_empty=True, strip = True):
     """
     Creates a uniform function split by a selected expression.
 
@@ -27,12 +27,17 @@ def split_factory(split_by=',', cast_to=list, remove_empty=True):
 
         container = list()
 
+        if strip:
+            processor = lambda t : t.strip()
+        else:
+            processor = lambda t : t
+
         for part in text.split(split_by):
             if remove_empty:
-                if part.strip() != '':
-                    container.append(part.strip())
+                if processor(part) != '':
+                    container.append(processor(part))
             else:
-                container.append(part.strip())
+                container.append(processor(part))
 
         return cast_to(container)
 

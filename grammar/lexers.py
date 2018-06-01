@@ -4,7 +4,17 @@ Defines all Lexer implementations.
 import abc
 import grammar.regular_expressions as rgx
 
-class Token: #todo: some tokens do not have a value. Implement an abstract Token class and then valueless token.
+class BasicToken:
+    """
+    Defines a interface that all tokens have to follow.
+    Does not contain a value (used for keywords)
+    """
+    def __init__(self, token_type: str):
+        self.token_type = token_type
+    def __repr__(self):
+        return '<' + self.token_type + '>'
+
+class Token(BasicToken): #todo: some tokens do not have a value. Implement an abstract Token class and then valueless token.
     """
     Defines a Token, a result of a Lexer scan.
     """
@@ -16,17 +26,24 @@ class Token: #todo: some tokens do not have a value. Implement an abstract Token
         :param str token_type: token type
         :param str token_value: token value
         """
-        self.token_type = token_type
+        super().__init__(token_type)
         self.token_value = token_value
 
     def __repr__(self):
-        return '<' + self.token_type + ', ' + self.token_value + '>'
+        return '<' + self.token_type + ", '{}'".format(self.token_value) + '>'
+
+class UndefinedToken(Token):
+    """
+    Defines a Token that has not been matched by a lexer but isn't a whitespace.
+    """
+    def __init__(self, token_value: str):
+        super().__init__('UNDEFINED', token_value)
 
 class Lexer:
     """
     Bare bones Lexer implementation.
     """
-    def __init__(self, *regexes):
+    def __init__(self, *regexes): #todo: maybe design a container for regexes (because of precedence)
         """
         Creates a Lexer defined with regular expressions.
 
@@ -50,13 +67,17 @@ class Lexer:
         for i, char in enumerate(text): #todo: introdu
             # print(i, char, "'{}'".format(text[start_index:i + 1]), current_regex, tokens)
             if start_index == -1:
+                continue_flag = False
                 for regex in self._regexes:
                     result = regex.check(char)
-                    # print("'{}' '{}' {}".format(char, char.strip(), result))
+                    # print("'{}' {}".format(char, result), rgx.INEQUAL.check(char))
                     if result:
                         start_index = i
                         current_regex = regex
+                        continue_flag = True
                         break
+                if not continue_flag and char != ' ':
+                    tokens.append(UndefinedToken(char))
             else:
                 continue_flag = False
                 for regex in self._regexes:
@@ -85,4 +106,5 @@ class StandardLexer(Lexer):
     def __init__(self):
         super().__init__(rgx.VARIABLE, rgx.FLOAT, rgx.INTEGER, rgx.LPARAM,
                          rgx.RPARAM, rgx.LBRACKET, rgx.RBRACKET, rgx.ASSIGN,
-                         rgx.EQUALITY)
+                         rgx.EQUAL, rgx.INEQUAL, rgx.LE, rgx.GE, rgx.LT,
+                         rgx.GT, rgx.NEWLINE, rgx.TAB)

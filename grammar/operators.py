@@ -87,12 +87,8 @@ class Single(UnaryOperator):
     def execute(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             enfa = nfa.EpsilonNFA.factory(
-                """s0,s1
-                {0}
-                s1
-                s0
-                s0,{0}->s1""".format(self._item),
-            generator.StandardFormatGenerator())
+                """s0,s1;{0};s1;s0;s0,{0}->s1""".format(self._item),
+            generator.StandardFormatSemicolonGenerator())
         elif isinstance(self._item, Operator):
             enfa = self._item.execute()
         return enfa
@@ -167,18 +163,14 @@ class Collation(BinaryOperator):
         result = ''
         inputs = ''
         for char in self.all_characters:
-            result += 'c0,{}->c1\n'.format(char)
+            result += 'c0,{}->c1;'.format(char)
             inputs += char + ','
         result = result[:-1]
         inputs = inputs[:-1]
 
         enfa = nfa.EpsilonNFA.factory(
-            """c0,c1
-            {}
-            c1
-            c0
-            {}""".format(inputs, result),
-        generator.StandardFormatGenerator())
+            """c0,c1;{};c1;c0;{}""".format(inputs, result),
+        generator.StandardFormatSemicolonGenerator())
         return enfa
 
 class Alternation(GeneralOperator):
@@ -198,12 +190,8 @@ class Alternation(GeneralOperator):
         for item in self._items:
             if isinstance(item, str):
                 enfas.append(nfa.EpsilonNFA.factory(
-                    """u0, u1
-                    {0}
-                    u1
-                    u0
-                    u0,{0}->u1""".format(item),
-                generator.StandardFormatGenerator()))
+                    """u0, u1;{0};u1;u0;u0,{0}->u1""".format(item),
+                generator.StandardFormatSemicolonGenerator()))
             elif isinstance(item, Operator):
                 enfas.append(item.execute())
 
@@ -231,12 +219,8 @@ class Concatenation(GeneralOperator):
         for item in self._items:
             if isinstance(item, str):
                 enfas.append(nfa.EpsilonNFA.factory(
-                    """c0, c1
-                    {0}
-                    c1
-                    c0
-                    c0,{0}->c1""".format(item),
-                    generator.StandardFormatGenerator()))
+                    """c0, c1;{0};c1;c0;c0,{0}->c1""".format(item),
+                    generator.StandardFormatSemicolonGenerator()))
             elif isinstance(item, Operator):
                 enfas.append(item.execute())
 
@@ -271,12 +255,8 @@ class KleeneStar(UnaryOperator):
     def execute(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             item_enfa = nfa.EpsilonNFA.factory(
-                """ks0,ks1
-                {0}
-                ks1
-                ks0
-                ks0,{0}->ks1""".format(self._item),
-            generator.StandardFormatGenerator())
+                """ks0,ks1;{0};ks1;ks0;ks0,{0}->ks1""".format(self._item),
+            generator.StandardFormatSemicolonGenerator())
         elif isinstance(self._item, Operator):
             item_enfa = self._item.execute()
         return item_enfa.kleene_operator()
@@ -299,12 +279,8 @@ class KleenePlus(UnaryOperator):
     def execute(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             enfa = nfa.EpsilonNFA.factory(
-                """kp0,kp1
-                {0}
-                kp1
-                kp0
-                kp0,{0}->kp1""".format(self._item),
-            generator.StandardFormatGenerator())
+                """kp0,kp1;{0};kp1;kp0;kp0,{0}->kp1""".format(self._item),
+            generator.StandardFormatSemicolonGenerator())
         elif isinstance(self._item, Operator):
             enfa = self._item.execute()
         # else is not needed because OperatorInputTypeError would already have been raised
@@ -330,21 +306,12 @@ class QuestionMark(UnaryOperator):
     def execute(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             item_enfa = nfa.EpsilonNFA.factory(
-                """qm0,qm1
-                {0}
-                qm1
-                qm0
-                qm0,{0}->qm1
-                qm0,$->qm1""".format(self._item),
-            generator.StandardFormatGenerator())
+                """qm0,qm1;{0};qm1;qm0;qm0,{0}->qm1;qm0,$->qm1""".format(self._item),
+            generator.StandardFormatSemicolonGenerator())
         elif isinstance(self._item, Operator):
             start_enfa = nfa.EpsilonNFA.factory(
-                """qm
-                
-                qm
-                qm
-                """,
-            generator.StandardFormatGenerator())
+                """qm;;qm;qm;""",
+            generator.StandardFormatSemicolonGenerator())
             end_enfa = start_enfa.deepcopy()
             item_enfa = start_enfa*end_enfa + self._item.execute()
         #todo: check if this is correct.

@@ -114,7 +114,45 @@ class StandardFormatGenerator(Generator):
 
         self._replace_state_keys()
 
-class StandardFormatWithInputParser(StandardFormatGenerator):
+class StandardFormatSemicolonGenerator(StandardFormatGenerator):
+    """
+    The same thing as StandardFormatGenerator just with semicolons (;)
+    as separators instead of just a newline (\n)
+
+    Not intended for direct use. To see its' usage see grammar.operators.py
+
+    I recommend using StandardFormatGenerator.
+    """
+    def _extract_functions(self, functions):
+
+        for line in functions:
+            if line == '':
+                continue
+            start_value, ends = api.split_factory('->', list, strip=False)(line)
+            start, value = api.split_factory(',', strip=False)(start_value)
+
+            for end in api.SPLIT_COMMA_LIST(ends):
+                if end != '#':
+                    self.states[start].add_function(self.states[end], value)
+
+    def _extract_inputs(self, text):
+
+        for inp in api.split_factory(',', strip=False)(text):
+            self.inputs.add(inp)
+
+    def scan(self, text):
+        self.reset()
+
+        lines = api.split_factory(';', remove_empty=False, strip=False)(text)
+
+        self._extract_states(lines[0], lines[2])
+        self._extract_inputs(lines[1])
+        self._extract_start_state(lines[3])
+        self._extract_functions(lines[4:])
+
+        self._replace_state_keys()
+
+class StandardFormatWithInputGenerator(StandardFormatGenerator):
     """
     Format specification:
     Line 1. inputs separated with a comma. Multiple input strings are separated with | symbol.
@@ -157,7 +195,7 @@ class StandardFormatWithInputParser(StandardFormatGenerator):
 
         self._replace_state_keys()
 
-class PushDownFormatWithInputParser(StandardFormatWithInputParser):
+class PushDownFormatWithInputGenerator(StandardFormatWithInputGenerator):
     """
     Format specification:
     Line 1. inputs separated with a comma. Multiple input strings are separated with | symbol.

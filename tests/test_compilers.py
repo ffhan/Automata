@@ -1,6 +1,6 @@
 import unittest
 from form.generators import Generator, StandardFormatGenerator, \
-    StandardFormatWithInputParser, PushDownFormatWithInputParser
+    StandardFormatWithInputGenerator, PushDownFormatWithInputGenerator
 from form.readers import Reader
 
 class TestParser(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestStandardFormatParser(unittest.TestCase):
 class TestStandardFormatWithInputParser(TestStandardFormatParser):
 
     def setUp(self):
-        self.test = StandardFormatWithInputParser()
+        self.test = StandardFormatWithInputGenerator()
 
     def test_file_parsing(self):
 
@@ -64,7 +64,7 @@ class TestStandardFormatWithInputParser(TestStandardFormatParser):
 class TestPushDownFormatWithInputParser(unittest.TestCase):
 
     def setUp(self):
-        self.test = PushDownFormatWithInputParser()
+        self.test = PushDownFormatWithInputGenerator()
 
     def test_file_parsing(self):
         try:
