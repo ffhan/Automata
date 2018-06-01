@@ -3,7 +3,7 @@ Defines a regular expression type and all default regular expression checkers.
 """
 import grammar.operators as operators
 
-class RegExp:
+class RegEx:
     """
     Defines a class that handles all regular expression needs.
     Currently compiles to epsilon NFA, but that will be bound to change.
@@ -16,7 +16,7 @@ class RegExp:
     binary_operators = {'|': operators.Alternation,
                         '': operators.Concatenation}
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, name: str = 'placeholder'):
         """
         Initializes a regular expression out of rules defined in a text.
 
@@ -39,18 +39,61 @@ class RegExp:
 
             This differs from a|bc because the former accepts ac while the latter does not.
 
+        Escaped character:
+            'a\[bc\]' - 'a[bc]'
+
+        :param str name: name that describes a particular regexp
         :param str text: text describing a regular expression
         """
+
+        self._name = name
+
         self._text = text
+
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
         self.automaton = self._groups.execute()
 
+    @property
+    def valid_characters(self)->set:
+        """
+        Returns all valid characters defined in this regex.
+
+        :return set: a set of all valid characters
+        """
+        return self.automaton.inputs
+
+    @property
+    def name(self)->str:
+        """
+        Property that returns a name
+
+        :return str: regex name
+        """
+        return self._name
+
+    def __repr__(self):
+        return '<' + self.name + '>'
+
     def create_checker(self):
+        """
+        Returns a checking function, since the class itself is not needed
+        after object creation.
+
+        :return: check function
+        """
         return self.check
 
-    def check(self, text):
+    def check(self, text)->bool:
+        """
+        Checks if a particular input is accepted by a regex.
+
+        :param str text: input text
+        :return bool: True if accepted, False if not
+        """
         for char in text:
+            if not char in self.valid_characters:
+                return False
             self.automaton.enter(char)
         is_ok = self.automaton.accepted
         self.automaton.reset()
@@ -65,16 +108,36 @@ class RegExp:
         :return Operator: single operator
         """
 
+        group = self._escape_characters(group)
         group = self._collate(group)
         group = self._process_sublists(group)
         group = self._to_unary_operators(group)
         group = self._concatenate(group)
         group = self._alternate(group)
+        group = self._clean(group)
 
         if len(group) > 1:
             # print(group)
             raise ValueError('Parsing failed.')
         return group[0]
+
+    def _escape_characters(self, group: list)->list:
+        """
+        Escapes characters after \ symbol to a Single operator.
+
+        :param list group: a list of items
+        :return list: a processed list of items
+        """
+
+        copied_group = group.copy()
+        compressed = 0
+
+        for i, item in enumerate(group):
+            if item == '\\':
+                copied_group[i - compressed : i + 2 - compressed] = \
+                    [operators.Single(copied_group[i + 1 - compressed])]
+                compressed += 1
+        return copied_group
 
     def _extract_bracket(self, text: str)->list:
         """
@@ -90,10 +153,18 @@ class RegExp:
         # print(text)
         for i, char in enumerate(text):
             if char == '(':
+                if i > 0:
+                    if text[i - 1] == '\\':
+                        result.append(char)
+                        continue
                 par_count += 1
                 if lpar_index == -1:
                     lpar_index = i
             elif char == ')':
+                if i > 0:
+                    if text[i - 1] == '\\':
+                        result.append(char)
+                        continue
                 par_count -= 1
                 rpar_index = i
             else:
@@ -231,10 +302,33 @@ class RegExp:
                 compressed += 2
         return copied_groups
 
-CHECK_INTEGER = RegExp('[0-9]+').create_checker()
-CHECK_VARIABLE = RegExp('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*').create_checker()
-CHECK_FLOAT = RegExp('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)').create_checker()
-CHECK_NUMBER = RegExp('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)').create_checker()
+    def _clean(self, group: list)->list:
+        """
+        Final cleanup, replaces all loose characters with Single operators.
+
+        :param list group: a list of items
+        :return list: a processed list of items
+        """
+
+        for i, item in enumerate(group):
+            if isinstance(item, str):
+                group[i] = operators.Single(item)
+        return group
+
+INTEGER = RegEx('[0-9]+', 'INTEGER')
+VARIABLE = RegEx('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*', 'VARIABLE')
+FLOAT = RegEx('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)', 'FLOAT')
+NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
+
+LPARAM = RegEx('\\(', 'LPARAM')
+RPARAM = RegEx('\\)', 'RPARAM')
+
+LBRACKET = RegEx('\\[', 'LBRACKET')
+RBRACKET = RegEx('\\]', 'RBRACKET')
+
+ASSIGN = RegEx('=', 'ASSIGN')
+EQUALITY = RegEx('==', 'EQUALITY')
+
 #todo: currently spaces can't be introduced in a language. Fix that in FA.
 
 #todo: enable inputting any character in a dfa. (maybe just a specific type.
