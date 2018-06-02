@@ -8,6 +8,7 @@ import abc
 import form.generator_api as api
 import automata.state as st
 import automata.packs as pk
+import misc.helper as helper
 
 class Generator(abc.ABC):
     """
@@ -59,6 +60,10 @@ class StandardFormatGenerator(Generator):
         If the transition function doesn't produce an end state then use # (start,value->#).
         If the transition function has multiple end states
         they are separated by a comma. (start,value->s1,s2,s3,s4)
+
+    If you are using a comma (,) or a newline (\n) anywhere they have to be escaped
+    with a backslash (\) in front of the symbol. For more details of escaping
+    see form.generator_api.py, specifically split_factory2 method.
     """
 
     def _replace_state_keys(self):
@@ -75,37 +80,43 @@ class StandardFormatGenerator(Generator):
         :param str accepted: All accepted states
         :return:
         """
-        accepted_states = api.SPLIT_COMMA_SET(accepted)
-        for state in api.SPLIT_COMMA_LIST(states):
+        accepted_states = api.NEW_SPLIT_COMMA(accepted, True)
+        for state in api.NEW_SPLIT_COMMA(states, True):
+            state_name = helper.de_escape_string(state)[0]
             # epsilon is format-specific so it should be bound to a specific Generator implementation.
-            state_obj = self.state_imp(state, 1 if state in accepted_states else 0)
-            self.states[state] = state_obj
+            state_obj = self.state_imp(state_name, 1 if state in accepted_states else 0)
+            self.states[state_name] = state_obj
 
     def _extract_start_state(self, start_state):
-        self.start_state = self.states[start_state]
+        self.start_state = self.states[helper.de_escape_string(start_state)[0]]
 
     def _extract_inputs(self, text):
 
-        for inp in api.SPLIT_COMMA_LIST(text):
-            self.inputs.add(inp)
+        for inp in api.NEW_SPLIT_COMMA(text, True):
+            self.inputs.add(*helper.de_escape_string(inp))
 
     def _extract_functions(self, functions):
 
         for line in functions:
             if line == '':
                 continue
-            start_value, ends = api.split_factory('->', list)(line)
+            start_value, ends = api.split_factory2('->')(line)
 
-            start, value = api.SPLIT_COMMA_LIST(start_value)
+            start, value = helper.de_escape_string(*api.NEW_SPLIT_COMMA(start_value))
 
-            for end in api.SPLIT_COMMA_LIST(ends):
+            for end in api.NEW_SPLIT_COMMA(ends):
+                end = helper.de_escape_string(end)[0]
                 if end != '#':
-                    self.states[start].add_function(self.states[end], value)
+                    try:
+                        self.states[start].add_function(self.states[end], value)
+                    except Exception as err:
+                        print(self.states, start, end, value)
+                        raise err
 
     def scan(self, text):
         self.reset()
 
-        lines = api.SPLIT_LINES_WITHOUT_REMOVAL(text)
+        lines = api.NEW_SPLIT_NEWLINE(text)
 
         self._extract_states(lines[0], lines[2])
         self._extract_inputs(lines[1])
@@ -271,3 +282,5 @@ class PushDownFormatWithInputGenerator(StandardFormatWithInputGenerator):
         self._extract_functions(lines[7:])
 
         self._replace_state_keys()
+
+#todo: implement SimpleGenerator that takes in set of states, inputs and somehow takes in functions.

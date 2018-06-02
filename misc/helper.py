@@ -81,3 +81,42 @@ def flatten_automaton_to_table(automaton)->str:
         result += '\n'
 
     return result
+
+def escape_string(*items)->list:
+    """
+    Escapes a string for a generator:
+    every character is individually escaped.
+
+    This avoids formatting problems.
+
+    :param items: strings that have to be escaped
+    :return list: list of completely escaped strings
+    """
+    new_items = []
+    for item in items:
+        new_string = ''
+        for char in item:
+            new_string += '\\' + char
+        new_items.append(new_string)
+    # print(new_items)
+    return new_items
+
+def de_escape_string(*items)->list:
+    """
+    Removes escape symbols from strings.
+
+    :param items: strings that have to be de-escaped
+    :return list: list of unescaped strings
+    """
+    new_items = []
+    for item in items:
+        item_list = list(item)
+        new_string = ''
+        while item_list:
+            char = item_list.pop(0)
+            if char == '\\':
+                new_string += item_list.pop(0)
+            else:
+                new_string += char
+        new_items.append(new_string)
+    return new_items

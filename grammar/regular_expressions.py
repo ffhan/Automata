@@ -115,7 +115,6 @@ class RegEx:
         :param list group: a list of items
         :return Operator: single operator
         """
-
         group = self._escape_characters(group)
         group = self._collate(group)
         group = self._process_sublists(group)
@@ -141,6 +140,8 @@ class RegEx:
         compressed = 0
 
         for i, item in enumerate(group):
+            if i >= len(group) - compressed:
+                break
             if item == '\\':
                 copied_group[i - compressed : i + 2 - compressed] = \
                     [operators.Single(copied_group[i + 1 - compressed])]
@@ -323,6 +324,18 @@ class RegEx:
                 group[i] = operators.Single(item)
         return group
 
+def check_check(rgx, *tests):
+    for test in tests:
+        print(test, rgx.check(test))
+
+WHILE = RegEx('while', 'WHILE')
+FOR = RegEx('for', 'FOR')
+IN = RegEx('in', 'IN')
+RETURN = RegEx('return', 'RETURN')
+DEFINE = RegEx('define', 'DEFINE')
+CLASS = RegEx('class', 'CLASS')
+#todo: reserved items currently are not being scanned.
+
 INTEGER = RegEx('[0-9]+', 'INTEGER')
 VARIABLE = RegEx('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*', 'VARIABLE')
 FLOAT = RegEx('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)', 'FLOAT')
@@ -347,18 +360,29 @@ GE = RegEx('>=', 'GE')
 NEWLINE = RegEx('\n', 'NEWLINE')
 TAB = RegEx('\t', 'TAB')
 
-# STAR = RegEx('\\*+', 'STAR') # tests escaping characters used for a regex.
-# print(STAR.check(''))
-# print(STAR.check('*'))
-# print(STAR.check('**'))
-# print(NEWLINE._groups, TAB._groups)
-# print(NEWLINE.check(''))
-# print(NEWLINE.check('\n'))
-# print(NEWLINE.check('\n\n'))
-# print(TAB.check(''))
-# print(TAB.check('\t'))
-# print(TAB.check('\t\t'))
+SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
+DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
 
-#todo: currently spaces can't be introduced in a language. Fix that in FA.
+SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
+COLON = RegEx(':', 'COLON')
+COMMA = RegEx(',', 'COMMA')
+DOT = RegEx('.', 'DOT')
 
-#todo: enable inputting any character in a dfa. (maybe just a specific type.
+PLUS = RegEx('\\+', 'PLUS')
+MINUS = RegEx('\\-', 'MINUS')
+ASTERISK = RegEx('\\*', 'ASTERISK')
+SLASH = RegEx('/', 'SLASH')
+BACKSLASH = RegEx('\\\\', 'BACKSLASH')
+
+DIV = RegEx('//', 'DIV')
+# print(DIV.check(''))
+# # print(DIV.check('/'))
+# # print(DIV.check('//'))
+# # print(DIV.check('///'))
+
+
+
+SPACE = RegEx(' ')
+# print(SPACE.check(''))
+# print(SPACE.check(' '))
+# print(SPACE.check('  '))

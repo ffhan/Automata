@@ -4,6 +4,7 @@ Defines Non-deterministic finite automata, including epsilon non deterministic f
 import copy
 import automata.fa as fa
 import automata.state as st
+import misc.helper as helper
 
 class NFA(fa.FiniteAutomaton):
     '''
@@ -158,11 +159,10 @@ class EpsilonNFA(NFA):
         #we need a clean epsilon NFA instance. See NFA union.
         new_e_nfa = self.factory(
             """{0},{1}
-            
-            {1}
-            {0}
-            """.format(starting, ending), lex.StandardFormatGenerator()
-        ) #todo: rename all of the states with unique names. do that also in mul and kleene.
+
+{1}
+{0}
+""".format(starting, ending), lex.StandardFormatGenerator())
 
         starting = new_e_nfa.start_state
         ending = list(new_e_nfa.accepted_states)[0]
@@ -261,10 +261,9 @@ class EpsilonNFA(NFA):
         new_e_nfa = self.factory(
             """{0},{1}
 
-            {1}
-            {0}
-            """.format(starting, ending), lex.StandardFormatGenerator()
-        )
+{1}
+{0}
+""".format(starting, ending), lex.StandardFormatGenerator()) # starting and ending might need escaping
 
         starting = new_e_nfa.start_state
         ending = list(new_e_nfa.accepted_states)[0]

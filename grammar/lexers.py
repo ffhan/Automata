@@ -14,7 +14,7 @@ class BasicToken:
     def __repr__(self):
         return '<' + self.token_type + '>'
 
-class Token(BasicToken): #todo: some tokens do not have a value. Implement an abstract Token class and then valueless token.
+class Token(BasicToken):
     """
     Defines a Token, a result of a Lexer scan.
     """
@@ -64,7 +64,7 @@ class Lexer:
         current_regex = None
         tokens = []
         # print("entered", text)
-        for i, char in enumerate(text): #todo: introdu
+        for i, char in enumerate(text):
             # print(i, char, "'{}'".format(text[start_index:i + 1]), current_regex, tokens)
             if start_index == -1:
                 continue_flag = False
@@ -81,14 +81,15 @@ class Lexer:
             else:
                 continue_flag = False
                 for regex in self._regexes:
-                    if regex.check(text[start_index:i + 1]) and regex != current_regex:
+                    if current_regex.check(text[start_index:i + 1]):
+                        continue_flag = True
+                    elif regex.check(text[start_index:i + 1]) and regex != current_regex:
                         continue_flag = True
                         current_regex = regex
-                    elif current_regex.check(text[start_index:i + 1]):
-                        continue_flag = True
+
                     if continue_flag:
                         break
-                if not continue_flag: #todo: for things that are not whitespace but haven't been lexed add an undefined token.
+                if not continue_flag:
                     tokens.append(Token(current_regex.name, text[start_index:i]))
                     # start_index = -1
                     # current_regex = None
@@ -104,7 +105,11 @@ class StandardLexer(Lexer):
     """
 
     def __init__(self):
-        super().__init__(rgx.VARIABLE, rgx.FLOAT, rgx.INTEGER, rgx.LPARAM,
-                         rgx.RPARAM, rgx.LBRACKET, rgx.RBRACKET, rgx.ASSIGN,
-                         rgx.EQUAL, rgx.INEQUAL, rgx.LE, rgx.GE, rgx.LT,
-                         rgx.GT, rgx.NEWLINE, rgx.TAB)
+        super().__init__(rgx.WHILE, rgx.FOR, rgx.IN, rgx.RETURN, rgx.DEFINE,
+                         rgx.CLASS, rgx.VARIABLE, rgx.FLOAT, rgx.INTEGER,
+                         rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET, rgx.RBRACKET,
+                         rgx.ASSIGN, rgx.EQUAL, rgx.INEQUAL, rgx.LE, rgx.GE,
+                         rgx.LT, rgx.GT, rgx.NEWLINE, rgx.TAB, rgx.SINGLEQUOTE,
+                         rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA, rgx.DOT,
+                         rgx.SLASH, rgx.BACKSLASH, rgx.SEMICOLON, rgx.COLON,
+                         rgx.PLUS, rgx.MINUS, rgx.DIV)
