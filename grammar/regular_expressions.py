@@ -22,6 +22,8 @@ class RegEx:
     binary_operators = {'|': operators.Alternation,
                         '': operators.Concatenation}
 
+
+
     def __init__(self, text: str, name: str = 'placeholder'):
         """
         Initializes a regular expression out of rules defined in a text.
@@ -59,6 +61,7 @@ class RegEx:
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
         self.automaton = self._groups.execute()
+        # self.compile()
 
     @property
     def valid_characters(self)->set:
@@ -324,65 +327,130 @@ class RegEx:
                 group[i] = operators.Single(item)
         return group
 
+    def compile(self):
+        """
+        Compiles a regex and saves it on a drive.
+
+        :return:
+        """
+        from misc.helper import compile_object
+        compile_object(self, self.name, 'regex', '.\\grammar\\compiled_regexes\\')
+    @staticmethod
+    def load(name: str):
+        """
+        Loads a regex from compiled_regexes directory.
+
+        :param str name: regex file name
+        :return RegEx: loaded regex object
+        """
+        from misc.helper import load_object
+        return load_object('.\\grammar\\compiled_regexes\\' + name + '.regex')
+
 def check_check(rgx, *tests):
     for test in tests:
         print(test, rgx.check(test))
 
-WHILE = RegEx('while', 'WHILE')
-FOR = RegEx('for', 'FOR')
-IN = RegEx('in', 'IN')
-RETURN = RegEx('return', 'RETURN')
-DEFINE = RegEx('define', 'DEFINE')
-CLASS = RegEx('class', 'CLASS')
-#todo: reserved items currently are not being scanned.
+WHILE = RegEx.load('WHILE')
+FOR = RegEx.load('FOR')
+IN = RegEx.load('IN')
+RETURN = RegEx.load('RETURN')
+DEFINE = RegEx.load('DEFINE')
+CLASS = RegEx.load('CLASS')
+# INTEGER = RegEx.load('INTEGER') #todo: pickling this does not work.
+# VARIABLE = RegEx.load('VARIABLE')
+# FLOAT = RegEx.load('FLOAT')
+# NUMBER = RegEx.load('NUMBER')
+LPARAM = RegEx.load('LPARAM')
+RPARAM = RegEx.load('RPARAM')
 
+LBRACKET = RegEx.load('LBRACKET')
+RBRACKET = RegEx.load('RBRACKET')
+
+ASSIGN = RegEx.load('ASSIGN')
+EQUAL = RegEx.load('EQUAL')
+INEQUAL = RegEx.load('INEQUAL')
+
+LT = RegEx.load('LT')
+LE = RegEx.load('LE')
+
+GT = RegEx.load('GT')
+GE = RegEx.load('GE')
+
+NEWLINE = RegEx.load('NEWLINE')
+TAB = RegEx.load('TAB')
+
+SINGLEQUOTE = RegEx.load('SINGLEQUOTE')
+DOUBLEQUOTE = RegEx.load('DOUBLEQUOTE')
+
+SEMICOLON = RegEx.load('SEMICOLON')
+COLON = RegEx.load('COLON')
+COMMA = RegEx.load('COMMA')
+DOT = RegEx.load('DOT')
+
+PLUS = RegEx.load('PLUS')
+MINUS = RegEx.load('MINUS')
+ASTERISK = RegEx.load('ASTERISK')
+SLASH = RegEx.load('SLASH')
+BACKSLASH = RegEx.load('BACKSLASH')
+DIV = RegEx.load('DIV')
+
+# WHILE = RegEx('while', 'WHILE')
+# FOR = RegEx('for', 'FOR')
+# IN = RegEx('in', 'IN')
+# RETURN = RegEx('return', 'RETURN')
+# DEFINE = RegEx('define', 'DEFINE')
+# CLASS = RegEx('class', 'CLASS')
+#
+# #todo: reserved items currently are not being scanned.
+#
 INTEGER = RegEx('[0-9]+', 'INTEGER')
 VARIABLE = RegEx('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*', 'VARIABLE')
 FLOAT = RegEx('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)', 'FLOAT')
 NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
 
-LPARAM = RegEx('\\(', 'LPARAM')
-RPARAM = RegEx('\\)', 'RPARAM')
-
-LBRACKET = RegEx('\\[', 'LBRACKET')
-RBRACKET = RegEx('\\]', 'RBRACKET')
-
-ASSIGN = RegEx('=', 'ASSIGN')
-EQUAL = RegEx('==', 'EQUAL')
-INEQUAL = RegEx('!=', 'INEQUAL')
-
-LT = RegEx('<', 'LT')
-LE = RegEx('<=', 'LE')
-
-GT = RegEx('>', 'GT')
-GE = RegEx('>=', 'GE')
-
-NEWLINE = RegEx('\n', 'NEWLINE')
-TAB = RegEx('\t', 'TAB')
-
-SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
-DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
-
-SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
-COLON = RegEx(':', 'COLON')
-COMMA = RegEx(',', 'COMMA')
-DOT = RegEx('.', 'DOT')
-
-PLUS = RegEx('\\+', 'PLUS')
-MINUS = RegEx('\\-', 'MINUS')
-ASTERISK = RegEx('\\*', 'ASTERISK')
-SLASH = RegEx('/', 'SLASH')
-BACKSLASH = RegEx('\\\\', 'BACKSLASH')
-
-DIV = RegEx('//', 'DIV')
+# LPARAM = RegEx('\\(', 'LPARAM')
+# RPARAM = RegEx('\\)', 'RPARAM')
+#
+# LBRACKET = RegEx('\\[', 'LBRACKET')
+# RBRACKET = RegEx('\\]', 'RBRACKET')
+#
+# ASSIGN = RegEx('=', 'ASSIGN')
+# EQUAL = RegEx('==', 'EQUAL')
+# INEQUAL = RegEx('!=', 'INEQUAL')
+#
+# LT = RegEx('<', 'LT')
+# LE = RegEx('<=', 'LE')
+#
+# GT = RegEx('>', 'GT')
+# GE = RegEx('>=', 'GE')
+#
+# NEWLINE = RegEx('\n', 'NEWLINE')
+# TAB = RegEx('\t', 'TAB')
+#
+# SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
+# DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
+#
+# SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
+# COLON = RegEx(':', 'COLON')
+# COMMA = RegEx(',', 'COMMA')
+# DOT = RegEx('.', 'DOT')
+#
+# PLUS = RegEx('\\+', 'PLUS')
+# MINUS = RegEx('\\-', 'MINUS')
+# ASTERISK = RegEx('\\*', 'ASTERISK')
+# SLASH = RegEx('/', 'SLASH')
+# BACKSLASH = RegEx('\\\\', 'BACKSLASH')
+#
+# DIV = RegEx('//', 'DIV')
 # print(DIV.check(''))
-# # print(DIV.check('/'))
-# # print(DIV.check('//'))
-# # print(DIV.check('///'))
+# print(DIV.check('/'))
+# print(DIV.check('//'))
+# print(DIV.check('///'))
 
+#todo: consider implementing operator precedence (explicitly, not implicitly)
+#todo: implement RegEx precedence (RESERVED and others, also vocabulary size)
 
-
-SPACE = RegEx(' ')
+# SPACE = RegEx(' ')
 # print(SPACE.check(''))
 # print(SPACE.check(' '))
 # print(SPACE.check('  '))

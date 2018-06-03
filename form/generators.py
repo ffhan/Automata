@@ -80,8 +80,8 @@ class StandardFormatGenerator(Generator):
         :param str accepted: All accepted states
         :return:
         """
-        accepted_states = api.NEW_SPLIT_COMMA(accepted, True)
-        for state in api.NEW_SPLIT_COMMA(states, True):
+        accepted_states = api.NEW_SPLIT_COMMA(accepted, remove_empty=True)
+        for state in api.NEW_SPLIT_COMMA(states, remove_empty=True):
             state_name = helper.de_escape_string(state)[0]
             # epsilon is format-specific so it should be bound to a specific Generator implementation.
             state_obj = self.state_imp(state_name, 1 if state in accepted_states else 0)
@@ -92,7 +92,7 @@ class StandardFormatGenerator(Generator):
 
     def _extract_inputs(self, text):
 
-        for inp in api.NEW_SPLIT_COMMA(text, True):
+        for inp in api.NEW_SPLIT_COMMA(text, remove_empty=True):
             self.inputs.add(*helper.de_escape_string(inp))
 
     def _extract_functions(self, functions):
@@ -282,5 +282,3 @@ class PushDownFormatWithInputGenerator(StandardFormatWithInputGenerator):
         self._extract_functions(lines[7:])
 
         self._replace_state_keys()
-
-#todo: implement SimpleGenerator that takes in set of states, inputs and somehow takes in functions.

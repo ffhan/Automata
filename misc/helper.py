@@ -1,7 +1,7 @@
 """
 Defines all helper functions that don't have a specific package.
 """
-import copy
+import pickle
 
 def get_all_subsets(items: set)->list:
     """
@@ -120,3 +120,24 @@ def de_escape_string(*items)->list:
                 new_string += char
         new_items.append(new_string)
     return new_items
+
+def compile_object(obj, file_name: str, file_suffix: str = 'compiled', file_path: str = '.'):
+    """
+    Pickles an object and dumps it into a binary file.
+    This enables that certain objects don't have to be re-initialized.
+
+    :param obj: any pickle-able object
+    :param str file_name: name of the file
+    :param str file_suffix: file format (for example comp in name_of_file.comp)
+    :param str file_path: path to the resulting file
+    :return:
+    """
+    if not file_path.endswith('\\'):
+        file_path += '\\'
+    with open(file_path + file_name + '.' + file_suffix, 'wb') as file:
+        pickle.dump(obj, file, -1)
+
+def load_object(file_path: str):
+    with open(file_path, 'rb') as file:
+        obj = pickle.load(file)
+    return obj
