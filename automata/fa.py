@@ -35,7 +35,7 @@ class FiniteAutomaton(abc.ABC):
             assert isinstance(self.start_state, st.State)
             self.current = {start_state}
         else:
-            raise ValueError(self._state_error(start_state.name))
+            raise TypeError(self._state_error(start_state.name))
 
         for name, state in self.states.items():
             try:
@@ -248,15 +248,15 @@ class FiniteAutomaton(abc.ABC):
         try:
             assert isinstance(self.start_state, st.State)
         except AssertionError as error:
-            print("Start state is not state, it's {}".format(type(self.start_state)), error)
-            raise AssertionError
+            print("Start state is not a state, it's {}".format(type(self.start_state)), error)
+            raise error
         start = 'q0=' + str(self.start_state.name)
         try:
             assert isinstance(self.start_state, st.State)
         except AssertionError as error:
-            print("Start state is not state, it's {}".format(type(self.start_state)), error)
-            raise AssertionError
-        return '{} '.format(self.__class__.__name__) + wrap_in_braces(tab(
+            print("Start state is not a state, it's {}".format(type(self.start_state)), error)
+            raise error
+        return '{} '.format(type(self).__name__) + wrap_in_braces(tab(
             newline(states, inputs, funcs, start, final)
         ), True)
 

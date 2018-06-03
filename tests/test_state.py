@@ -7,6 +7,14 @@ class TestStateName(unittest.TestCase):
 
         self.test = StateName('testing')
 
+    def test_init(self):
+
+        with self.assertRaises(TypeError):
+            test = StateName(3)
+        name = 'successful test   '
+        test = StateName(name)
+        self.assertTrue(name == test.name)
+
     def test_add(self):
 
         self.assertEqual(self.test + self.test, 'testingtesting')

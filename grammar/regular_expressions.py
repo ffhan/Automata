@@ -408,6 +408,25 @@ VARIABLE = RegEx('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*', 'VARIABLE')
 FLOAT = RegEx('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)', 'FLOAT')
 NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
 
+# FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
+# LOADING IS ~7.5 TIMES FASTER.
+# [a-z][A-Z][0-9] takes about 3 miliseconds to create, while loading it takes about 0.4 miliseconds to load it.
+# creating ':' takes about 0.1 miliseconds to create and about 0.4 miliseconds to load it.
+# the point is: loading is absolutely necessary. Even for small vocabularies in which loading is slower
+# it's still nothing (0.4 miliseconds) compared to the usual lexer scan time (in seconds).
+# extensive load tests could give much more precised and nuanced answers though.
+
+# time profiling for lexer turned out two big time consumers: calculating epsilon closures and accepted states
+# both are used extremely often and both take a long time to process (as all properties do)
+# epsilon closures really can't get much faster without a major redesign, so I should finally write a good
+# nfa to dfa caster after writing tests for new modules.
+
+# import time
+# t0 = time.clock()
+# test = RegEx.load('00test')
+# print('{:.100f}'.format(time.clock() - t0))
+# test.compile()
+
 # LPARAM = RegEx('\\(', 'LPARAM')
 # RPARAM = RegEx('\\)', 'RPARAM')
 #

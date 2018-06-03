@@ -12,13 +12,16 @@ class StateName:
     Inherits string class, allowing us to treat it as a string.
     '''
 
-    def __init__(self, name):
+    def __init__(self, name: str):
 
-        assert isinstance(name, str)
+        try:
+            assert isinstance(name, str)
+        except:
+            raise TypeError('Name "{}" is not a string!'.format(name))
         self._name = ''
         self.name = name
 
-    def __add__(self, other):
+    def __add__(self, other)->str:
         """
         Concatenates a string or other State name.
 
