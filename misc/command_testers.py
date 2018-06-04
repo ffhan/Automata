@@ -62,7 +62,7 @@ class CommandTester:
         self._tests['E_NFA'] = self._test_factory(preformat.TEST_E_NFA)
         self._tests['DFA_MIN'] = self._test_factory(preformat.TEST_DFA_MIN)
         self._tests['DPDA'] = self._test_factory(preformat.TEST_PDA)
-        self._tests['PARSER'] = self._test_factory(preformat.TEST_PARSER)
+        self._tests['PARSER'] = self._test_factory(preformat.TEST_GENERATOR)
         return self._tests
 
     @property

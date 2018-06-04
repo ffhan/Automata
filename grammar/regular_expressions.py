@@ -2,6 +2,8 @@
 Defines a regular expression type and all default regular expression checkers.
 """
 import grammar.operators as operators
+import os
+dirname = os.path.dirname(__file__)
 
 class RegEx:
     """
@@ -333,8 +335,8 @@ class RegEx:
 
         :return:
         """
-        from misc.helper import compile_object
-        compile_object(self, self.name, 'regex', '.\\grammar\\compiled_regexes\\')
+        from misc.helper import save_object
+        save_object(self, self.name, 'regex', dirname + '\\compiled_regexes\\')
     @staticmethod
     def load(name: str):
         """
@@ -344,7 +346,7 @@ class RegEx:
         :return RegEx: loaded regex object
         """
         from misc.helper import load_object
-        return load_object('.\\grammar\\compiled_regexes\\' + name + '.regex')
+        return load_object(dirname + '\\compiled_regexes\\' + name + '.regex')
 
 def check_check(rgx, *tests):
     for test in tests:

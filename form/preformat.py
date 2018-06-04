@@ -111,7 +111,7 @@ def test_factory(getter_func, lexer, lexer_method):
 
     return wrapper
 
-def TEST_PARSER(string, test_output, verbose):
+def TEST_GENERATOR(string, test_output, verbose):
 
     import Parser_implementation
 

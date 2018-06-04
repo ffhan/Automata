@@ -3,36 +3,6 @@ Defines all helper functions that don't have a specific package.
 """
 import pickle
 
-def get_all_subsets(items: set)->list:
-    """
-    Returns all possible subsets (including an empty subset).
-
-    :param set items: set of all items
-    :return set: set of all possible subsets
-    """
-
-    def recurse(current_set: set, leftovers: list):
-        """
-        fills result with all subsets for a given set and all items not yet passed.
-
-        :param set current_set: set of items
-        :param list leftovers: all elements not yet included
-        :return:
-        """
-        print(current_set, leftovers)
-        result.append(list(current_set))
-        while leftovers:
-            current = current_set.copy()
-            current.add(leftovers.pop(0))
-            recurse(current, leftovers.copy())
-
-    work = list(items) # eases iterating through items uniformly.
-    result = list() # add all subsets in this set
-
-    recurse(set(), work)
-
-    return sorted(result, key = lambda t : len(t))
-
 def flatten_automaton_to_table(automaton)->str:
     """
     Returns a string that contains a table describing an automaton.
@@ -105,6 +75,13 @@ def de_escape_string(*items)->list:
     """
     Removes escape symbols from strings.
 
+    Be careful to use os.path.dirname(__file__) if you are not sure about relative path.
+    For example, running a misc.helper script from tests will mean that regexes are going to
+    try to load from tests\\compiled_regexes directory if using .\\compiled_regexes instead of
+    C:\\...\\grammar\\compiled_regexes.
+
+    The same goes for saving an object.
+
     :param items: strings that have to be de-escaped
     :return list: list of unescaped strings
     """
@@ -121,10 +98,17 @@ def de_escape_string(*items)->list:
         new_items.append(new_string)
     return new_items
 
-def compile_object(obj, file_name: str, file_suffix: str = 'compiled', file_path: str = '.'):
+def save_object(obj, file_name: str, file_suffix: str = 'compiled', file_path: str = '.'):
     """
     Pickles an object and dumps it into a binary file.
     This enables that certain objects don't have to be re-initialized.
+
+    Be careful to use os.path.dirname(__file__) if you are not sure about relative path.
+    For example, running a misc.helper script from tests will mean that regexes are going to
+    try to load from tests\\compiled_regexes directory if using .\\compiled_regexes instead of
+    C:\\...\\grammar\\compiled_regexes.
+
+    The same goes for loading an object.
 
     :param obj: any pickle-able object
     :param str file_name: name of the file
@@ -132,7 +116,7 @@ def compile_object(obj, file_name: str, file_suffix: str = 'compiled', file_path
     :param str file_path: path to the resulting file
     :return:
     """
-    if not file_path.endswith('\\'):
+    if not file_name.endswith('\\'):
         file_path += '\\'
     with open(file_path + file_name + '.' + file_suffix, 'wb') as file:
         pickle.dump(obj, file, -1)
