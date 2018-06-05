@@ -140,11 +140,10 @@ class Lexer:
                 continue_flag = False
                 for regex in self._regexes:
                     result = regex.check(text[i : i + regex.min_lookahead])
-                    # print("'{}' {}".format(char, result), rgx.INEQUAL.check(char))
                     if result:
                         start_index = i
                         i += regex.min_lookahead - 1
-                        # print('found', "'"+text[start_index:i]+"'")
+                        # print('found', "'"+text[start_index:i + 1]+"'")
                         current_regex = regex
                         continue_flag = True
                         break
@@ -152,7 +151,7 @@ class Lexer:
                     tokens.append(UndefinedToken(char))
             else:
                 continue_flag = False
-                # print('check', "'" + text[start_index:i+1] + "'", text)
+                # print('check', "'" + text[start_index:i+1] + "'", tokens)
                 if current_regex.check(text[start_index:i + 1]):
                     continue_flag = True
                 else:
@@ -168,12 +167,12 @@ class Lexer:
                     # start_index = -1
                     # current_regex = None
                     # print(tokens, "'{}'".format(text[start_index:i]))
-                    tokens += self.scan(text[i:])
-                    tokens = self._backtrack(tokens)
+                    tokens2 = self.scan(text[i:])
+                    tokens += self._backtrack(tokens2)
                     return tokens
         if start_index != -1 and current_regex:
             tokens.append(Token(current_regex, text[start_index:]))
-        tokens = self._backtrack(tokens)
+        # tokens = self._backtrack(tokens)
         return tokens
 
 class StandardLexer(Lexer):
