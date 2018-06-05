@@ -55,20 +55,25 @@ class TestLexer(unittest.TestCase):
                          Token(regex.ASSIGN, '='),
                          UndefinedToken('?')]))
 
-        scan2 = Lexer(regex.INTEGER, regex.FLOAT).scan('123.1234352436463.56')
+        scan2 = Lexer(regex.INTEGER, regex.FLOAT).add_ignored_characters(
+            ' ').scan('123.1234352436463.56')
         self.assertEqual(str(scan2),
                          str([Token(regex.FLOAT, '123.1234352436463'),
                           Token(regex.FLOAT, '.56')]))
-        scan3 = Lexer(regex.WHILE, regex.VARIABLE).scan('whileab abwhile')
+        scan3 = Lexer(regex.WHILE, regex.VARIABLE).add_ignored_characters(
+            ' ').scan('whileab abwhile')
         self.assertEqual(str(scan3),
                          str([Token(regex.VARIABLE, 'whileab'),
                               Token(regex.VARIABLE, 'abwhile')]))
-        scan4 = Lexer(regex.VARIABLE, regex.NUMBER).scan('1234abc123.')
+        scan4 = Lexer(regex.VARIABLE, regex.NUMBER).add_ignored_characters(
+            ' ').scan('1234abc123.')
         self.assertEqual(str(scan4),
                          str([Token(regex.NUMBER, '1234'),
                               Token(regex.VARIABLE, 'abc123'),
                               UndefinedToken('.')]))
-        scan5 = Lexer(regex.VARIABLE, regex.INTEGER, regex.FLOAT, regex.DOT).scan(
+        scan5 = Lexer(regex.VARIABLE, regex.INTEGER,
+                      regex.FLOAT, regex.DOT).add_ignored_characters(
+            ' ').scan(
             " 12 . 45   1234..9865 123.56")
         self.assertEqual(str(scan5),
                          str([Token(regex.INTEGER, '12'),

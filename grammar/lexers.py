@@ -66,9 +66,10 @@ class Lexer:
         Adds all ignored characters
 
         :param ignored: all ignored characters
-        :return:
+        :return Lexer: changed lexer
         """
         self._ignored |= set(filter(lambda t : isinstance(t, str), ignored))
+        return self
 
     # def scan(self, text: str)->list:
     #     """
