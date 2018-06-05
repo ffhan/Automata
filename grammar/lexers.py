@@ -15,6 +15,13 @@ class BasicToken:
         return '<' + (self.token_type.name if isinstance(self.token_type, rgx.RegEx)
                       else self.token_type) + '>'
 
+class BoundToken(BasicToken):
+    """
+    Defines a token that delimits other tokens in a list.
+    """
+    def __init__(self):
+        super().__init__('_delimit_')
+
 class Token(BasicToken):
     """
     Defines a Token, a result of a Lexer scan.
@@ -52,6 +59,16 @@ class Lexer:
         :param regexes: regex class
         """
         self._regexes: list = regexes
+        self._ignored = set()
+
+    def add_ignored_characters(self, *ignored):
+        """
+        Adds all ignored characters
+
+        :param ignored: all ignored characters
+        :return:
+        """
+        self._ignored |= set(filter(lambda t : isinstance(t, str), ignored))
 
     # def scan(self, text: str)->list:
     #     """
@@ -116,13 +133,32 @@ class Lexer:
                     return self._backtrack(tokens)
         return tokens
 
+    def _clean_ignored(self, tokens):
+        """
+        Removes all individual undefined variables that contain whitespace.
+        This is wrong and should not be a thing.
+
+        :param tokens:
+        :return:
+        """
+        return list(filter(lambda t : t.token_value not in self._ignored, tokens))
+
     def scan(self, text: str)->list:
         """
-                Scans the text and returns a list of found tokens.
+        Scans the text and returns a list of found tokens.
 
-                :param str text: string of text
-                :return list: a list containing tokens
-                """
+        :param str text: string of text
+        :return list: a list containing tokens
+        """
+        return self._clean_ignored(self._internal_scan(text))
+
+    def _internal_scan(self, text: str)->list:
+        """
+        Scans the text and returns a list of found tokens.
+
+        :param str text: string of text
+        :return list: a list containing tokens
+        """
         start_index = -1
         # end_index = -1
 
@@ -139,7 +175,7 @@ class Lexer:
             if start_index == -1:
                 continue_flag = False
                 for regex in self._regexes:
-                    result = regex.check(text[i : i + regex.min_lookahead])
+                    result = regex.check(text[i: i + regex.min_lookahead])
                     if result:
                         start_index = i
                         i += regex.min_lookahead - 1
@@ -147,7 +183,7 @@ class Lexer:
                         current_regex = regex
                         continue_flag = True
                         break
-                if not continue_flag and char != ' ':
+                if not continue_flag:
                     tokens.append(UndefinedToken(char))
             else:
                 continue_flag = False
@@ -167,12 +203,14 @@ class Lexer:
                     # start_index = -1
                     # current_regex = None
                     # print(tokens, "'{}'".format(text[start_index:i]))
-                    tokens2 = self.scan(text[i:])
-                    tokens += self._backtrack(tokens2)
+                    tokens2 = self._internal_scan(text[i:])
+                    if tokens2:
+                        tokens += self._backtrack(tokens2)
                     return tokens
         if start_index != -1 and current_regex:
             tokens.append(Token(current_regex, text[start_index:]))
         # tokens = self._backtrack(tokens)
+
         return tokens
 
 class StandardLexer(Lexer):
@@ -189,3 +227,4 @@ class StandardLexer(Lexer):
                          rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA, rgx.DOT,
                          rgx.SLASH, rgx.BACKSLASH, rgx.SEMICOLON, rgx.COLON,
                          rgx.PLUS, rgx.MINUS, rgx.DIV)
+        self.add_ignored_characters(' ')
