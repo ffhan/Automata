@@ -66,6 +66,10 @@ class RegEx:
         # self.compile()
 
     @property
+    def min_lookahead(self):
+        return self._groups.min_length
+
+    @property
     def valid_characters(self)->set:
         """
         Returns all valid characters defined in this regex.

@@ -10,8 +10,10 @@ class TestLexer(unittest.TestCase):
         self.lexer = lex.StandardLexer()
 
     def test_scan(self):
-        self.assertEqual(self.lexer.scan('_v4R1aB13 = 34.12 (4 == 5. while .123] ! !='),
-                         [lex.Token('VARIABLE', '_v4R1aB13'),
+        scanned = self.lexer.scan('_v4R1aB13 = 34.12 (4 == 5. while .123] ! !=')
+        print(scanned)
+        self.assertEqual(str(scanned),
+                         str([lex.Token('VARIABLE', '_v4R1aB13'),
                           lex.Token('ASSIGN', '='),
                           lex.Token('FLOAT', '34.12'),
                           lex.Token('LPARAM', '('),
@@ -22,4 +24,4 @@ class TestLexer(unittest.TestCase):
                           lex.Token('FLOAT', '.123'),
                           lex.Token('RBRACKET', ']'),
                           lex.UndefinedToken('!'),
-                          lex.Token('INEQUAL', '!=')])
+                          lex.Token('INEQUAL', '!=')]))

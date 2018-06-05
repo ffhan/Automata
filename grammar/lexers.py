@@ -9,16 +9,17 @@ class BasicToken:
     Defines a interface that all tokens have to follow.
     Does not contain a value (used for keywords)
     """
-    def __init__(self, token_type: str):
+    def __init__(self, token_type):
         self.token_type = token_type
     def __repr__(self):
-        return '<' + self.token_type + '>'
+        return '<' + (self.token_type.name if isinstance(self.token_type, rgx.RegEx)
+                      else self.token_type) + '>'
 
 class Token(BasicToken):
     """
     Defines a Token, a result of a Lexer scan.
     """
-    def __init__(self, token_type: str, token_value: str):
+    def __init__(self, token_type, token_value: str):
         """
         Initialises a Token. A token contains a token type (for example a variable, an integer..)
         and a value or an alias, what it's changing (token type: variable, token value: example_of_a_variable)
@@ -30,7 +31,8 @@ class Token(BasicToken):
         self.token_value = token_value
 
     def __repr__(self):
-        return '<' + self.token_type + ", '{}'".format(self.token_value) + '>'
+        return '<' + (self.token_type.name if isinstance(self.token_type, rgx.RegEx)
+                      else self.token_type) + ", '{}'".format(self.token_value) + '>'
 
 class UndefinedToken(Token):
     """
@@ -51,28 +53,98 @@ class Lexer:
         """
         self._regexes: list = regexes
 
+    # def scan(self, text: str)->list:
+    #     """
+    #     Scans the text and returns a list of found tokens.
+    #
+    #     :param str text: string of text
+    #     :return list: a list containing tokens
+    #     """
+    #     start_index = -1
+    #     # end_index = -1
+    #
+    #     current_regex = None
+    #     tokens = []
+    #     # print("entered", text)
+    #     for i, char in enumerate(text):
+    #         # print(i, char, "'{}'".format(text[start_index:i + 1]), current_regex, tokens)
+    #         if start_index == -1:
+    #             continue_flag = False
+    #             for regex in self._regexes:
+    #                 result = regex.check(char)
+    #                 # print("'{}' {}".format(char, result), rgx.INEQUAL.check(char))
+    #                 if result:
+    #                     start_index = i
+    #                     current_regex = regex
+    #                     continue_flag = True
+    #                     break
+    #             if not continue_flag and char != ' ':
+    #                 tokens.append(UndefinedToken(char))
+    #         else:
+    #             continue_flag = False
+    #             for regex in self._regexes:
+    #                 if current_regex.check(text[start_index:i + 1]):
+    #                     continue_flag = True
+    #                 elif regex.check(text[start_index:i + 1]) and regex != current_regex:
+    #                     continue_flag = True
+    #                     current_regex = regex
+    #
+    #                 if continue_flag:
+    #                     break
+    #             if not continue_flag:
+    #                 tokens.append(Token(current_regex.name, text[start_index:i]))
+    #                 # start_index = -1
+    #                 # current_regex = None
+    #                 tokens += self.scan(text[i:])
+    #                 return tokens
+    #     if start_index != -1 and current_regex:
+    #         tokens.append(Token(current_regex.name, text[start_index:]))
+    #     return tokens
+
+    def _backtrack(self, tokens):
+        """
+        Backtracks through tokens and tries to merge them together.
+
+        :param tokens:
+        :return:
+        """
+        if len(tokens) > 1:
+            value = tokens[-2].token_value + tokens[-1].token_value
+            for rgx in self._regexes:
+                if rgx.check(value):
+                    tokens[-2:] = [Token(rgx, value)]
+                    return self._backtrack(tokens)
+        return tokens
+
     def scan(self, text: str)->list:
         """
-        Scans the text and returns a list of found tokens.
+                Scans the text and returns a list of found tokens.
 
-        :param str text: string of text
-        :return list: a list containing tokens
-        """
+                :param str text: string of text
+                :return list: a list containing tokens
+                """
         start_index = -1
         # end_index = -1
 
         current_regex = None
         tokens = []
         # print("entered", text)
-        for i, char in enumerate(text):
+        i = -1
+        while i - 1 < len(text):
             # print(i, char, "'{}'".format(text[start_index:i + 1]), current_regex, tokens)
+            i += 1
+            if i >= len(text):
+                break
+            char = text[i]
             if start_index == -1:
                 continue_flag = False
                 for regex in self._regexes:
-                    result = regex.check(char)
+                    result = regex.check(text[i : i + regex.min_lookahead])
                     # print("'{}' {}".format(char, result), rgx.INEQUAL.check(char))
                     if result:
                         start_index = i
+                        i += regex.min_lookahead - 1
+                        # print('found', "'"+text[start_index:i]+"'")
                         current_regex = regex
                         continue_flag = True
                         break
@@ -80,23 +152,28 @@ class Lexer:
                     tokens.append(UndefinedToken(char))
             else:
                 continue_flag = False
-                for regex in self._regexes:
-                    if current_regex.check(text[start_index:i + 1]):
-                        continue_flag = True
-                    elif regex.check(text[start_index:i + 1]) and regex != current_regex:
-                        continue_flag = True
-                        current_regex = regex
+                # print('check', "'" + text[start_index:i+1] + "'", text)
+                if current_regex.check(text[start_index:i + 1]):
+                    continue_flag = True
+                else:
+                    for regex in self._regexes:
+                        if regex.check(text[start_index:i + 1]) and regex != current_regex:
+                            continue_flag = True
+                            current_regex = regex
 
-                    if continue_flag:
-                        break
+                        if continue_flag:
+                            break
                 if not continue_flag:
-                    tokens.append(Token(current_regex.name, text[start_index:i]))
+                    tokens.append(Token(current_regex, text[start_index:i]))
                     # start_index = -1
                     # current_regex = None
+                    # print(tokens, "'{}'".format(text[start_index:i]))
                     tokens += self.scan(text[i:])
+                    tokens = self._backtrack(tokens)
                     return tokens
         if start_index != -1 and current_regex:
-            tokens.append(Token(current_regex.name, text[start_index:]))
+            tokens.append(Token(current_regex, text[start_index:]))
+        tokens = self._backtrack(tokens)
         return tokens
 
 class StandardLexer(Lexer):

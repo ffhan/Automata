@@ -33,15 +33,15 @@ def flatten_automaton_to_table(automaton)->str:
 
     result = ''
     result += '{:^{length}s}'.format('state name', length=name_length)
-    for j, single_input in enumerate(inputs):
+    for single_input in inputs:
         result += '{:^{length}s}'.format(single_input, length=input_length)
     result += '{:^{length}s}'.format('accepted', length=accepted_length)
     result += '\n'
     result += '-' * (name_length + input_length * len(inputs) + accepted_length) + '\n'
-    for i, name in enumerate(sorted(automaton.states)):
+    for name in sorted(automaton.states):
 
         result += '{:^{length}s}'.format(repr(name), length=name_length)
-        for j, single_input in enumerate(inputs):
+        for single_input in inputs:
             output = sorted(automaton.states[name].forward(single_input))
             if not output:
                 output = '-'
@@ -74,13 +74,6 @@ def escape_string(*items)->list:
 def de_escape_string(*items)->list:
     """
     Removes escape symbols from strings.
-
-    Be careful to use os.path.dirname(__file__) if you are not sure about relative path.
-    For example, running a misc.helper script from tests will mean that regexes are going to
-    try to load from tests\\compiled_regexes directory if using .\\compiled_regexes instead of
-    C:\\...\\grammar\\compiled_regexes.
-
-    The same goes for saving an object.
 
     :param items: strings that have to be de-escaped
     :return list: list of unescaped strings
@@ -122,6 +115,20 @@ def save_object(obj, file_name: str, file_suffix: str = 'compiled', file_path: s
         pickle.dump(obj, file, -1)
 
 def load_object(file_path: str):
+    """
+    Un-pickles an object from a binary file.
+    This enables that certain objects don't have to be re-initialized.
+
+    Be careful to use os.path.dirname(__file__) if you are not sure about relative path.
+    For example, running a misc.helper script from tests will mean that regexes are going to
+    try to load from tests\\compiled_regexes directory if using .\\compiled_regexes instead of
+    C:\\...\\grammar\\compiled_regexes.
+
+    The same goes for saving an object.
+
+    :param str file_path: path to a file
+    :return: unpickled object
+    """
     with open(file_path, 'rb') as file:
         obj = pickle.load(file)
     return obj

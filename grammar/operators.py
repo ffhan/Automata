@@ -60,6 +60,18 @@ class Operator(abc.ABC):
         """
         pass
 
+    @property
+    @abc.abstractmethod
+    def min_length(self)->int:
+        """
+        Property that returns a minimum length for a defined operator.
+
+        For example Kleene star has minimum length 0, while Single 'ab' has length 2.
+
+        :return int: minimum length of an operator
+        """
+        pass
+
 class UnaryOperator(Operator):
     """
     Defines an operator that takes in only one item.
@@ -97,6 +109,13 @@ s0,{0}->s1""".format(*helper.escape_string(self._item)),
         elif isinstance(self._item, Operator):
             enfa = self._item.execute()
         return enfa
+    @property
+    def min_length(self):
+        if isinstance(self._item, str):
+            return len(self._item)
+        elif isinstance(self._item, Operator):
+            return self._item.min_length
+        raise TypeError('Item type is not accepted by {}'.format(self.__class__.__name__))
 
 class BinaryOperator(Operator):
     """
@@ -182,6 +201,10 @@ c0
         generator.StandardFormatGenerator())
         return enfa
 
+    @property
+    def min_length(self):
+        return 1
+
 class Alternation(GeneralOperator):
     """
     Defines a union of two items. Those items can be a string or already defined operators.
@@ -212,6 +235,18 @@ u0,{0}->u1""".format(*helper.escape_string(item)),
         for i in range(1, len(enfas)):
             result = result + enfas[i]
         return result
+
+    @property
+    def min_length(self):
+        lengths = []
+        for item in self._items:
+            if isinstance(item, str):
+                lengths.append(len(item))
+            elif isinstance(item, Operator):
+                lengths.append(item.min_length)
+            else:
+                raise TypeError
+        return min(lengths)
 
 class Concatenation(GeneralOperator):
     """
@@ -253,6 +288,17 @@ c0,{0}->c1""".format(*helper.escape_string(item)),
         # result = result[:-1]
         return '{' + '{} {}'.format(self.__class__.__name__, result) + '}'
 
+    @property
+    def min_length(self):
+        length = 0
+        for item in self._items:
+            if isinstance(item, str):
+                length += len(item)
+            elif isinstance(item, Operator):
+                length += item.min_length
+            else:
+                raise TypeError
+        return length
 
 class KleeneStar(UnaryOperator):
     """
@@ -281,6 +327,10 @@ ks0,{0}->ks1""".format(*helper.escape_string(self._item)),
         elif isinstance(self._item, Operator):
             item_enfa = self._item.execute()
         return item_enfa.kleene_operator()
+
+    @property
+    def min_length(self):
+        return 0
 
 class KleenePlus(UnaryOperator):
     """
@@ -312,6 +362,14 @@ kp0,{0}->kp1""".format(*helper.escape_string(self._item)),
         # else is not needed because OperatorInputTypeError would already have been raised
         # if item is not a string or an Operator.
         return enfa.deepcopy() * enfa.kleene_operator()
+
+    @property
+    def min_length(self):
+        if isinstance(self._item, str):
+            return len(self._item)
+        elif isinstance(self._item, Operator):
+            return self._item.min_length
+        raise TypeError
 
 class QuestionMark(UnaryOperator):
     """
@@ -346,3 +404,7 @@ qm0,$->qm1""".format(*helper.escape_string(self._item)),
             end_enfa = start_enfa.deepcopy()
             item_enfa = start_enfa*end_enfa + self._item.execute()
         return item_enfa
+
+    @property
+    def min_length(self):
+        return 0
