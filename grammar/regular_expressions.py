@@ -362,6 +362,26 @@ IN = RegEx.load('IN')
 RETURN = RegEx.load('RETURN')
 DEFINE = RegEx.load('DEFINE')
 CLASS = RegEx.load('CLASS')
+TRY = RegEx.load('TRY')
+EXCEPT = RegEx.load('EXCEPT')
+ASSERT = RegEx.load('ASSERT')
+WITH = RegEx.load('WITH')
+AS = RegEx.load('AS')
+# AS = RegEx('as', 'AS')
+
+IF = RegEx.load('IF')
+ELIF = RegEx.load('ELIF')
+ELSE = RegEx.load('ELSE')
+
+# IF = RegEx('if', 'IF')
+# ELIF = RegEx('elif', 'ELIF')
+# ELSE = RegEx('else', 'ELSE')
+
+# WITH = RegEx('with', 'WITH')
+# TRY = RegEx('try', 'TRY')
+# EXCEPT = RegEx('except', 'EXCEPT')
+# ASSERT = RegEx('assert', 'ASSERT')
+
 # INTEGER = RegEx.load('INTEGER') #todo: pickling this does not work.
 # VARIABLE = RegEx.load('VARIABLE')
 # FLOAT = RegEx.load('FLOAT')

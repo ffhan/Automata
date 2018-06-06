@@ -221,11 +221,12 @@ class StandardLexer(Lexer):
 
     def __init__(self):
         super().__init__(rgx.WHILE, rgx.FOR, rgx.IN, rgx.RETURN, rgx.DEFINE,
-                         rgx.CLASS, rgx.VARIABLE, rgx.FLOAT, rgx.INTEGER,
-                         rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET, rgx.RBRACKET,
-                         rgx.ASSIGN, rgx.EQUAL, rgx.INEQUAL, rgx.LE, rgx.GE,
-                         rgx.LT, rgx.GT, rgx.NEWLINE, rgx.TAB, rgx.SINGLEQUOTE,
-                         rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA, rgx.DOT,
-                         rgx.SLASH, rgx.BACKSLASH, rgx.SEMICOLON, rgx.COLON,
+                         rgx.CLASS, rgx.ASSERT, rgx.TRY, rgx.EXCEPT, rgx.WITH,
+                         rgx.IF, rgx.ELIF, rgx.ELSE, rgx.AS, rgx.VARIABLE, rgx.FLOAT,
+                         rgx.INTEGER, rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET,
+                         rgx.RBRACKET, rgx.ASSIGN, rgx.EQUAL, rgx.INEQUAL,
+                         rgx.LE, rgx.GE, rgx.LT, rgx.GT, rgx.NEWLINE, rgx.TAB,
+                         rgx.SINGLEQUOTE, rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA,
+                         rgx.DOT, rgx.SLASH, rgx.BACKSLASH, rgx.SEMICOLON, rgx.COLON,
                          rgx.PLUS, rgx.MINUS, rgx.DIV)
         self.add_ignored_characters(' ')
