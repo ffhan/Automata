@@ -195,33 +195,63 @@ class TuringMachine(dfa.DFA):
         """
         records = pk.Records()
         records.add_record(pk.RecordPack(self.current, bool(self.accepted)))
-
+        # print(self)
+        # while True:
+        #     if self.current in self.accepted_states | self.rejected_states:
+        #         # print('in accepted')
+        #         break
+        #     read = self.tape.read
+        #     print('-'*35)
+        #     if not read:
+        #         read = self.empty_cell_symbol
+        #     output = self.current.clean_forward(read)
+        #     print(self.current, read, output)
+        #     if output == set():
+        #         # print('no further')
+        #         break
+        #     new_state, symbol, movement = output.unpack
+        #     _ = self.tape.consume
+        #     print(self.current, read, output, symbol, self.tape._index)
+        #
+        #     if movement == pk.TuringOutputPack.LEFT:
+        #         movement = self.tape.move_left
+        #     elif movement == pk.TuringOutputPack.RIGHT:
+        #         movement = self.tape.move_right
+        #     else:
+        #         raise ValueError('Invalid movement value!')
+        #     movement(symbol)
+        #     self.current = self.states[self._get_alias(new_state.name)]
+        #
+        #     records.add_record(pk.RecordPack(self.current, bool(self.accepted)))
         while True:
-            read = self.tape.read
-            print('-'*35)
-            if not read:
-                read = self.empty_cell_symbol
-            output = self.current.clean_forward(read)
-            print(self.current, read, output)
-            if output == set():
+            if self.current in self.accepted_states | self.rejected_states:
                 break
-            new_state, symbol, movement = output.unpack
-            _ = self.tape.consume
-            print(self.current, read, output, symbol, self.tape._index)
-            # if new_state in self.accepted_states | self.rejected_states:
-            #     break
+            # table = repr(self.tape)
+            read = self.tape.consume
+            if read is None:
+                # read = self.empty_cell_symbol WRONG?!
+                self.tape.move_left() # i absolutely don't have any idea why this solves everything.
+                break
+            output = self.current.clean_forward(read)
+            # print('-'*50)
+            # print('current: {}, read: {}, output: {}, index: {}'.format(
+            #     self.current, read, output, self.tape._index))
+            # print(table)
+            if output == set():
+                self.tape.add(read)
+                break
+            end, symbol, movement = output.unpack
+            # if self.tape._index
             if movement == pk.TuringOutputPack.LEFT:
                 movement = self.tape.move_left
             elif movement == pk.TuringOutputPack.RIGHT:
                 movement = self.tape.move_right
             else:
-                raise ValueError('Invalid movement value!')
+                raise ValueError('Invalid movement value.')
             movement(symbol)
-            self.current = self.states[self._get_alias(new_state.name)]
+            # print(self.tape)
+            self.current = self.states[self._get_alias(end.name)]
 
-            if self.current in self.accepted_states | self.rejected_states:
-                break
-            records.add_record(pk.RecordPack(self.current, bool(self.accepted)))
         self.records.add_record(records)
 
     @staticmethod

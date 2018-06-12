@@ -417,12 +417,13 @@ class Tape:
     #             value, 0, len(self._container)))
     def __repr__(self):
         result = 'Tape: ['
+        result2 = ''
         for i, item in enumerate(self._container):
             fix = ''
             if i == self._index:
                 fix = '_'
-            result += fix + (item if isinstance(item, str) else repr(item)) + fix + ', '
-        result = result[:-2] + ']'
+            result2 += fix + (item if isinstance(item, str) else repr(item)) + fix + ','
+        result += result2[:-1] + ']'
         return result
 
     @property
@@ -456,14 +457,15 @@ class Tape:
         :param items: items to be added
         :return:
         """
-        if 0 <= self._index < len(self._container):
-            index = self._index
-        elif self._index < 0:
+        index = self._index
+        if self._index < 0:
             index = 0
-        else:
+        elif self._index >= len(self._container):
             index = len(self._container) - 1
         # self._index += len(items) + 1 if items else 0
-        self._container = self._container[:index] + list(items) + self._container[index:]
+        # self._container = self._container[:index] + list(items) + self._container[index:]
+        for i, item in enumerate(items):
+            self._container.insert(self._index + i, item)
 
     def _internal_move(self, movement: int, *items):
         """
@@ -476,12 +478,12 @@ class Tape:
         """
         self.add(*items)
         self._index += movement
-        read = self.read
-        # if self._index < 0:
-        #     self._index = -1
-        # elif self._index > len(self._container):
-        #     self._index = len(self._container)
-        return read
+        # read = self.read
+        if self._index < 0:
+            self._index = 0
+        elif self._index >= len(self._container):
+            self._index = len(self._container)
+        return self.read
     def move_left(self, *items):
         """
         Adds all specified items to the tape and move the tape to the left.
@@ -506,3 +508,6 @@ class Tape:
     def clear(self):
         self._container.clear()
         self._index = 0
+
+    def __len__(self):
+        return len(self._container)
