@@ -457,13 +457,6 @@ class Tape:
         :param items: items to be added
         :return:
         """
-        index = self._index
-        if self._index < 0:
-            index = 0
-        elif self._index >= len(self._container):
-            index = len(self._container) - 1
-        # self._index += len(items) + 1 if items else 0
-        # self._container = self._container[:index] + list(items) + self._container[index:]
         for i, item in enumerate(items):
             self._container.insert(self._index + i, item)
 
@@ -480,9 +473,10 @@ class Tape:
         self._index += movement
         # read = self.read
         if self._index < 0:
-            self._index = 0
-        elif self._index >= len(self._container):
-            self._index = len(self._container)
+            self._index = 0 # this might be -1, but I'm pretty sure this is ok.
+        # this is moved out because the tape should be infinite on the right
+        # elif self._index >= len(self._container):
+        #     self._index = len(self._container)
         return self.read
     def move_left(self, *items):
         """

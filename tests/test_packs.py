@@ -154,12 +154,18 @@ class TestTape(unittest.TestCase):
         self.RIGHT = TuringOutputPack.RIGHT
     def test_movement(self):
         results = [2,3,4,5,None,None,None,None]
+        actual = []
         for i in range(8):
-            self.assertEqual(self.test.move_right(),results[i])
-        results = [None,None,None,5,4,3,2,1]
-        for i in range(8):
-            self.assertEqual(self.test.move_left(),results[i])
-        results = [2,1,2,1]
+            actual.append(self.test.move_right())
+        self.assertEqual(results, actual)
+        results = [None,None,None,5,4,3,2,1,1,1]
+        actual = []
+        for i in range(10):
+            actual.append(self.test.move_left())
+        self.assertEqual(results, actual)
+        results = [1,2,1,2]
+        actual = []
         for i in range(4):
-            func = self.test.move_right if i % 2 == 0 else self.test.move_left
-            self.assertEqual(func(), results[i])
+            func = self.test.move_right if i % 2 == 1 else self.test.move_left
+            actual.append(func())
+        self.assertEqual(results, actual)

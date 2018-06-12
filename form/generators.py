@@ -112,7 +112,7 @@ class StandardFormatGenerator(Generator):
                     try:
                         self.states[start].add_function(self.states[end], value)
                     except Exception as err:
-                        print(self.states, start, end, value)
+                        # print(self.states, start, end, value)
                         raise err
 
     def scan(self, text):
