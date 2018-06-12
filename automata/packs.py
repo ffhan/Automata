@@ -37,7 +37,6 @@ class RecordPack:
         return 'pack:[{}, {}]'.format(self.current, self.accepted)
 
 class PushRecordPack(RecordPack):
-
     """
     Record pack that also contains a stack. Used primarily in Push down automata.
     """
@@ -166,6 +165,67 @@ class InputPack:
         if self.key == other.key:
             return self.value < other.value
         return self.key < other.key
+
+class TuringOutputPack:
+    """
+    Classic Turing machine transition output.
+    Key is the new state, value is a symbol that is going to be written to the tape
+    and side indicates where the tape is going to move.
+
+    TuringOutputPack.LEFT indicates leftwards move, RIGHT rightwards.
+    LEFT is defined by integer -1, RIGHT by integer 1
+
+    It's really important to distinct between head movement and tape movement.
+    In current context we are talking about HEAD movement.
+    Tape movement to the left is opposite of the head movement (to the right).
+    """
+    LEFT = -1
+    RIGHT = 1
+    def __init__(self, key, value, side):
+        """
+        Initialises a TuringOutputPack.
+        The class itself does not inherit InputPack by purpose.
+        Most of the code has to be rewritten and they do not share
+        the same interface.
+
+        :param key: new state
+        :param value: symbol that is going to be written to the tape
+        :param side: tape movement side
+        """
+        self.key = key
+        self.value = value
+        self._side = 0
+        self.side = side
+        assert self._side in (self.LEFT, self.RIGHT)
+
+    @property
+    def side(self):
+        """
+        Returns a side property.
+
+        :return int: side movement
+        """
+        return self._side
+    @side.setter
+    def side(self, value):
+        """
+        Defines a side movement, checks if it's valid.
+
+        :param value: LEFT or RIGHT movement.
+        :return:
+        """
+        if value in (self.LEFT, self.RIGHT):
+            self._side = value
+        else:
+            raise ValueError('Side value must be LEFT (-1) or RIGHT (1)')
+    @property
+    def unpack(self):
+        """
+        Unpacks all values out of this pack.
+
+        :return:
+        """
+        return self.key, self.value, self.side
 
 class Stack:
     """
@@ -320,3 +380,121 @@ class Stack:
             return res
         self._reset_index()
         raise StopIteration
+
+class Tape:
+    """
+    Defines a Turing machine tape.
+    """
+    def __init__(self, *initial_items):
+        self._container = list(initial_items)
+        self._index = 0
+
+    # @property
+    # def index(self)->int:
+    #     """
+    #     Defines an index property
+    #
+    #     :return int: index value
+    #     """
+    #     return self._index
+    #
+    # @index.setter
+    # def index(self, value):
+    #     """
+    #     Sets an index to a new value.
+    #
+    #     :param value: new index value
+    #     :return:
+    #     """
+    #     if 0 <= value < len(self._container):
+    #         self._index = value
+    #     else:
+    #         raise ValueError('New index value {} is outside of the acceptable range {}-{}'.format(
+    #             value, 0, len(self._container)))
+    def __repr__(self):
+        result = 'Tape: ['
+        for i, item in enumerate(self._container):
+            fix = ''
+            if i == self._index:
+                fix = '_'
+            result += fix + (item if isinstance(item, str) else repr(item)) + fix + ', '
+        result = result[:-2] + ']'
+        return result
+
+    @property
+    def read(self):
+        """
+        Reads an item that the tape head currently points to.
+
+        :return:
+        """
+        if 0 <= self._index < len(self._container):
+            return self._container[self._index]
+        return None
+    @property
+    def consume(self):
+        """
+        Reads an item and removes it from the tape at the
+        current position of the head.
+
+        :return: item from the tape
+        """
+        if 0 <= self._index < len(self._container):
+            result = self._container.pop(self._index)
+        else:
+            result = None
+        return result
+
+    def add(self, *items):
+        """
+        Adds specified items to the tape.
+
+        :param items: items to be added
+        :return:
+        """
+        if 0 <= self._index < len(self._container):
+            index = self._index
+        elif self._index < 0:
+            index = 0
+        else:
+            index = len(self._container) - 1
+        # self._index += len(items) + 1 if items else 0
+        self._container = self._container[:index] + list(items) + self._container[index:]
+
+    def _internal_move(self, movement: int, *items):
+        """
+        Adds all specified items to the tape and moves the head index.
+
+        :param items: items to be added to a tape
+        :param int movement: movement side. It's possible to use
+        TuringOutputPack LEFT and RIGHT as movement side.
+        :return: item that the head currently points at
+        """
+        self.add(*items)
+        self._index += movement
+        read = self.read
+        # if self._index < 0:
+        #     self._index = -1
+        # elif self._index > len(self._container):
+        #     self._index = len(self._container)
+        return read
+    def move_left(self, *items):
+        """
+        Adds all specified items to the tape and move the tape to the left.
+
+        :param items:
+        :return: item that the head currently points at
+        """
+        # it might be a really bad idea to produce such a tight coupling
+        # between movement here and movement in TuringOutputPack
+        # the reason why i'm currently okay with that is because it
+        # ensures a uniform behaviour.
+        return self._internal_move(TuringOutputPack.LEFT, *items)
+    def move_right(self, *items):
+        """
+        Adds all specified items to the tape and move the tape to the right.
+
+        :param items:
+        :return: item that the head currently points at
+        """
+        return self._internal_move(TuringOutputPack.RIGHT, *items)

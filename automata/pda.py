@@ -7,7 +7,6 @@ import automata.state as st
 import automata.packs as pk
 
 class DeterministicPDA(dfa.DFA): # the correct implementation would be to inherit from abstract PA.
-
     """
     Deterministic push down automaton implementation.
     """
