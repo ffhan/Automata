@@ -108,7 +108,7 @@ class State:
 
         :return: True if accepted, False if not.
         """
-        return bool(self.value)
+        return self.value == 1
 
     @property
     def direct_reach(self):

@@ -54,6 +54,19 @@ def get_dpda(string):
     # print(pda.records)
     return pda
 
+def get_turing(string):
+    """
+    Gets a Turing machine.
+
+    :param str string: input text
+    :return: a turing machine
+    """
+    parser = form.generators.StandardTuringMachineFormatGenerator()
+    turing = automata.turing.TuringMachine.factory(string, parser)
+
+    turing.enter(*parser.tape_content)
+    return turing
+
 def print_verbose(result, test_output, level):
     """
     Controls printing according to verbose level
@@ -126,3 +139,5 @@ TEST_E_NFA = test_factory(get_e_nfa, form.compositors.StandardCompositor,
                           form.compositors.StandardCompositor.composite_output)
 TEST_DFA_MIN = test_factory(get_dfa_min, form.compositors.StandardCompositor,
                             form.compositors.StandardCompositor.composite_automaton)
+TEST_TURING = test_factory(get_turing, form.compositors.StandardTuringMachineCompositor,
+                           form.compositors.StandardTuringMachineCompositor.composite_output)

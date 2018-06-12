@@ -58,11 +58,12 @@ class CommandTester:
         :return dict: all known _all_tests
         """
         self._tests.clear()
-        # define E_NFA tester function
+        # define E_NFA tester function, all in CAPS
         self._tests['E_NFA'] = self._test_factory(preformat.TEST_E_NFA)
         self._tests['DFA_MIN'] = self._test_factory(preformat.TEST_DFA_MIN)
         self._tests['DPDA'] = self._test_factory(preformat.TEST_PDA)
         self._tests['PARSER'] = self._test_factory(preformat.TEST_GENERATOR)
+        self._tests['TURING'] = self._test_factory(preformat.TEST_TURING)
         return self._tests
 
     @property

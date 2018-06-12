@@ -6,6 +6,7 @@ Packs are used to transport complex data through the system.
 """
 import copy
 
+#todo: redesign all packages to inherit from a single interface. This is crazy complicated and unnecessary.
 class RecordPack:
 
     """
@@ -226,6 +227,9 @@ class TuringOutputPack:
         :return:
         """
         return self.key, self.value, self.side
+
+    def __repr__(self):
+        return '({},{},{})'.format(self.key, self.value, self.side)
 
 class Stack:
     """
@@ -498,3 +502,7 @@ class Tape:
         :return: item that the head currently points at
         """
         return self._internal_move(TuringOutputPack.RIGHT, *items)
+
+    def clear(self):
+        self._container.clear()
+        self._index = 0

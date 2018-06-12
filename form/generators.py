@@ -9,7 +9,9 @@ import form.generator_api as api
 import automata.state as st
 import automata.packs as pk
 import misc.helper as helper
-
+#todo: refactor the names:
+# every format (e.g. standard format) has to have its' own
+# subpackage of generators.
 class Generator(abc.ABC):
     """
     Abstract class that defines the interface for all generators.
@@ -241,5 +243,85 @@ class PushDownFormatWithInputGenerator(StandardFormatWithInputGenerator):
         self._extract_start_state(lines[5])
         self._extract_starting_stack_symbol(lines[6])
         self._extract_functions(lines[7:])
+
+        self._replace_state_keys()
+
+class StandardTuringMachineFormatGenerator(StandardFormatGenerator):
+    """
+    This format does NOT allow for explicit rejected state creation.
+
+    Line 1: states
+    Line 2: input symbols
+    Line 3: alphabet
+    Line 4: empty cell symbol
+    Line 5: textual representation of a Turing machine tape
+    Line 6: acceptable states.
+    Line 7: starting state
+    Line 8: starting index of turing machine
+    Line 9+ transition functions in a format
+        currentState,symbol->newState,newSymbol,headMovement
+    """
+
+    def __init__(self, state_class = st.State):
+        super().__init__(state_class)
+        self.alphabet = set()
+        self.empty_cell_symbol = None
+        self.tape_content = []
+        self.head_index = 0
+
+    def reset(self):
+        super().reset()
+        self.alphabet.clear()
+        self.empty_cell_symbol = None
+        self.tape_content.clear()
+        self.head_index = 0
+
+    def _replace_state_keys(self):
+        states = dict()
+        for state in self.states.values():
+            states[state.name] = state
+        self.states = states
+
+    def _extract_start_state(self, start_state):
+        self.start_state = self.states[helper.de_escape_string(start_state)[0]]
+
+    def _extract_inputs(self, text):
+        for inp in api.NEW_SPLIT_COMMA(text, remove_empty=True):
+            self.inputs.add(*helper.de_escape_string(inp))
+
+    def _extract_alphabet(self, text):
+        for inp in api.NEW_SPLIT_COMMA(text, remove_empty=True):
+            self.alphabet.add(*helper.de_escape_string(inp))
+
+    def _extract_tape(self, text):
+        self.tape_content = list(text)
+
+    def _extract_functions(self, functions):
+
+        for line in functions:
+            if line == '':
+                continue
+            start_value, ends = api.split_factory2('->')(line)
+
+            start, value = helper.de_escape_string(*api.NEW_SPLIT_COMMA(start_value))
+
+            end, symbol, movement = helper.de_escape_string(*api.NEW_SPLIT_COMMA(ends))
+            end = self.states[end]
+            movement = pk.TuringOutputPack.LEFT if movement == 'L' else pk.TuringOutputPack.RIGHT
+            self.states[start].add_function(pk.TuringOutputPack(end, symbol, movement), value)
+
+    def scan(self, text):
+        self.reset()
+
+        lines = api.NEW_SPLIT_NEWLINE(text)
+
+        self._extract_states(lines[0], lines[5])
+        self._extract_inputs(lines[1])
+        self._extract_alphabet(lines[2])
+        self.empty_cell_symbol = lines[3]
+        self._extract_tape(lines[4])
+        self._extract_start_state(lines[6])
+        self.head_index = int(lines[7])
+        self._extract_functions(lines[8:])
 
         self._replace_state_keys()

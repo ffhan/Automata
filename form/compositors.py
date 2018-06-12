@@ -129,7 +129,6 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
         result = ''
         # print(self.automaton.records)
         for record in self.automaton.records:
-
             for entry in record:
                 # print(entry, *entry.unpack)
                 state, accepted, stack = entry.unpack
@@ -141,8 +140,17 @@ class StandardPushDownCompositor(Compositor): #could inherit Standard compositor
             result += ('1' if accepted else '0') + '|'
             result = result[:-1] + '\n'
 
-
         return result[:-1].strip()
 
     def composite_automaton(self):
         raise NotImplementedError
+
+class StandardTuringMachineCompositor(Compositor):
+    def composite_automaton(self):
+        raise NotImplementedError
+    def composite_output(self):
+        result = repr(self.automaton.current) + '|' + repr(self.automaton.tape._index) + '|'
+        for item in self.automaton.tape._container:
+            result += (item if isinstance(item, str) else repr(item))
+        result += '|' + ('1' if self.automaton.accepted else '0')
+        return result

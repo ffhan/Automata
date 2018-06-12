@@ -1,4 +1,4 @@
-from automata.packs import Records, PushRecordPack, Stack, InputPack, RecordPack
+from automata.packs import Records, PushRecordPack, Stack, InputPack, RecordPack, Tape, TuringOutputPack
 import unittest
 
 class TestRecords(unittest.TestCase):
@@ -146,3 +146,20 @@ class TestInputPack(unittest.TestCase):
     def test_pack(self):
 
         self.assertEqual(self.s1.unpack, (1, 'a'))
+
+class TestTape(unittest.TestCase):
+    def setUp(self):
+        self.test = Tape(1,2,3,4,5)
+        self.LEFT = TuringOutputPack.LEFT
+        self.RIGHT = TuringOutputPack.RIGHT
+    def test_movement(self):
+        results = [2,3,4,5,None,None,None,None]
+        for i in range(8):
+            self.assertEqual(self.test.move_right(),results[i])
+        results = [None,None,None,5,4,3,2,1]
+        for i in range(8):
+            self.assertEqual(self.test.move_left(),results[i])
+        results = [2,1,2,1]
+        for i in range(4):
+            func = self.test.move_right if i % 2 == 0 else self.test.move_left
+            self.assertEqual(func(), results[i])
