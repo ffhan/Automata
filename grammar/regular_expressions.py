@@ -372,10 +372,13 @@ AS = RegEx.load('AS')
 IF = RegEx.load('IF')
 ELIF = RegEx.load('ELIF')
 ELSE = RegEx.load('ELSE')
+IS = RegEx.load('IS')
 
 # IF = RegEx('if', 'IF')
 # ELIF = RegEx('elif', 'ELIF')
 # ELSE = RegEx('else', 'ELSE')
+# IS = RegEx('is', 'IS')
+# IS.compile()
 
 # WITH = RegEx('with', 'WITH')
 # TRY = RegEx('try', 'TRY')

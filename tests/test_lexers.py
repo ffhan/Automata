@@ -48,7 +48,7 @@ class TestLexer(unittest.TestCase):
                          Token(regex.RPARAM, ')'),
                          UndefinedToken('!'),
                          Token(regex.NEWLINE, '\n'),
-                         Token(regex.VARIABLE, 'is'),
+                         Token(regex.IS, 'is'),
                          Token(regex.VARIABLE, 'equal'),
                          Token(regex.EQUAL, '=='),
                          Token(regex.VARIABLE, 'or'),

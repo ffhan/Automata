@@ -4,6 +4,7 @@ API used to cast various automata to other types.
 import copy
 import automata.nfa, automata.dfa
 import automata.state as st
+import pprint
 
 def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo: add tests
     """
@@ -53,72 +54,97 @@ def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo
                 transitions.add(work.states[end_state.name])
             work.states[state].transitions[event] = transitions
 
-    print(work.states)
+    # print(work.states)
 
     return automata.nfa.NFA(work.states, work.inputs, work.start_state)
 
 def nfa_to_dfa(nfa: automata.nfa.NFA)->automata.dfa.DFA:
     """
-    Casts non-deterministic finite automata to deterministic finite automata.
+        Casts non-deterministic finite automata to deterministic finite automata.
 
-    :param automata.nfa.NFA nfa: NFA to be cast
-    :return autmoata.dfa.DFA: cast object
+        :param automata.nfa.NFA nfa: NFA to be cast
+        :return autmoata.dfa.DFA: cast object
     """
 
-    print(nfa)
+    def concatenate(*args):
+        """
+        Returns concatenated State names and values
+
+        :param args: States
+        :return: new_name, new_value
+        """
+        name = ''
+        acc = 0
+        for single_state in sorted(args, key=lambda t : t.name):
+            name += repr(single_state) + '_'
+            if single_state.value:
+                acc = 1
+        return name[:-1], acc
 
     assert type(nfa) is automata.nfa.NFA
-    work = nfa.deepcopy()
+    work = nfa.deepcopy() #created so that I don't have to copy existing States manually.
 
     created_states = dict()
-    delete_states = set()
 
-    for single_input in work.inputs:
-        for start_state in work.states.values():
-            accepted = False
-            concatenated_states_name = ''
-            end_states = sorted(list(start_state.forward(single_input)))
+    epsilon = work.start_state.epsilon
+    empty_state = st.State('empty', 0, epsilon)
 
-            new = False
+    created_states[work.start_state.name] = work.start_state
+    associations = dict() #holds references for new states to old states
+    for alias in nfa.states.values():
+        state = work.states[alias.name] #this neat trick allows me to change work nfa on the fly
+        for single_input in nfa.inputs:
+            empty_state.transitions[single_input] = {empty_state}
 
-            for end_state in end_states:
-                if end_state.value:
-                    accepted = True
-                concatenated_states_name += str(end_state) + '+'
-            concatenated_states_name = concatenated_states_name[:-1]
+            throughput = state.forward(single_input)
+            if not throughput:
+                new_state = empty_state
+            elif len(throughput) > 1:
+                new_state_name, accepted = concatenate(*throughput)
+                new_state = st.State(new_state_name, accepted, epsilon)
+            else:
+                new_state, = throughput
+            if not new_state in associations and len(throughput) > 1:
+                associations[new_state] = set(throughput)
+            if new_state.name not in created_states:
+                created_states[new_state.name] = new_state
+            state.transitions[single_input] = {created_states[new_state.name]}
+    done_assoc = dict()
+    while associations:
+        state = list(associations.keys())[0]
+        for single_input in sorted(work.inputs):
+            transition = set()
+            for _ in sorted(associations[state]):
+                link = nfa.states[_.name]
+                output = link.forward(single_input)
+                transition |= output
+            if not transition:
+                transition = {empty_state}
+                state.transitions[single_input] = transition
+                continue
+            if transition in associations.values():
+                for key, value in sorted(associations.items()):
+                    if transition == value:
+                        # print('matched {} with hash {} on input {} for state {} with hash {}..'.format(
+                        #     key, hash(key), single_input, state, hash(state)))
+                        state.transitions[single_input] = {created_states[key.name]}
+                        break
+            else:
+                name, accept = concatenate(*transition)
+                new_state = st.State(name, accept, epsilon)
+                if new_state in done_assoc:
+                    new_state = done_assoc[new_state]
+                # print('creating {} with hash {}..'.format(name, hash(new_state)))
+                created_states[new_state.name] = new_state
+                associations[new_state] = transition
+                state.transitions[single_input] = {created_states[new_state.name]}
+        if len(state.transitions) == len(work.inputs):
+            done_assoc[state] = state
+            del(associations[state])
+    # for state in created_states.values():
+    #     print(state, state.transitions, state.value)
 
-            if len(end_states) > 1:
-                new = True
-                new_state = st.State(concatenated_states_name, int(accepted), start_state.epsilon)
-                delete_states |= set(end_states)
-
-                if not created_states.get(new_state.name, False):
-                    created_states[new_state.name] = new_state
-                else:
-                    new_state = created_states[new_state.name]
-            elif len(end_states) == 1:
-                new_state = list(end_states)[0]
-            elif not end_states:
-                new = True
-                new_state = st.State('empty', 0, start_state.epsilon)
-
-                if not created_states.get(new_state.name, False):
-                    created_states[new_state.name] = new_state
-                else:
-                    new_state = created_states[new_state.name]
-
-            if new:
-                for one_input in work.inputs:
-                    new_state.add_function(new_state, one_input)
-
-            start_state.transitions[single_input] = {new_state}
-
-    for state in delete_states:
-        del(work.states[state.name])
-
-    for name, state in created_states.items():
-        work.states[name] = state
-    return automata.dfa.DFA(work.states, work.inputs, work.start_state)
+    return automata.dfa.DFA(created_states, work.inputs, work.start_state)
 
 def epsilon_nfa_to_dfa(automaton: automata.nfa.EpsilonNFA)->automata.dfa.DFA:
     """
@@ -129,3 +155,13 @@ def epsilon_nfa_to_dfa(automaton: automata.nfa.EpsilonNFA)->automata.dfa.DFA:
     """
 
     return nfa_to_dfa(epsilon_nfa_to_nfa(automaton))
+
+def nfa_to_epsilon_nfa(automaton: automata.nfa.NFA)->automata.nfa.EpsilonNFA:
+    """
+    Casts an NFA to epsilon NFA.
+
+    :param NFA automaton: automaton to be cast
+    :return EpsikonNFA: cast object
+    """
+    work = automaton.deepcopy()
+    return automata.nfa.EpsilonNFA(work.states, work.inputs, work.start_state)

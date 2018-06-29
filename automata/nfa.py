@@ -88,7 +88,7 @@ class EpsilonNFA(NFA):
         """
 
         if state not in self:
-            raise ValueError(self._input_error(state))
+            raise ValueError(self._state_error(state))
 
         if isinstance(state, str):
             closure -= {state}

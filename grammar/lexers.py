@@ -222,8 +222,8 @@ class StandardLexer(Lexer):
     def __init__(self):
         super().__init__(rgx.WHILE, rgx.FOR, rgx.IN, rgx.RETURN, rgx.DEFINE,
                          rgx.CLASS, rgx.ASSERT, rgx.TRY, rgx.EXCEPT, rgx.WITH,
-                         rgx.IF, rgx.ELIF, rgx.ELSE, rgx.AS, rgx.VARIABLE, rgx.FLOAT,
-                         rgx.INTEGER, rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET,
+                         rgx.IF, rgx.ELIF, rgx.ELSE, rgx.AS, rgx.IS, rgx.VARIABLE,
+                         rgx.FLOAT, rgx.INTEGER, rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET,
                          rgx.RBRACKET, rgx.ASSIGN, rgx.EQUAL, rgx.INEQUAL,
                          rgx.LE, rgx.GE, rgx.LT, rgx.GT, rgx.NEWLINE, rgx.TAB,
                          rgx.SINGLEQUOTE, rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA,
