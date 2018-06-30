@@ -63,6 +63,7 @@ class RegEx:
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
         self.automaton = self._groups.execute()
+        print(self._text)
         # self.compile()
 
     @property
@@ -356,79 +357,79 @@ def check_check(rgx, *tests):
     for test in tests:
         print(test, rgx.check(test))
 
-WHILE = RegEx.load('WHILE')
-FOR = RegEx.load('FOR')
-IN = RegEx.load('IN')
-RETURN = RegEx.load('RETURN')
-DEFINE = RegEx.load('DEFINE')
-CLASS = RegEx.load('CLASS')
-TRY = RegEx.load('TRY')
-EXCEPT = RegEx.load('EXCEPT')
-ASSERT = RegEx.load('ASSERT')
-WITH = RegEx.load('WITH')
-AS = RegEx.load('AS')
-# AS = RegEx('as', 'AS')
+# WHILE = RegEx.load('WHILE')
+# FOR = RegEx.load('FOR')
+# IN = RegEx.load('IN')
+# RETURN = RegEx.load('RETURN')
+# DEFINE = RegEx.load('DEFINE')
+# CLASS = RegEx.load('CLASS')
+# TRY = RegEx.load('TRY')
+# EXCEPT = RegEx.load('EXCEPT')
+# ASSERT = RegEx.load('ASSERT')
+# WITH = RegEx.load('WITH')
+# AS = RegEx.load('AS')
+AS = RegEx('as', 'AS')
 
-IF = RegEx.load('IF')
-ELIF = RegEx.load('ELIF')
-ELSE = RegEx.load('ELSE')
-IS = RegEx.load('IS')
+# IF = RegEx.load('IF')
+# ELIF = RegEx.load('ELIF')
+# ELSE = RegEx.load('ELSE')
+# IS = RegEx.load('IS')
 
-# IF = RegEx('if', 'IF')
-# ELIF = RegEx('elif', 'ELIF')
-# ELSE = RegEx('else', 'ELSE')
-# IS = RegEx('is', 'IS')
+IF = RegEx('if', 'IF')
+ELIF = RegEx('elif', 'ELIF')
+ELSE = RegEx('else', 'ELSE')
+IS = RegEx('is', 'IS')
 # IS.compile()
 
-# WITH = RegEx('with', 'WITH')
-# TRY = RegEx('try', 'TRY')
-# EXCEPT = RegEx('except', 'EXCEPT')
-# ASSERT = RegEx('assert', 'ASSERT')
+WITH = RegEx('with', 'WITH')
+TRY = RegEx('try', 'TRY')
+EXCEPT = RegEx('except', 'EXCEPT')
+ASSERT = RegEx('assert', 'ASSERT')
 
 # INTEGER = RegEx.load('INTEGER') #todo: pickling this does not work.
 # VARIABLE = RegEx.load('VARIABLE')
 # FLOAT = RegEx.load('FLOAT')
 # NUMBER = RegEx.load('NUMBER')
-LPARAM = RegEx.load('LPARAM')
-RPARAM = RegEx.load('RPARAM')
+# LPARAM = RegEx.load('LPARAM')
+# RPARAM = RegEx.load('RPARAM')
+#
+# LBRACKET = RegEx.load('LBRACKET')
+# RBRACKET = RegEx.load('RBRACKET')
+#
+# ASSIGN = RegEx.load('ASSIGN')
+# EQUAL = RegEx.load('EQUAL')
+# INEQUAL = RegEx.load('INEQUAL')
+#
+# LT = RegEx.load('LT')
+# LE = RegEx.load('LE')
+#
+# GT = RegEx.load('GT')
+# GE = RegEx.load('GE')
+#
+# NEWLINE = RegEx.load('NEWLINE')
+# TAB = RegEx.load('TAB')
+#
+# SINGLEQUOTE = RegEx.load('SINGLEQUOTE')
+# DOUBLEQUOTE = RegEx.load('DOUBLEQUOTE')
+#
+# SEMICOLON = RegEx.load('SEMICOLON')
+# COLON = RegEx.load('COLON')
+# COMMA = RegEx.load('COMMA')
+# DOT = RegEx.load('DOT')
+#
+# PLUS = RegEx.load('PLUS')
+# MINUS = RegEx.load('MINUS')
+# ASTERISK = RegEx.load('ASTERISK')
+# SLASH = RegEx.load('SLASH')
+# BACKSLASH = RegEx.load('BACKSLASH')
+# DIV = RegEx.load('DIV')
 
-LBRACKET = RegEx.load('LBRACKET')
-RBRACKET = RegEx.load('RBRACKET')
-
-ASSIGN = RegEx.load('ASSIGN')
-EQUAL = RegEx.load('EQUAL')
-INEQUAL = RegEx.load('INEQUAL')
-
-LT = RegEx.load('LT')
-LE = RegEx.load('LE')
-
-GT = RegEx.load('GT')
-GE = RegEx.load('GE')
-
-NEWLINE = RegEx.load('NEWLINE')
-TAB = RegEx.load('TAB')
-
-SINGLEQUOTE = RegEx.load('SINGLEQUOTE')
-DOUBLEQUOTE = RegEx.load('DOUBLEQUOTE')
-
-SEMICOLON = RegEx.load('SEMICOLON')
-COLON = RegEx.load('COLON')
-COMMA = RegEx.load('COMMA')
-DOT = RegEx.load('DOT')
-
-PLUS = RegEx.load('PLUS')
-MINUS = RegEx.load('MINUS')
-ASTERISK = RegEx.load('ASTERISK')
-SLASH = RegEx.load('SLASH')
-BACKSLASH = RegEx.load('BACKSLASH')
-DIV = RegEx.load('DIV')
-
-# WHILE = RegEx('while', 'WHILE')
-# FOR = RegEx('for', 'FOR')
-# IN = RegEx('in', 'IN')
-# RETURN = RegEx('return', 'RETURN')
-# DEFINE = RegEx('define', 'DEFINE')
-# CLASS = RegEx('class', 'CLASS')
+WHILE = RegEx('while', 'WHILE')
+FOR = RegEx('for', 'FOR')
+IN = RegEx('in', 'IN')
+RETURN = RegEx('return', 'RETURN')
+DEFINE = RegEx('define', 'DEFINE')
+CLASS = RegEx('class', 'CLASS')
 #
 # #todo: reserved items currently are not being scanned.
 #
@@ -450,46 +451,50 @@ NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
 # epsilon closures really can't get much faster without a major redesign, so I should finally write a good
 # nfa to dfa caster after writing tests for new modules.
 
+# after creating casts going through 1500 iterations of iteratively increased sequences DFA processes
+# them in less than 3 seconds while it takes ~7-8 seconds for epsilon NFAs'.
+# further minimising the DFAs' would make it a bit faster.
+
 # import time
 # t0 = time.clock()
 # test = RegEx.load('00test')
 # print('{:.100f}'.format(time.clock() - t0))
 # test.compile()
 
-# LPARAM = RegEx('\\(', 'LPARAM')
-# RPARAM = RegEx('\\)', 'RPARAM')
-#
-# LBRACKET = RegEx('\\[', 'LBRACKET')
-# RBRACKET = RegEx('\\]', 'RBRACKET')
-#
-# ASSIGN = RegEx('=', 'ASSIGN')
-# EQUAL = RegEx('==', 'EQUAL')
-# INEQUAL = RegEx('!=', 'INEQUAL')
-#
-# LT = RegEx('<', 'LT')
-# LE = RegEx('<=', 'LE')
-#
-# GT = RegEx('>', 'GT')
-# GE = RegEx('>=', 'GE')
-#
-# NEWLINE = RegEx('\n', 'NEWLINE')
-# TAB = RegEx('\t', 'TAB')
-#
-# SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
-# DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
-#
-# SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
-# COLON = RegEx(':', 'COLON')
-# COMMA = RegEx(',', 'COMMA')
-# DOT = RegEx('.', 'DOT')
-#
-# PLUS = RegEx('\\+', 'PLUS')
-# MINUS = RegEx('\\-', 'MINUS')
-# ASTERISK = RegEx('\\*', 'ASTERISK')
-# SLASH = RegEx('/', 'SLASH')
-# BACKSLASH = RegEx('\\\\', 'BACKSLASH')
-#
-# DIV = RegEx('//', 'DIV')
+LPARAM = RegEx('\\(', 'LPARAM')
+RPARAM = RegEx('\\)', 'RPARAM')
+
+LBRACKET = RegEx('\\[', 'LBRACKET')
+RBRACKET = RegEx('\\]', 'RBRACKET')
+
+ASSIGN = RegEx('=', 'ASSIGN')
+EQUAL = RegEx('==', 'EQUAL')
+INEQUAL = RegEx('!=', 'INEQUAL')
+
+LT = RegEx('<', 'LT')
+LE = RegEx('<=', 'LE')
+
+GT = RegEx('>', 'GT')
+GE = RegEx('>=', 'GE')
+
+NEWLINE = RegEx('\n', 'NEWLINE')
+TAB = RegEx('\t', 'TAB')
+
+SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
+DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
+
+SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
+COLON = RegEx(':', 'COLON')
+COMMA = RegEx(',', 'COMMA')
+DOT = RegEx('.', 'DOT')
+
+PLUS = RegEx('\\+', 'PLUS')
+MINUS = RegEx('\\-', 'MINUS')
+ASTERISK = RegEx('\\*', 'ASTERISK')
+SLASH = RegEx('/', 'SLASH')
+BACKSLASH = RegEx('\\\\', 'BACKSLASH')
+
+DIV = RegEx('//', 'DIV')
 # print(DIV.check(''))
 # print(DIV.check('/'))
 # print(DIV.check('//'))
@@ -498,7 +503,7 @@ NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
 #todo: consider implementing operator precedence (explicitly, not implicitly)
 #todo: implement RegEx precedence (RESERVED and others, also vocabulary size)
 
-# SPACE = RegEx(' ')
+SPACE = RegEx(' ')
 # print(SPACE.check(''))
 # print(SPACE.check(' '))
 # print(SPACE.check('  '))

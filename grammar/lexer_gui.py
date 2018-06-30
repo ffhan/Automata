@@ -110,9 +110,9 @@ def lexer_gui():
     for name, color in cols.items():
         text_output.tag_config(name, foreground=color)
 
-    frame.pack(fill=tk.BOTH)
-    text_input.pack(fill=tk.BOTH)
-    text_output.pack(fill=tk.BOTH)
+    frame.pack(fill=tk.BOTH, expand=True)
+    text_input.pack(fill=tk.BOTH, expand=True)
+    text_output.pack(fill=tk.BOTH, expand=True)
 
     tk.mainloop()
 if __name__ == '__main__':

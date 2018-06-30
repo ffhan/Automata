@@ -1,12 +1,13 @@
 """
 Defines all operator abstractions and their respective default operators.
 """
-#todo: write extensive tests for this module.
 import abc
 import automata.nfa as nfa
+import automata.dfa as dfa
 import form.generators as generator
 import misc.errors as err
 import misc.helper as helper
+import automata.cast_api as api
 
 class Operator(abc.ABC):
     """
@@ -52,13 +53,21 @@ class Operator(abc.ABC):
                 item.__class__.__name__))
 
     @abc.abstractmethod
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         """
-        Executes the Operator: returns an epsilon NFA that describes the operation results.
+        Assembles the operator into an Epsilon NFA
 
-        :return EpsilonNFA: epsilon NFA that describes the operator results
+        :return:
         """
         pass
+
+    def execute(self)->dfa.DFA:
+        """
+        Executes the Operator: returns a DFA that describes the operation results.
+
+        :return DFA: minimised DFA
+        """
+        return api.epsilon_nfa_to_dfa(self._assemble()).minimize()
 
     @property
     @abc.abstractmethod
@@ -97,7 +106,7 @@ class Single(UnaryOperator):
     def __init__(self, item):
         super().__init__(item, '')
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             enfa = nfa.EpsilonNFA.factory(
                 """s0,s1
@@ -107,7 +116,7 @@ s0
 s0,{0}->s1""".format(*helper.escape_string(self._item)),
             generator.StandardFormatGenerator())
         elif isinstance(self._item, Operator):
-            enfa = self._item.execute()
+            enfa = self._item._assemble()
         return enfa
     @property
     def min_length(self):
@@ -183,7 +192,7 @@ class Collation(BinaryOperator):
         """
         return [chr(i) for i in range(ord(self._first), ord(self._last) + 1)]
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         result = ''
         inputs = ''
         for char in self.all_characters:
@@ -217,7 +226,7 @@ class Alternation(GeneralOperator):
     def __init__(self, *items):
         super().__init__('|', *items)
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         enfas = []
         for item in self._items:
             if isinstance(item, str):
@@ -229,7 +238,7 @@ u0
 u0,{0}->u1""".format(*helper.escape_string(item)),
                 generator.StandardFormatGenerator()))
             elif isinstance(item, Operator):
-                enfas.append(item.execute())
+                enfas.append(item._assemble())
 
         result = enfas[0]
         for i in range(1, len(enfas)):
@@ -262,7 +271,7 @@ class Concatenation(GeneralOperator):
     def __init__(self, *items):
         super().__init__('', *items)
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         enfas = []
         for item in self._items:
             if isinstance(item, str):
@@ -274,7 +283,7 @@ c0
 c0,{0}->c1""".format(*helper.escape_string(item)),
                     generator.StandardFormatGenerator()))
             elif isinstance(item, Operator):
-                enfas.append(item.execute())
+                enfas.append(item._assemble())
 
         result = enfas[0]
         for i in range(1, len(enfas)):
@@ -315,7 +324,7 @@ class KleeneStar(UnaryOperator):
     def __init__(self, item):
         super().__init__(item, '*')
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             item_enfa = nfa.EpsilonNFA.factory(
                 """ks0,ks1
@@ -325,7 +334,7 @@ ks0
 ks0,{0}->ks1""".format(*helper.escape_string(self._item)),
             generator.StandardFormatGenerator())
         elif isinstance(self._item, Operator):
-            item_enfa = self._item.execute()
+            item_enfa = self._item._assemble()
         return item_enfa.kleene_operator()
 
     @property
@@ -347,7 +356,7 @@ class KleenePlus(UnaryOperator):
     def __init__(self, item):
         super().__init__(item, '+')
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             # todo: don't call it through this.
             enfa = nfa.EpsilonNFA.factory(
@@ -358,7 +367,7 @@ kp0
 kp0,{0}->kp1""".format(*helper.escape_string(self._item)),
             generator.StandardFormatGenerator())
         elif isinstance(self._item, Operator):
-            enfa = self._item.execute()
+            enfa = self._item._assemble()
         # else is not needed because OperatorInputTypeError would already have been raised
         # if item is not a string or an Operator.
         return enfa.deepcopy() * enfa.kleene_operator()
@@ -387,7 +396,7 @@ class QuestionMark(UnaryOperator):
     def __init__(self, item):
         super().__init__(item, '?')
 
-    def execute(self)->nfa.EpsilonNFA:
+    def _assemble(self)->nfa.EpsilonNFA:
         if isinstance(self._item, str):
             item_enfa = nfa.EpsilonNFA.factory(
                 """qm0,qm1
@@ -402,7 +411,7 @@ qm0,$->qm1""".format(*helper.escape_string(self._item)),
                 """qm\n\nqm\nqm\n""",
             generator.StandardFormatGenerator())
             end_enfa = start_enfa.deepcopy()
-            item_enfa = start_enfa*end_enfa + self._item.execute()
+            item_enfa = start_enfa*end_enfa + self._item._assemble()
         return item_enfa
 
     @property

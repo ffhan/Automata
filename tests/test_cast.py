@@ -14,7 +14,7 @@ def casting_tester(original, cast, test_func, output_results = False):
 
     :param FA original: original FA
     :param FA cast: cast FA
-    :param test_func: unit test method to execute
+    :param test_func: unit test method to _assemble
     :param bool output_results: defines if tester prints out all results
     :return:
     """

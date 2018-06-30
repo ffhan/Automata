@@ -102,7 +102,7 @@ def test_factory(getter_func, lexer, lexer_method):
 
     :param function getter_func: automaton getter function
     :param Generator lexer: defines which concrete Generator implementation to use
-    :param function lexer_method: defines which Generator method to execute
+    :param function lexer_method: defines which Generator method to _assemble
     :return function: test function
     """
 

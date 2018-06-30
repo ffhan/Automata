@@ -55,7 +55,7 @@ def epsilon_nfa_to_nfa(e_nfa: automata.nfa.EpsilonNFA)->automata.nfa.NFA: # todo
             work.states[state].transitions[event] = transitions
 
     # print(work.states)
-
+    print("done to nfa")
     return automata.nfa.NFA(work.states, work.inputs, work.start_state)
 
 def nfa_to_dfa(nfa: automata.nfa.NFA)->automata.dfa.DFA:
@@ -111,6 +111,7 @@ def nfa_to_dfa(nfa: automata.nfa.NFA)->automata.dfa.DFA:
             state.transitions[single_input] = {created_states[new_state.name]}
     done_assoc = dict()
     while associations:
+        print(associations)
         state = list(associations.keys())[0]
         for single_input in sorted(work.inputs):
             transition = set()
@@ -143,7 +144,7 @@ def nfa_to_dfa(nfa: automata.nfa.NFA)->automata.dfa.DFA:
             del(associations[state])
     # for state in created_states.values():
     #     print(state, state.transitions, state.value)
-
+    print("done to dfa")
     return automata.dfa.DFA(created_states, work.inputs, work.start_state)
 
 def epsilon_nfa_to_dfa(automaton: automata.nfa.EpsilonNFA)->automata.dfa.DFA:
