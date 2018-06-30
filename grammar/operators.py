@@ -67,7 +67,11 @@ class Operator(abc.ABC):
 
         :return DFA: minimised DFA
         """
-        return api.epsilon_nfa_to_dfa(self._assemble()).minimize()
+        # import misc.visual as vis
+        # vis.save_graph(self._assemble())
+        dfa_output = api.epsilon_nfa_to_dfa(self._assemble())
+        dfa_output.minimize()
+        return dfa_output
 
     @property
     @abc.abstractmethod

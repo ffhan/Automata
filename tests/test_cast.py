@@ -6,6 +6,7 @@ import automata.nfa as nfa
 import form.generators
 import automata.cast_api as api
 from random import randint
+import grammar.regular_expressions as rgx
 
 def casting_tester(original, cast, test_func, output_results = False):
     """
@@ -89,3 +90,5 @@ q1,1->q0,q1""", form.generators.StandardFormatGenerator()
         self.cast = api.epsilon_nfa_to_dfa(self.original)
     def test_fa_casts(self):
         casting_tester(self.original, self.cast, self.assertEqual)
+    def test_regexes(self):
+        rgx

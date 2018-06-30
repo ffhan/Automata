@@ -59,6 +59,11 @@ class Lexer:
         :param regexes: regex class
         """
         self._regexes: list = regexes
+        for regex in self._regexes:
+            try:
+                assert type(regex) is rgx.RegEx
+            except AssertionError as e:
+                print(type(regex), e)
         self._ignored = set()
 
     def add_ignored_characters(self, *ignored):

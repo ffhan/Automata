@@ -3,14 +3,17 @@ Defines a regular expression type and all default regular expression checkers.
 """
 import grammar.operators as operators
 import os
+import xml.dom.minidom as dom
+import os.path as pth
+import dill
 dirname = os.path.dirname(__file__)
 
-class RegEx:
+class RegEx(object):
     """
     Defines a class that handles all regular expression needs.
     Currently compiles to epsilon NFA, but that will be bound to change.
     """
-    #todo: fix nfa to dfa casting and add compile method that does: operator->e_nfa->nfa->dfa->minimised dfa
+    #todo: fix nfa to dfa casting and add save method that does: operator->e_nfa->nfa->dfa->minimised dfa
     #todo: multiple collation [a-z,A-Z]
     #todo: anchoring
     #todo: {min, max} repetitions
@@ -63,8 +66,7 @@ class RegEx:
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
         self.automaton = self._groups.execute()
-        print(self._text)
-        # self.compile()
+        # self.save()
 
     @property
     def min_lookahead(self):
@@ -334,14 +336,14 @@ class RegEx:
                 group[i] = operators.Single(item)
         return group
 
-    def compile(self):
+    def save(self):
         """
-        Compiles a regex and saves it on a drive.
+        Saves a regex on a drive.
 
         :return:
         """
-        from misc.helper import save_object
-        save_object(self, self.name, 'regex', dirname + '\\compiled_regexes\\')
+        with open(dirname + '\\compiled_regexes\\' + self.name.upper() + '.regex', 'wb') as file:
+            dill.dump(self, file, -1)
     @staticmethod
     def load(name: str):
         """
@@ -350,160 +352,68 @@ class RegEx:
         :param str name: regex file name
         :return RegEx: loaded regex object
         """
-        from misc.helper import load_object
-        return load_object(dirname + '\\compiled_regexes\\' + name + '.regex')
+        with open(dirname + '\\compiled_regexes\\' + name.upper() + '.regex', 'rb') as file:
+            obj = dill.load(file)
+        return obj
 
 def check_check(rgx, *tests):
+    """
+    Enables fast testing whether a regex works as designed.
+
+    :param rgx: regex to test
+    :param tests: input characters
+    :return:
+    """
     for test in tests:
         print(test, rgx.check(test))
 
-# WHILE = RegEx.load('WHILE')
-# FOR = RegEx.load('FOR')
-# IN = RegEx.load('IN')
-# RETURN = RegEx.load('RETURN')
-# DEFINE = RegEx.load('DEFINE')
-# CLASS = RegEx.load('CLASS')
-# TRY = RegEx.load('TRY')
-# EXCEPT = RegEx.load('EXCEPT')
-# ASSERT = RegEx.load('ASSERT')
-# WITH = RegEx.load('WITH')
-# AS = RegEx.load('AS')
-AS = RegEx('as', 'AS')
+preloaded_regexes = dict()
+def prepare_regexes():
+    """
+    Loads and creates all regexes defined in preloaded_regexes.xml
 
-# IF = RegEx.load('IF')
-# ELIF = RegEx.load('ELIF')
-# ELSE = RegEx.load('ELSE')
-# IS = RegEx.load('IS')
+    :return:
+    """
+    doc = dom.parse(dirname + '/' + 'preloaded_regexes.xml')
+    rgxs = doc.getElementsByTagName('regex')
+    for rgx in rgxs:
+        name, expr = rgx.attributes['name'].value, rgx.attributes['expr'].value
+        if pth.isfile(dirname + '/' + 'compiled_regexes/{}.regex'.format(name)):
+            try:
+                print('LOADING {} REGEX..'.format(name))
+                exec('global {0}; {0} = RegEx.load("{0}")'.format(name))
+            except AttributeError as e:
+                exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); {0}.save()'.format(name, repr(expr))
+                print('ERROR LOADING: {}'.format(e)) #todo: all regexes currently can't load properly
+                print('CREATING {} REGEX..'.format(name))
+                # print(exec_string)
+                exec(exec_string)
+        else:
+            exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); {0}.save()'.format(name, repr(expr))
+            print('CREATING {} REGEX..'.format(name))
+            # print(exec_string)
+            exec(exec_string)
+prepare_regexes()
 
-IF = RegEx('if', 'IF')
-ELIF = RegEx('elif', 'ELIF')
-ELSE = RegEx('else', 'ELSE')
-IS = RegEx('is', 'IS')
-# IS.compile()
-
-WITH = RegEx('with', 'WITH')
-TRY = RegEx('try', 'TRY')
-EXCEPT = RegEx('except', 'EXCEPT')
-ASSERT = RegEx('assert', 'ASSERT')
-
-# INTEGER = RegEx.load('INTEGER') #todo: pickling this does not work.
-# VARIABLE = RegEx.load('VARIABLE')
-# FLOAT = RegEx.load('FLOAT')
-# NUMBER = RegEx.load('NUMBER')
-# LPARAM = RegEx.load('LPARAM')
-# RPARAM = RegEx.load('RPARAM')
+# # FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
+# # LOADING IS ~7.5 TIMES FASTER.
+# # [a-z][A-Z][0-9] takes about 3 miliseconds to create, while loading it takes about 0.4 miliseconds to load it.
+# # creating ':' takes about 0.1 miliseconds to create and about 0.4 miliseconds to load it.
+# # the point is: loading is absolutely necessary. Even for small vocabularies in which loading is slower
+# # it's still nothing (0.4 miliseconds) compared to the usual lexer scan time (in seconds).
+# # extensive load tests could give much more precised and nuanced answers though.
 #
-# LBRACKET = RegEx.load('LBRACKET')
-# RBRACKET = RegEx.load('RBRACKET')
+# # time profiling for lexer turned out two big time consumers: calculating epsilon closures and accepted states
+# # both are used extremely often and both take a long time to process (as all properties do)
+# # epsilon closures really can't get much faster without a major redesign, so I should finally write a good
+# # nfa to dfa caster after writing tests for new modules.
 #
-# ASSIGN = RegEx.load('ASSIGN')
-# EQUAL = RegEx.load('EQUAL')
-# INEQUAL = RegEx.load('INEQUAL')
+# # after creating casts going through 1500 iterations of iteratively increased sequences DFA processes
+# # them in less than 3 seconds while it takes ~7-8 seconds for epsilon NFAs'.
+# # further minimising the DFAs' would make it a bit faster.
 #
-# LT = RegEx.load('LT')
-# LE = RegEx.load('LE')
-#
-# GT = RegEx.load('GT')
-# GE = RegEx.load('GE')
-#
-# NEWLINE = RegEx.load('NEWLINE')
-# TAB = RegEx.load('TAB')
-#
-# SINGLEQUOTE = RegEx.load('SINGLEQUOTE')
-# DOUBLEQUOTE = RegEx.load('DOUBLEQUOTE')
-#
-# SEMICOLON = RegEx.load('SEMICOLON')
-# COLON = RegEx.load('COLON')
-# COMMA = RegEx.load('COMMA')
-# DOT = RegEx.load('DOT')
-#
-# PLUS = RegEx.load('PLUS')
-# MINUS = RegEx.load('MINUS')
-# ASTERISK = RegEx.load('ASTERISK')
-# SLASH = RegEx.load('SLASH')
-# BACKSLASH = RegEx.load('BACKSLASH')
-# DIV = RegEx.load('DIV')
-
-WHILE = RegEx('while', 'WHILE')
-FOR = RegEx('for', 'FOR')
-IN = RegEx('in', 'IN')
-RETURN = RegEx('return', 'RETURN')
-DEFINE = RegEx('define', 'DEFINE')
-CLASS = RegEx('class', 'CLASS')
-#
-# #todo: reserved items currently are not being scanned.
-#
-INTEGER = RegEx('[0-9]+', 'INTEGER')
-VARIABLE = RegEx('([a-z]|[A-Z]|_)([a-z]|[A-Z]|[0-9]|_)*', 'VARIABLE')
-FLOAT = RegEx('([0-9]+.[0-9]*)|([0-9]*.[0-9]+)', 'FLOAT')
-NUMBER = RegEx('([0-9]*.?[0-9]+)|([0-9]+.?[0-9]*)', 'NUMBER')
-
-# FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
-# LOADING IS ~7.5 TIMES FASTER.
-# [a-z][A-Z][0-9] takes about 3 miliseconds to create, while loading it takes about 0.4 miliseconds to load it.
-# creating ':' takes about 0.1 miliseconds to create and about 0.4 miliseconds to load it.
-# the point is: loading is absolutely necessary. Even for small vocabularies in which loading is slower
-# it's still nothing (0.4 miliseconds) compared to the usual lexer scan time (in seconds).
-# extensive load tests could give much more precised and nuanced answers though.
-
-# time profiling for lexer turned out two big time consumers: calculating epsilon closures and accepted states
-# both are used extremely often and both take a long time to process (as all properties do)
-# epsilon closures really can't get much faster without a major redesign, so I should finally write a good
-# nfa to dfa caster after writing tests for new modules.
-
-# after creating casts going through 1500 iterations of iteratively increased sequences DFA processes
-# them in less than 3 seconds while it takes ~7-8 seconds for epsilon NFAs'.
-# further minimising the DFAs' would make it a bit faster.
-
-# import time
-# t0 = time.clock()
-# test = RegEx.load('00test')
-# print('{:.100f}'.format(time.clock() - t0))
-# test.compile()
-
-LPARAM = RegEx('\\(', 'LPARAM')
-RPARAM = RegEx('\\)', 'RPARAM')
-
-LBRACKET = RegEx('\\[', 'LBRACKET')
-RBRACKET = RegEx('\\]', 'RBRACKET')
-
-ASSIGN = RegEx('=', 'ASSIGN')
-EQUAL = RegEx('==', 'EQUAL')
-INEQUAL = RegEx('!=', 'INEQUAL')
-
-LT = RegEx('<', 'LT')
-LE = RegEx('<=', 'LE')
-
-GT = RegEx('>', 'GT')
-GE = RegEx('>=', 'GE')
-
-NEWLINE = RegEx('\n', 'NEWLINE')
-TAB = RegEx('\t', 'TAB')
-
-SINGLEQUOTE = RegEx("'", 'SINGLEQUOTE')
-DOUBLEQUOTE = RegEx('"', 'DOUBLEQUOTE')
-
-SEMICOLON = RegEx('\\;', 'SEMICOLON') #todo: fix this in generators.py
-COLON = RegEx(':', 'COLON')
-COMMA = RegEx(',', 'COMMA')
-DOT = RegEx('.', 'DOT')
-
-PLUS = RegEx('\\+', 'PLUS')
-MINUS = RegEx('\\-', 'MINUS')
-ASTERISK = RegEx('\\*', 'ASTERISK')
-SLASH = RegEx('/', 'SLASH')
-BACKSLASH = RegEx('\\\\', 'BACKSLASH')
-
-DIV = RegEx('//', 'DIV')
-# print(DIV.check(''))
-# print(DIV.check('/'))
-# print(DIV.check('//'))
-# print(DIV.check('///'))
-
-#todo: consider implementing operator precedence (explicitly, not implicitly)
-#todo: implement RegEx precedence (RESERVED and others, also vocabulary size)
-
-SPACE = RegEx(' ')
-# print(SPACE.check(''))
-# print(SPACE.check(' '))
-# print(SPACE.check('  '))
+# # import time
+# # t0 = time.clock()
+# # test = RegEx.load('00test')
+# # print('{:.100f}'.format(time.clock() - t0))
+# # test.save()
