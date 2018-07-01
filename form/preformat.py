@@ -135,9 +135,9 @@ def TEST_GENERATOR(string, test_output, verbose):
 
 TEST_PDA = test_factory(get_dpda, form.compositors.StandardPushDownCompositor,
                         form.compositors.StandardPushDownCompositor.composite_output)
-TEST_E_NFA = test_factory(get_e_nfa, form.compositors.StandardCompositor,
-                          form.compositors.StandardCompositor.composite_output)
-TEST_DFA_MIN = test_factory(get_dfa_min, form.compositors.StandardCompositor,
-                            form.compositors.StandardCompositor.composite_automaton)
+TEST_E_NFA = test_factory(get_e_nfa, form.compositors.StandardCommandTestCompositor,
+                          form.compositors.StandardCommandTestCompositor.composite_output)
+TEST_DFA_MIN = test_factory(get_dfa_min, form.compositors.StandardCommandTestCompositor,
+                            form.compositors.StandardCommandTestCompositor.composite_automaton)
 TEST_TURING = test_factory(get_turing, form.compositors.StandardTuringMachineCompositor,
                            form.compositors.StandardTuringMachineCompositor.composite_output)

@@ -26,7 +26,13 @@ class DFA(fa.FiniteAutomaton):
     def _check_structure(self):
 
         error_msg = 'Incorrect {} structure.'.format(self.__class__.__name__)
-
+        for state in self.states.values():
+            for single in self.inputs:
+                for end in state.forward(single):
+                    try:
+                        assert end in self.states
+                    except AssertionError:
+                        raise AssertionError
         for state in self.states.values():
             if len(state.transitions) != len(self.inputs):
                 raise ValueError(error_msg)

@@ -1,11 +1,16 @@
 """
 Defines a regular expression type and all default regular expression checkers.
 """
-import grammar.operators as operators
 import os
 import xml.dom.minidom as dom
 import os.path as pth
 import dill
+import json
+import grammar.operators as operators
+import form.generators as generator
+import automata.dfa as dfa
+import form.compositors as com
+import form.generators as gen
 dirname = os.path.dirname(__file__)
 
 class RegEx(object):
@@ -29,7 +34,7 @@ class RegEx(object):
 
 
 
-    def __init__(self, text: str, name: str = 'placeholder'):
+    def __init__(self, text: str, name: str = 'placeholder', auto_execute: bool = True):
         """
         Initializes a regular expression out of rules defined in a text.
 
@@ -57,6 +62,7 @@ class RegEx(object):
 
         :param str name: name that describes a particular regexp
         :param str text: text describing a regular expression
+        :param bool auto_execute: automatically executes FA from operators
         """
 
         self._name = name
@@ -65,7 +71,8 @@ class RegEx(object):
 
         self._groups = self._extract_bracket(text)
         self._groups = self._process(self._groups)
-        self.automaton = self._groups.execute()
+        if auto_execute:
+            self.automaton = self._groups.execute()
         # self.save()
 
     @property
@@ -367,7 +374,32 @@ def check_check(rgx, *tests):
     for test in tests:
         print(test, rgx.check(test))
 
-preloaded_regexes = dict()
+def export(regex):
+    """
+    Exports a regex into a JSON file.
+
+    :param regex: regular expression to be exported
+    :param file: export destination
+    :return:
+    """
+    inner = dict()
+    inner['text'] = regex._text
+    inner['name'] = regex._name
+    inner['automaton'] = com.StandardCompositor(regex.automaton).composite_automaton()
+    with open(dirname + '/compiled_regexes/' + inner['name'].upper() + '.regex', 'w') as file:
+        json.dump(inner, file, indent=4)
+def load(file):
+    """
+    Loads a regex.
+
+    :param file: regex filepath
+    :return: regex object
+    """
+    with open(dirname + '/compiled_regexes/' + file + '.regex', 'r') as file:
+        data = json.load(file)
+        regex = RegEx(data['text'], data['name'], False)
+        regex.automaton = dfa.DFA.factory(data['automaton'], generator.StandardFormatGenerator())
+    return regex
 def prepare_regexes():
     """
     Loads and creates all regexes defined in preloaded_regexes.xml
@@ -381,20 +413,23 @@ def prepare_regexes():
         if pth.isfile(dirname + '/' + 'compiled_regexes/{}.regex'.format(name)):
             try:
                 print('LOADING {} REGEX..'.format(name))
-                exec('global {0}; {0} = RegEx.load("{0}")'.format(name))
+                exec('global {0}; {0} = load("{0}")'.format(name))
             except AttributeError as e:
-                exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); {0}.save()'.format(name, repr(expr))
+                # exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); export({0})'.format(name, repr(expr))
+                exec_string = 'global {0}; {0} = RegEx({1}, "{0}")'.format(name, repr(expr))
                 print('ERROR LOADING: {}'.format(e)) #todo: all regexes currently can't load properly
                 print('CREATING {} REGEX..'.format(name))
                 # print(exec_string)
                 exec(exec_string)
         else:
-            exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); {0}.save()'.format(name, repr(expr))
+            exec_string = 'global {0}; {0} = RegEx({1}, "{0}")'.format(name, repr(expr))
             print('CREATING {} REGEX..'.format(name))
             # print(exec_string)
             exec(exec_string)
 prepare_regexes()
 
+# print(json.dumps({'%s' % type(NUMBER._groups).__name__ : process_operator(NUMBER._groups)}, indent=4))
+# print(process_operator(WHILE))
 # # FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
 # # LOADING IS ~7.5 TIMES FASTER.
 # # [a-z][A-Z][0-9] takes about 3 miliseconds to create, while loading it takes about 0.4 miliseconds to load it.

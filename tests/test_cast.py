@@ -5,6 +5,7 @@ import unittest
 import automata.nfa as nfa
 import form.generators
 import automata.cast_api as api
+import grammar.operators as op
 from random import randint
 import grammar.regular_expressions as rgx
 

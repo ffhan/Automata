@@ -60,14 +60,13 @@ class StateName:
 
 
     def __eq__(self, other):
-
         if isinstance(other, str):
             return other == self.name
-
-        if not isinstance(other, self.__class__):
-            return False
-
-        return other.name == self.name
+        elif isinstance(other, State):
+            return other.name == self
+        elif isinstance(other, self.__class__):
+            return other.name == self.name
+        return False
 
     def __hash__(self):
 
