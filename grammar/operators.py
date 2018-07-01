@@ -71,6 +71,9 @@ class Operator(abc.ABC):
         # vis.save_graph(self._assemble())
         dfa_output = api.epsilon_nfa_to_dfa(self._assemble())
         dfa_output.minimize()
+        for index, state in enumerate(sorted(list(dfa_output.states))):
+            dfa_output.rename_state(state.name, str(index))
+        dfa_output._alias.clear()
         return dfa_output
 
     @property

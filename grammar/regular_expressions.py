@@ -400,34 +400,29 @@ def load(file):
         regex = RegEx(data['text'], data['name'], False)
         regex.automaton = dfa.DFA.factory(data['automaton'], generator.StandardFormatGenerator())
     return regex
+REGEXES = dict()
 def prepare_regexes():
     """
     Loads and creates all regexes defined in preloaded_regexes.xml
 
     :return:
     """
+    # print("PREPARING REGEXES..")
     doc = dom.parse(dirname + '/' + 'preloaded_regexes.xml')
     rgxs = doc.getElementsByTagName('regex')
     for rgx in rgxs:
         name, expr = rgx.attributes['name'].value, rgx.attributes['expr'].value
         if pth.isfile(dirname + '/' + 'compiled_regexes/{}.regex'.format(name)):
-            try:
-                print('LOADING {} REGEX..'.format(name))
-                exec('global {0}; {0} = load("{0}")'.format(name))
-            except AttributeError as e:
-                # exec_string = 'global {0}; {0} = RegEx({1}, "{0}"); export({0})'.format(name, repr(expr))
-                exec_string = 'global {0}; {0} = RegEx({1}, "{0}")'.format(name, repr(expr))
-                print('ERROR LOADING: {}'.format(e)) #todo: all regexes currently can't load properly
-                print('CREATING {} REGEX..'.format(name))
-                # print(exec_string)
-                exec(exec_string)
+            print('LOADING {}..'.format(name))
+            REGEXES[name] = load(name)
         else:
-            exec_string = 'global {0}; {0} = RegEx({1}, "{0}")'.format(name, repr(expr))
-            print('CREATING {} REGEX..'.format(name))
-            # print(exec_string)
-            exec(exec_string)
+            print('CREATING {}..'.format(name))
+            REGEXES[name] = RegEx(expr, name)
+            export(REGEXES[name])
+import time
+t = time.time()
 prepare_regexes()
-
+print(time.time() - t)
 # print(json.dumps({'%s' % type(NUMBER._groups).__name__ : process_operator(NUMBER._groups)}, indent=4))
 # print(process_operator(WHILE))
 # # FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
@@ -441,7 +436,7 @@ prepare_regexes()
 # # time profiling for lexer turned out two big time consumers: calculating epsilon closures and accepted states
 # # both are used extremely often and both take a long time to process (as all properties do)
 # # epsilon closures really can't get much faster without a major redesign, so I should finally write a good
-# # nfa to dfa caster after writing tests for new modules.
+# # nfa to dfa caster after writing tests for new modules. (DONE)
 #
 # # after creating casts going through 1500 iterations of iteratively increased sequences DFA processes
 # # them in less than 3 seconds while it takes ~7-8 seconds for epsilon NFAs'.
@@ -452,3 +447,11 @@ prepare_regexes()
 # # test = RegEx.load('00test')
 # # print('{:.100f}'.format(time.clock() - t0))
 # # test.save()
+
+# 1.915 seconds to load all regexes.
+# 0.677 seconds to create all regexes.
+# loading is not going to be used by default. Export is here only to be able to save a regex externally.
+# clean version of preparation takes approx. 0.424 seconds which is fine.
+
+# by cutting down the alias dict and shortening all names I got to 0.439 seconds to create all regexes (0.666 when exporting)
+# and 0.047 seconds (47 miliseconds) to load all of them. I have successfully solved the export/loading problem.

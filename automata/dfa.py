@@ -24,7 +24,6 @@ class DFA(fa.FiniteAutomaton):
         return self.current in self.accepted_states
 
     def _check_structure(self):
-
         error_msg = 'Incorrect {} structure.'.format(self.__class__.__name__)
         for state in self.states.values():
             for single in self.inputs:
@@ -32,6 +31,8 @@ class DFA(fa.FiniteAutomaton):
                     try:
                         assert end in self.states
                     except AssertionError:
+                        print(self.states)
+                        print(state, single, end)
                         raise AssertionError
         for state in self.states.values():
             if len(state.transitions) != len(self.inputs):
@@ -104,15 +105,26 @@ class DFA(fa.FiniteAutomaton):
         for old_state in self._alias:
             self.states.pop(old_state)
 
+        for old, new in self._alias.items():
+            for state in self.states.values():
+                for single_input in self.inputs:
+                    for end in state.forward(single_input):
+                        if end.name == old:
+                            # replace all references to old objects with
+                            # references to objects only existing in the State dictionary.
+                            state.transitions[single_input] -= { end }
+                            state.transitions[single_input] |= { self.states[self._get_alias(new)] }
+
         return table
 
     def minimize(self):
-
         self.reachable()
-        # print(self)
+
         self.distinguish()
-        # print(self)
+
         self.start_state = self.states[self._get_alias(self.start_state.name)]
+
+        self._check_structure()
 
     @staticmethod
     def factory(input_text, lexer):

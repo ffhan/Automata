@@ -225,13 +225,18 @@ class StandardLexer(Lexer):
     """
 
     def __init__(self):
-        super().__init__(rgx.WHILE, rgx.FOR, rgx.IN, rgx.RETURN, rgx.DEFINE,
-                         rgx.CLASS, rgx.ASSERT, rgx.TRY, rgx.EXCEPT, rgx.WITH,
-                         rgx.IF, rgx.ELIF, rgx.ELSE, rgx.AS, rgx.IS, rgx.VARIABLE,
-                         rgx.FLOAT, rgx.INTEGER, rgx.LPARAM, rgx.RPARAM, rgx.LBRACKET,
-                         rgx.RBRACKET, rgx.ASSIGN, rgx.EQUAL, rgx.INEQUAL,
-                         rgx.LE, rgx.GE, rgx.LT, rgx.GT, rgx.NEWLINE, rgx.TAB,
-                         rgx.SINGLEQUOTE, rgx.DOUBLEQUOTE, rgx.ASTERISK, rgx.COMMA,
-                         rgx.DOT, rgx.SLASH, rgx.BACKSLASH, rgx.SEMICOLON, rgx.COLON,
-                         rgx.PLUS, rgx.MINUS, rgx.DIV)
+        super().__init__(rgx.REGEXES['WHILE'], rgx.REGEXES['FOR'], rgx.REGEXES['IN'],
+                         rgx.REGEXES['RETURN'], rgx.REGEXES['DEFINE'], rgx.REGEXES['CLASS'],
+                         rgx.REGEXES['ASSERT'], rgx.REGEXES['TRY'], rgx.REGEXES['EXCEPT'],
+                         rgx.REGEXES['WITH'], rgx.REGEXES['IF'], rgx.REGEXES['ELIF'],
+                         rgx.REGEXES['ELSE'], rgx.REGEXES['AS'], rgx.REGEXES['IS'],
+                         rgx.REGEXES['VARIABLE'], rgx.REGEXES['FLOAT'], rgx.REGEXES['INTEGER'],
+                         rgx.REGEXES['LPARAM'], rgx.REGEXES['RPARAM'], rgx.REGEXES['LBRACKET'],
+                         rgx.REGEXES['RBRACKET'], rgx.REGEXES['ASSIGN'], rgx.REGEXES['EQUAL'],
+                         rgx.REGEXES['INEQUAL'], rgx.REGEXES['LE'], rgx.REGEXES['GE'],
+                         rgx.REGEXES['LT'], rgx.REGEXES['GT'], rgx.REGEXES['NEWLINE'],
+                         rgx.REGEXES['TAB'], rgx.REGEXES['SINGLEQUOTE'], rgx.REGEXES['DOUBLEQUOTE'],
+                         rgx.REGEXES['ASTERISK'], rgx.REGEXES['COMMA'], rgx.REGEXES['DOT'],
+                         rgx.REGEXES['SLASH'], rgx.REGEXES['BACKSLASH'], rgx.REGEXES['SEMICOLON'],
+                         rgx.REGEXES['COLON'], rgx.REGEXES['PLUS'], rgx.REGEXES['MINUS'], rgx.REGEXES['DIV'])
         self.add_ignored_characters(' ')

@@ -158,7 +158,10 @@ class StandardCompositor(Compositor):
             for single_input in sorted(self.automaton.inputs):
                 for end in sorted(state.forward(single_input)):
                     # print(state, single_input, end)
-                    assert end in self.automaton.states
+                    try:
+                        assert end in self.automaton.states
+                    except AssertionError as e:
+                        raise e
                     functions += '{},{}->{}\n'.format(general_it(repr(state), '\\', True)[:-1],
                                                     general_it(single_input, '\\', True)[:-1],
                                                     general_it(repr(end), '\\', True)[:-1])

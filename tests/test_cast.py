@@ -2,11 +2,12 @@
 Defines cast API tests.
 """
 import unittest
+from random import randint
 import automata.nfa as nfa
 import form.generators
 import automata.cast_api as api
 import grammar.operators as op
-from random import randint
+import misc.helper as hel
 import grammar.regular_expressions as rgx
 
 def casting_tester(original, cast, test_func, output_results = False):
@@ -92,4 +93,46 @@ q1,1->q0,q1""", form.generators.StandardFormatGenerator()
     def test_fa_casts(self):
         casting_tester(self.original, self.cast, self.assertEqual)
     def test_regexes(self):
-        rgx
+        for regex in rgx.REGEXES.values():
+            if regex.name == 'VARIABLE':
+                self.assertFalse(regex.check(''))
+                self.assertFalse(regex.check('12'))
+                self.assertFalse(regex.check('12fgt'))
+                self.assertTrue(regex.check('_12'))
+                self.assertTrue(regex.check('_12fht'))
+                self.assertTrue(regex.check('hnefns_'))
+                self.assertTrue(regex.check('_hnefns_'))
+                self.assertTrue(regex.check('_hne_fns_'))
+                self.assertTrue(regex.check('_hn34ef55ns_'))
+                self.assertFalse(regex.check('_hn34ef 55ns_'))
+            elif regex.name == 'INTEGER':
+                self.assertFalse(regex.check(''))
+                self.assertFalse(regex.check('.12'))
+                self.assertFalse(regex.check('95.12'))
+                self.assertFalse(regex.check('95 .12'))
+                self.assertFalse(regex.check('95 12'))
+                self.assertTrue(regex.check('9512'))
+                self.assertTrue(regex.check('1'))
+            elif regex.name == 'FLOAT':
+                self.assertFalse(regex.check(''))
+                self.assertFalse(regex.check('.'))
+                self.assertFalse(regex.check('12'))
+                self.assertFalse(regex.check('12454 .'))
+                self.assertFalse(regex.check('. 12454'))
+                self.assertTrue(regex.check('.12454'))
+                self.assertTrue(regex.check('12454.'))
+                self.assertTrue(regex.check('98.765'))
+                self.assertFalse(regex.check('98.765.456'))
+                self.assertFalse(regex.check('98.765.'))
+                self.assertFalse(regex.check('.98.765'))
+            elif regex.name == 'NUMBER':
+                self.assertFalse(regex.check(''))
+                self.assertFalse(regex.check('.'))
+                self.assertTrue(regex.check('123'))
+                self.assertTrue(regex.check('123.456'))
+                self.assertTrue(regex.check('123.'))
+                self.assertTrue(regex.check('.456'))
+            else:
+                self.assertFalse(regex.check(''))
+                self.assertTrue(regex.check(*hel.de_escape_string(regex._text.lower())))
+                self.assertFalse(regex.check(*hel.de_escape_string(regex._text.lower() * 2)))
