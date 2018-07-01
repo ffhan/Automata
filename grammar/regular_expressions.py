@@ -4,13 +4,12 @@ Defines a regular expression type and all default regular expression checkers.
 import os
 import xml.dom.minidom as dom
 import os.path as pth
-import dill
 import json
 import grammar.operators as operators
 import form.generators as generator
 import automata.dfa as dfa
 import form.compositors as com
-import form.generators as gen
+
 dirname = os.path.dirname(__file__)
 
 class RegEx(object):
@@ -343,25 +342,33 @@ class RegEx(object):
                 group[i] = operators.Single(item)
         return group
 
-    def save(self):
+    def export(self):
         """
-        Saves a regex on a drive.
+        Exports a regex into a JSON file.
 
+        :param regex: regular expression to be exported
+        :param file: export destination
         :return:
         """
-        with open(dirname + '\\compiled_regexes\\' + self.name.upper() + '.regex', 'wb') as file:
-            dill.dump(self, file, -1)
+        inner = dict()
+        inner['text'] = self._text
+        inner['name'] = self._name
+        inner['automaton'] = com.StandardCompositor(self.automaton).composite_automaton()
+        with open(dirname + '/compiled_regexes/' + inner['name'].upper() + '.regex', 'w') as file:
+            json.dump(inner, file, indent=4)
     @staticmethod
-    def load(name: str):
+    def load(file):
         """
-        Loads a regex from compiled_regexes directory.
+        Loads a regex.
 
-        :param str name: regex file name
-        :return RegEx: loaded regex object
+        :param file: regex filepath
+        :return: regex object
         """
-        with open(dirname + '\\compiled_regexes\\' + name.upper() + '.regex', 'rb') as file:
-            obj = dill.load(file)
-        return obj
+        with open(dirname + '/compiled_regexes/' + file + '.regex', 'r') as file:
+            data = json.load(file)
+            regex = RegEx(data['text'], data['name'], False)
+            regex.automaton = dfa.DFA.factory(data['automaton'], generator.StandardFormatGenerator())
+        return regex
 
 def check_check(rgx, *tests):
     """
@@ -374,32 +381,6 @@ def check_check(rgx, *tests):
     for test in tests:
         print(test, rgx.check(test))
 
-def export(regex):
-    """
-    Exports a regex into a JSON file.
-
-    :param regex: regular expression to be exported
-    :param file: export destination
-    :return:
-    """
-    inner = dict()
-    inner['text'] = regex._text
-    inner['name'] = regex._name
-    inner['automaton'] = com.StandardCompositor(regex.automaton).composite_automaton()
-    with open(dirname + '/compiled_regexes/' + inner['name'].upper() + '.regex', 'w') as file:
-        json.dump(inner, file, indent=4)
-def load(file):
-    """
-    Loads a regex.
-
-    :param file: regex filepath
-    :return: regex object
-    """
-    with open(dirname + '/compiled_regexes/' + file + '.regex', 'r') as file:
-        data = json.load(file)
-        regex = RegEx(data['text'], data['name'], False)
-        regex.automaton = dfa.DFA.factory(data['automaton'], generator.StandardFormatGenerator())
-    return regex
 REGEXES = dict()
 def prepare_regexes():
     """
@@ -414,15 +395,12 @@ def prepare_regexes():
         name, expr = rgx.attributes['name'].value, rgx.attributes['expr'].value
         if pth.isfile(dirname + '/' + 'compiled_regexes/{}.regex'.format(name)):
             print('LOADING {}..'.format(name))
-            REGEXES[name] = load(name)
+            REGEXES[name] = RegEx.load(name)
         else:
             print('CREATING {}..'.format(name))
             REGEXES[name] = RegEx(expr, name)
-            export(REGEXES[name])
-import time
-t = time.time()
+            REGEXES[name].export()
 prepare_regexes()
-print(time.time() - t)
 # print(json.dumps({'%s' % type(NUMBER._groups).__name__ : process_operator(NUMBER._groups)}, indent=4))
 # print(process_operator(WHILE))
 # # FOR REALLY SMALL CHARACTER VOCABULARY LOADING IS 3-4 TIMES SLOWER, FOR BIG VOCABULARY
